@@ -1,0 +1,272 @@
+[gd_scene load_steps=23 format=3 uid="uid://b6pid4dsdcjdq"]
+
+[ext_resource type="Script" path="res://scenes/player/Player.gd" id="1_ftkfc"]
+[ext_resource type="PackedScene" uid="uid://cdv3vwjuck1q4" path="res://scenes/sounds/DistractionSound.tscn" id="2_ktpxp"]
+[ext_resource type="Shader" path="res://assets/shaders/accumulated_light.gdshader" id="3_omixk"]
+[ext_resource type="ArrayMesh" uid="uid://olo8fsfrq5tm" path="res://assets/models/Props/flashlight.obj" id="3_pkhej"]
+[ext_resource type="ArrayMesh" uid="uid://cuxmjm4wn24kp" path="res://assets/models/Entities/PlayerHands.obj" id="3_uvo8e"]
+[ext_resource type="Texture2D" uid="uid://c1xnedgsmiwq7" path="res://assets/models/Props/flashlight.png" id="4_3sv5c"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bucq1"]
+render_priority = 0
+shader = ExtResource("3_omixk")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/diffuse_texture = ExtResource("4_3sv5c")
+
+[sub_resource type="Animation" id="Animation_7kybc"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Node3D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.376551, -0.372259, 0.078669)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Node3D:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.233874, 0.228638, -0.260054)]
+}
+
+[sub_resource type="Animation" id="Animation_c2gfg"]
+resource_name = "breathe"
+length = 5.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 2.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0.01, 0), Vector3(0, -0.01, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_5g7gq"]
+resource_name = "grab"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Node3D:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.376551, -0.372259, 0.078669), Vector3(0.311435, -0.372259, -0.134633), Vector3(0.254503, -0.372259, -0.321126), Vector3(0.516296, -0.372259, -0.0255687), Vector3(0.376551, -0.372259, 0.078669)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Node3D:rotation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.233874, 0.228638, -0.260054), Vector3(0.305433, -0.146608, -0.15708), Vector3(0.366519, 0.42237, 1.50273), Vector3(0.268406, 0.815404, 0.255387), Vector3(0.233874, 0.228638, -0.260054)]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../..")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.2),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"on_pickup_animation"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_tjqam"]
+resource_name = "walk"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.5, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.05, -0.01, 0), Vector3(-0.1, 0.01, 0), Vector3(0.05, -0.01, 0), Vector3(0.1, 0.01, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_p76pw"]
+_data = {
+"RESET": SubResource("Animation_7kybc"),
+"breathe": SubResource("Animation_c2gfg"),
+"grab": SubResource("Animation_5g7gq"),
+"walk": SubResource("Animation_tjqam")
+}
+
+[sub_resource type="AnimationNodeAdd2" id="AnimationNodeAdd2_oehiq"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ceimi"]
+animation = &"walk"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ic3rm"]
+animation = &"grab"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1aavq"]
+animation = &"RESET"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1sx4f"]
+animation = &"breathe"
+
+[sub_resource type="AnimationNodeOneShot" id="AnimationNodeOneShot_idr0m"]
+
+[sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_r6rlq"]
+
+[sub_resource type="AnimationNodeAdd2" id="AnimationNodeAdd2_cr1rs"]
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_sxm3u"]
+nodes/Add2/node = SubResource("AnimationNodeAdd2_oehiq")
+nodes/Add2/position = Vector2(700, -80)
+nodes/Animation/node = SubResource("AnimationNodeAnimation_1sx4f")
+nodes/Animation/position = Vector2(60, -60)
+"nodes/Animation 2/node" = SubResource("AnimationNodeAnimation_ceimi")
+"nodes/Animation 2/position" = Vector2(60, 120)
+"nodes/Animation 3/node" = SubResource("AnimationNodeAnimation_ic3rm")
+"nodes/Animation 3/position" = Vector2(480, 300)
+"nodes/Animation 4/node" = SubResource("AnimationNodeAnimation_1aavq")
+"nodes/Animation 4/position" = Vector2(480, 180)
+nodes/grab/node = SubResource("AnimationNodeOneShot_idr0m")
+nodes/grab/position = Vector2(700, 140)
+nodes/output/position = Vector2(900, 0)
+nodes/speed/node = SubResource("AnimationNodeTimeScale_r6rlq")
+nodes/speed/position = Vector2(280, 100)
+nodes/walking/node = SubResource("AnimationNodeAdd2_cr1rs")
+nodes/walking/position = Vector2(500, -20)
+node_connections = [&"Add2", 0, &"walking", &"Add2", 1, &"grab", &"grab", 0, &"Animation 4", &"grab", 1, &"Animation 3", &"output", 0, &"Add2", &"speed", 0, &"Animation 2", &"walking", 0, &"Animation", &"walking", 1, &"speed"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_djyb8"]
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 256
+collision_mask = 65537
+script = ExtResource("1_ftkfc")
+distraction_sound_scene = ExtResource("2_ktpxp")
+
+[node name="CameraPosition" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.68, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPosition"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000205874, -0.00708103, 0.00305724)
+
+[node name="FlashlightRay" type="RayCast3D" parent="CameraPosition"]
+target_position = Vector3(0, 0, -100)
+collision_mask = 65537
+
+[node name="Interactor" type="RayCast3D" parent="CameraPosition"]
+target_position = Vector3(0, 0, -2)
+collision_mask = 16
+collide_with_areas = true
+
+[node name="Hands" type="Node3D" parent="CameraPosition"]
+
+[node name="Node3D" type="Node3D" parent="CameraPosition/Hands"]
+transform = Transform3D(0.927721, 0.301201, 0.220481, -0.250133, 0.940067, -0.231748, -0.27707, 0.159848, 0.94746, 0.376551, -0.372259, 0.078669)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CameraPosition/Hands/Node3D"]
+transform = Transform3D(1, 3.1665e-07, 0, -7.45058e-07, 1, 0, -2.38419e-07, -1.93715e-07, 1, 0.0256614, -0.500178, -0.566782)
+cast_shadow = 0
+mesh = ExtResource("3_uvo8e")
+skeleton = NodePath("../..")
+
+[node name="ItemRay" type="RayCast3D" parent="CameraPosition/Hands/Node3D"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.53)
+target_position = Vector3(0, 0, -0.195)
+
+[node name="ItemTransform" type="RemoteTransform3D" parent="CameraPosition/Hands/Node3D/ItemRay"]
+update_scale = false
+
+[node name="Node3D2" type="Node3D" parent="CameraPosition/Hands"]
+transform = Transform3D(0.984485, -0.0436405, -0.169956, 0, 0.968579, -0.248707, 0.17547, 0.244848, 0.953551, -0.377, -0.350547, 0.114776)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CameraPosition/Hands/Node3D2"]
+transform = Transform3D(1, -1.86265e-08, 0, 1.86265e-08, 1, -1.04308e-07, 1.49012e-08, 8.9407e-08, 1, -0.258241, -0.470445, -0.218252)
+cast_shadow = 0
+mesh = ExtResource("3_uvo8e")
+skeleton = NodePath("../..")
+
+[node name="Flashlight" type="Node3D" parent="CameraPosition/Hands/Node3D2"]
+unique_name_in_owner = true
+transform = Transform3D(1, -7.45058e-09, 0, 7.45058e-09, 1, -2.98023e-08, 0, 1.49012e-08, 1, 0, 0, -0.6)
+
+[node name="FlashlightMesh" type="MeshInstance3D" parent="CameraPosition/Hands/Node3D2/Flashlight"]
+transform = Transform3D(0.59, 0, 0, 0, 0.588181, -0.0462909, 0, 0.0462909, 0.588181, 0, -0.33, -0.095)
+mesh = ExtResource("3_pkhej")
+skeleton = NodePath("../../../../..")
+surface_material_override/0 = SubResource("ShaderMaterial_bucq1")
+surface_material_override/1 = SubResource("ShaderMaterial_bucq1")
+surface_material_override/2 = SubResource("ShaderMaterial_bucq1")
+
+[node name="FlashlightLight" type="SpotLight3D" parent="CameraPosition/Hands/Node3D2/Flashlight/FlashlightMesh"]
+transform = Transform3D(1.69492, -2.23517e-07, -7.45058e-07, 7.45058e-08, 1.69492, 7.7486e-07, 2.98023e-08, 5.96046e-08, 1.69492, -0.0319204, 0.289418, -0.340922)
+light_energy = 1.425
+shadow_enabled = true
+spot_range = 11.2662
+spot_attenuation = 0.683022
+spot_angle = 32.6637
+spot_angle_attenuation = 2.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CameraPosition/Hands"]
+libraries = {
+"": SubResource("AnimationLibrary_p76pw")
+}
+
+[node name="HandsAnimation" type="AnimationTree" parent="CameraPosition/Hands"]
+unique_name_in_owner = true
+root_node = NodePath("%HandsAnimation/..")
+libraries = {
+"": SubResource("AnimationLibrary_p76pw")
+}
+tree_root = SubResource("AnimationNodeBlendTree_sxm3u")
+anim_player = NodePath("../AnimationPlayer")
+parameters/Add2/add_amount = 1.0
+parameters/grab/active = false
+parameters/grab/internal_active = false
+parameters/grab/request = 0
+parameters/speed/scale = 0.0
+parameters/walking/add_amount = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_djyb8")

@@ -1,0 +1,46 @@
+[gd_scene load_steps=8 format=3 uid="uid://dmd174cay1h0d"]
+
+[ext_resource type="Shader" path="res://assets/shaders/accumulated_light.gdshader" id="1_e7n2k"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2fbhs"]
+render_priority = 0
+shader = ExtResource("1_e7n2k")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dpvq7"]
+material = SubResource("ShaderMaterial_2fbhs")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f3yvi"]
+size = Vector3(2, 0.050293, 2)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1cq66"]
+render_priority = 0
+shader = ExtResource("1_e7n2k")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rqi7v"]
+material = SubResource("ShaderMaterial_1cq66")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_87y1x"]
+size = Vector3(2, 2, 2)
+
+[node name="Node3D" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+mesh = SubResource("PlaneMesh_dpvq7")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0251465, 0)
+shape = SubResource("BoxShape3D_f3yvi")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_rqi7v")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D2/StaticBody3D"]
+shape = SubResource("BoxShape3D_87y1x")

@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://cdv3vwjuck1q4"]
+
+[ext_resource type="Script" path="res://scripts/Sound.gd" id="1_6wm7j"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_5kncm"]
+radius = 20.0
+
+[node name="Sound" type="Area3D"]
+top_level = true
+collision_layer = 0
+collision_mask = 65536
+monitorable = false
+script = ExtResource("1_6wm7j")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_5kncm")

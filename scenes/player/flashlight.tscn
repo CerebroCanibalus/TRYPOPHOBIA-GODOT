@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://mnhm158jhdey"]
+
+[ext_resource type="Script" path="res://scenes/player/Flashlight.gd" id="1_uqhm0"]
+
+[node name="Flashlight" type="SpotLight3D"]
+shadow_enabled = true
+spot_range = 21.3291
+spot_angle = 15.2845
+script = ExtResource("1_uqhm0")

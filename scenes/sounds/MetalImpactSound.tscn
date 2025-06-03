@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://ddgb28xwrvwxa"]
+
+[ext_resource type="Script" path="res://scripts/Sound.gd" id="1_gi75m"]
+[ext_resource type="AudioStream" uid="uid://dmybggn2q4jpy" path="res://assets/audio/sounds/metal impact.wav" id="2_f8fpy"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_xsys3"]
+radius = 20.0
+
+[node name="SoundArea" type="Area3D" node_paths=PackedStringArray("audio_player")]
+collision_layer = 0
+collision_mask = 65536
+monitorable = false
+script = ExtResource("1_gi75m")
+audio_player = NodePath("AudioStreamPlayer")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_xsys3")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_f8fpy")
