@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=4 uid="uid://c6qrt61xbgo1t"]
+[gd_scene load_steps=59 format=4 uid="uid://c6qrt61xbgo1t"]
 
 [ext_resource type="Script" path="res://addons/qodot/src/nodes/qodot_map.gd" id="3_wjm7a"]
 [ext_resource type="Resource" uid="uid://c36hv0o6g0udo" path="res://addons/qodot/game_definitions/fgd/qodot_fgd.tres" id="4_swgl6"]
@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://criq8nhtfa1af" path="res://assets/env/textures/Wall1.png" id="6_fdh0i"]
 [ext_resource type="Texture2D" uid="uid://bswmp2iso73mv" path="res://assets/env/textures/Floor3.png" id="7_k3cou"]
 [ext_resource type="Texture2D" uid="uid://cc1uqx1sc6fub" path="res://assets/env/textures/Floor2.png" id="8_hdc72"]
-[ext_resource type="PackedScene" uid="uid://ck1ipaot64eyp" path="res://scenes/player/playerbase.tscn" id="9_1hbvd"]
 [ext_resource type="Texture2D" uid="uid://bepcgwwpvw0m6" path="res://assets/env/textures/Floor4.png" id="9_jj73r"]
 [ext_resource type="ArrayOccluder3D" uid="uid://y8llo0nayys7" path="res://scenes/world/World.occ" id="10_dbdg5"]
 
@@ -377,6 +376,3 @@ shape = SubResource("ConvexPolygonShape3D_boeq8")
 
 [node name="entity_0_brush_39_collision_shape" type="CollisionShape3D" parent="NavigationRegion3D/QodotMap/entity_0_worldspawn"]
 shape = SubResource("ConvexPolygonShape3D_rbcrp")
-
-[node name="Player" parent="." instance=ExtResource("9_1hbvd")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.262205, 8.03928, -1.73868)
