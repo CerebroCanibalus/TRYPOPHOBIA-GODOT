@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfwa36v3ynguy"]
+
+[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://scene/character_body_3d.tscn" id="1_4odmi"]
+
+[node name="world" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.709263, 0.704944, 0, -0.704944, 0.709263, -2.58644, 6.93374, 5.97786)
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 10, 0.022872, 0.0328913, -0.000740767)
+use_collision = true
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.080346, 0.052747, 0)
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="CSGCombiner3D"]
+transform = Transform3D(0.20177, 0, 0, 0, 2.32531, 0, 0, 0, 0.225863, -0.435979, 2.24183, -0.357152)
+
+[node name="CSGCylinder3D2" type="CSGCylinder3D" parent="CSGCombiner3D"]
+transform = Transform3D(0.20177, 0, 0, 0, 2.32531, 0, 0, 0, 0.225863, -0.168369, 0.563254, -0.357152)
+
+[node name="CSGCylinder3D3" type="CSGCylinder3D" parent="CSGCombiner3D"]
+transform = Transform3D(0.20177, 0, 0, 0, 2.32531, 0, 0, 0, 0.225863, -0.168369, -1.09788, -0.110592)
+height = 2.89373
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CharacterBody3D" parent="." instance=ExtResource("1_4odmi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.54622, 1.68043, 0.665433)
