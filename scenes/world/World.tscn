@@ -1,7 +1,5 @@
-[gd_scene load_steps=60 format=4 uid="uid://c6qrt61xbgo1t"]
+[gd_scene load_steps=88 format=4 uid="uid://c6qrt61xbgo1t"]
 
-[ext_resource type="Script" path="res://addons/qodot/src/nodes/qodot_map.gd" id="3_wjm7a"]
-[ext_resource type="Resource" uid="uid://c36hv0o6g0udo" path="res://addons/qodot/game_definitions/fgd/qodot_fgd.tres" id="4_swgl6"]
 [ext_resource type="Texture2D" uid="uid://cod3jas8d7eq0" path="res://assets/env/textures/Floor1.png" id="5_0d5tl"]
 [ext_resource type="Texture2D" uid="uid://criq8nhtfa1af" path="res://assets/env/textures/Wall1.png" id="6_fdh0i"]
 [ext_resource type="Texture2D" uid="uid://bswmp2iso73mv" path="res://assets/env/textures/Floor3.png" id="7_k3cou"]
@@ -20,6 +18,2289 @@ glow_enabled = true
 vertices = PackedVector3Array(-7.25, 7.5, -192.25, -7.25, 7.5, -187.75, -6.75, 7.5, -187.75, -6.75, 7.5, -192.25, -5, 4.5, -192.25, -5, 4.5, -188.75, 7.25, 4.5, -188.75, 7.25, 4.5, -192.25, 8.75, 7.5, -192.25, 8.75, 7.5, -188.75, 13.25, 7.5, -188.75, 13.25, 7.5, -192.25, -8.25, 1.5, -186, -8.75, 1.5, -187.25, -13.25, 1.5, -187.25, -13.25, 1.5, -161.75, -3.75, 1.5, -161.75, -3.25, 1.5, -159.25, 3.25, 1.5, -159.25, 3.25, 1.5, -161.25, -3.25, 1.5, -161.25, 13.25, 1.5, -187, -5, 1.5, -187, -5.75, 1.5, -186, 3.75, 1.5, -161.75, 13.25, 1.5, -161.75, -3.75, 1.5, -161.75, -3.25, 1.5, -161.25, 3.25, 1.5, -161.25, 3.75, 1.5, -161.75, -5.75, 1.5, -186, -8.25, 1.5, -186, -3.25, 1.5, -127.75, 3.25, 1.5, -127.75, 3.25, 1.5, -159.25, -3.25, 1.5, -159.25, 47.25, 1.5, -125.25, 47.25, 1.5, -119.75, 49.25, 1.5, -119.75, 49.25, 1.5, -125.25, 94.25, 1.5, -135.25, 49.75, 1.5, -135.25, 49.75, 1.5, -125.75, 49.75, 1.5, -125.75, 49.25, 1.5, -125.25, 49.25, 1.5, -119.75, 49.75, 1.5, -119.25, 94.25, 1.5, -108.75, 94.25, 1.5, -135.25, 49.75, 1.5, -119.25, 49.75, 1.5, -108.75, 94.25, 1.5, -108.75, 3.75, 1.5, -119.75, 5.75, 1.5, -119.75, 5.75, 1.5, -125.25, 3.75, 1.5, -125.25, -3.25, 1.5, -117.25, 3.25, 1.5, -117.25, 3.25, 1.5, -119.25, 3.25, 1.5, -119.25, 3.75, 1.5, -119.75, 3.75, 1.5, -125.25, 3.25, 1.5, -125.75, -3.25, 1.5, -127.75, -3.25, 1.5, -117.25, 3.25, 1.5, -125.75, 3.25, 1.5, -127.75, -3.25, 1.5, -127.75, 5.75, 1.5, -119.75, 32.5, 1.5, -119.75, 32.5, 1.5, -125.25, 5.75, 1.5, -125.25, 32.5, 1.5, -125.25, 32.5, 1.5, -119.75, 34.5, 1.5, -119.75, 35, 1.5, -119.25, 35, 1.5, -117.5, 41.25, 1.5, -117.5, 41.25, 1.5, -119.25, 41.75, 1.5, -119.75, 47.25, 1.5, -119.75, 47.25, 1.5, -125.25, 32.5, 1.5, -125.25, 34.5, 1.5, -119.75, 35, 1.5, -119.25, 41.75, 1.5, -119.75, 47.25, 1.5, -125.25, 35, 1.5, -119.25, 41.25, 1.5, -119.25, 41.75, 1.5, -119.75, 4.75, 10.5, -118.25, 4.75, 10.5, -114.75, 8.25, 10.5, -114.75, 8.25, 10.5, -118.25, 29.75, 10.5, -118.25, 29.75, 10.5, -114.75, 33.5, 10.5, -114.75, 33.5, 10.5, -118.25, 35, 1.5, -89.25, 41.25, 1.5, -89, 41.25, 1.5, -117.5, 35, 1.5, -117.5, -3.25, 1.5, -89.75, 3.25, 1.5, -89.75, 3.25, 1.5, -117.25, -3.25, 1.5, -117.25, 4.75, 9.75, -92.25, 4.75, 9.75, -88.5, 8.25, 9.75, -88.5, 8.25, 9.75, -92.25, 29.75, 10.5, -92.25, 29.75, 10.5, -88.5, 33.5, 10.5, -88.5, 33.5, 10.5, -92.25, -3, 1.5, -80.25, -3, 1.5, -78.5, 3.25, 1.5, -78.5, 3.25, 1.5, -80.25, 3.25, 1.5, -89.75, -3.25, 1.5, -89.75, -3.25, 1.5, -87.75, 3.25, 1.5, -87.5, 3.75, 1.5, -80.75, 5.5, 1.5, -80.75, 5.5, 1.5, -87, 3.75, 1.5, -87, -3.25, 1.5, -87.75, -3.75, 1.5, -87.25, -3.5, 1.5, -80.75, 3.25, 1.5, -80.25, 3.75, 1.5, -87, 3.25, 1.5, -87.5, -3.5, 1.5, -80.75, -3, 1.5, -80.25, 3.25, 1.5, -80.25, 3.25, 1.5, -80.25, 3.75, 1.5, -80.75, 3.75, 1.5, -87, -3.75, 1.5, -87.25, -5.75, 1.5, -87.25, -5.75, 1.5, -80.75, -3.5, 1.5, -80.75, 41.25, 1.5, -89, 35, 1.5, -89.25, 35, 1.5, -87.75, 34.25, 1.5, -87, 32.75, 1.5, -87, 33, 1.5, -80.75, 41.25, 1.5, -89, 35, 1.5, -87.75, 34.25, 1.5, -87, 33, 1.5, -80.75, 41.25, 1.5, -80.75, -5.75, 1.5, -80.75, -5.75, 1.5, -87.25, -76.25, 1.5, -87.25, -76.25, 1.5, -80.75, 5.5, 1.5, -80.75, 33, 1.5, -80.75, 32.75, 1.5, -87, 5.5, 1.5, -87, -25.25, 7.5, -68, -24.75, 7.5, -68, -24.75, 7.5, -74.25, -25.25, 7.5, -74.25, -75.25, 7.5, -79.25, -75.25, 7.5, -74.75, -25.75, 7.5, -74.75, -4.75, 7.5, -79.25, -25.75, 7.5, -74.75, -25.25, 7.5, -74.25, -24.75, 7.5, -74.25, -24.25, 7.5, -74.75, -24.25, 7.5, -74.75, -5.75, 7.5, -74.75, -4.75, 7.5, -79.25, -5.25, 7.5, -74.25, -5.25, 7.5, -68, -4.75, 7.5, -68, -4.75, 7.5, -79.25, -25.75, 7.5, -74.75, -24.25, 7.5, -74.75, -4.75, 7.5, -79.25, -5.75, 7.5, -74.75, -5.25, 7.5, -74.25, -4.75, 7.5, -79.25, 4.75, 6.5, -43.75, 49.25, 6.5, -43.75, 49.25, 6.5, -79.25, 4.75, 6.5, -79.25, -3, 1.5, -59.25, 3.25, 1.5, -59, 3.25, 1.5, -78.5, -3, 1.5, -78.5, -23, 1.5, -73, -23, 1.5, -62.75, -6.75, 1.5, -62.75, -6.75, 1.5, -73, -20.25, 7.5, -56.25, -17.75, 7.5, -56.25, -17.75, 7.5, -58.25, -20.25, 7.5, -58.25, -25.25, 7.5, -58.75, -20.75, 7.5, -58.75, -24.25, 7.5, -61.25, -20.75, 7.5, -58.75, -20.25, 7.5, -58.25, -17.75, 7.5, -58.25, -17.25, 7.5, -58.75, -15.25, 7.5, -58.75, -15.25, 7.5, -61.25, -20.75, 7.5, -58.75, -17.75, 7.5, -58.25, -17.25, 7.5, -58.75, -15.25, 7.5, -61.25, -24.25, 7.5, -61.25, -25.25, 7.5, -58.75, -24.25, 7.5, -61.25, -24.75, 7.5, -61.75, -24.75, 7.5, -61.75, -24.75, 7.5, -68, -25.25, 7.5, -68, -25.25, 7.5, -58.75, -4.75, 7.5, -68, -5.25, 7.5, -68, -5.25, 7.5, -61.75, -4.75, 7.5, -58.75, -15.25, 7.5, -58.75, -4.75, 7.5, -58.75, -5.75, 7.5, -61.25, -15.25, 7.5, -61.25, -4.75, 7.5, -58.75, -5.25, 7.5, -61.75, -5.75, 7.5, -61.25, 3.25, 1.5, -59, -3, 1.5, -59.25, -3, 1.5, -57.75, -3, 1.5, -28.25, -3, 1.5, -26.75, 3.25, 1.5, -27, -3.5, 1.5, -28.75, -3, 1.5, -28.25, 3.25, 1.5, -27, 3.25, 1.5, -59, -3, 1.5, -57.75, -3.75, 1.5, -57, -3.75, 1.5, -57, -16, 1.5, -57, -16, 1.5, -28.75, -3.5, 1.5, -28.75, -19.25, 7.5, -28.25, -19.25, 7.5, -27.25, -17.5, 7.5, -27.5, -20.25, 7.5, -28.75, -19.25, 7.5, -28.25, -17.5, 7.5, -27.5, -17.75, 7.5, -56.25, -20.25, 7.5, -56.25, 49.75, 6.5, -37.75, 51.75, 6.5, -37.75, 51.75, 6.5, -41.25, 49.75, 6.5, -41.25, 4.75, 6.5, -16.75, 49.25, 6.5, -16.75, 49.25, 6.5, -37.25, 4.75, 6.5, -43.75, 49.25, 6.5, -37.25, 49.75, 6.5, -37.75, 49.75, 6.5, -41.25, 49.25, 6.5, -41.75, 4.75, 6.5, -43.75, 49.25, 6.5, -41.75, 49.25, 6.5, -43.75, 4.75, 6.5, -43.75, 51.75, 6.5, -37.75, 77.25, 6.5, -37.75, 77.25, 6.5, -41.25, 51.75, 6.5, -41.25, 73.75, 7.5, -11.75, 81.25, 7.5, -11.75, 81.25, 7.5, -36.25, 73.75, 7.5, -36.25, 50.25, 1.5, -15, 48.75, 1.5, -15, 49, 1.5, -10.75, 51, 1.5, -15.75, 50.25, 1.5, -15, 49, 1.5, -10.75, 72.25, 1.5, -10.75, 72.25, 1.5, -36, 51, 1.5, -36, 51, 1.5, -15.75, 72.25, 1.5, -10.75, -17.5, 7.5, -27.5, -19.25, 7.5, -27.25, -19.25, 7.5, -22.75, -4.75, 7.5, -22.75, -4.75, 7.5, -27.25, 4, 1.5, -7.75, 4.25, 1.5, -15, 3.25, 1.5, -15.5, -4.25, 1.5, -7.75, 3.25, 1.5, -27, -3, 1.5, -26.75, -3, 1.5, -21.75, 3.25, 1.5, -15.5, 3.25, 1.5, -27, -3, 1.5, -21.75, -3.75, 1.5, -21, 3.25, 1.5, -15.5, -3.75, 1.5, -21, -4.75, 1.5, -21, -4.75, 1.5, -7.25, -4.25, 1.5, -7.75, -9, 1.5, -5.25, -9, 1.5, -3.5, -4.75, 1.5, -3.5, -9, 1.5, -5.25, -4.75, 1.5, -3.5, -4.75, 1.5, -7.25, -9.5, 1.5, -5.75, -9.5, 1.5, -5.75, -4.75, 1.5, -7.25, -4.75, 1.5, -21, -29.25, 1.5, -21.25, -29, 1.5, -5.75, 32.75, 1.5, -10.75, 34.25, 1.5, -10.75, 34, 1.5, -15, 32.25, 1.5, -10.25, 32.75, 1.5, -10.75, 34, 1.5, -15, 4.25, 1.5, -15, 4, 1.5, -7.75, 5, 1.5, -7.25, 5, 1.5, -7.25, 5, 1.5, 2.25, 32.25, 1.5, 2.25, 32.25, 1.5, -10.25, 34.25, 1.5, -10.75, 49, 1.5, -10.75, 48.75, 1.5, -15, 34, 1.5, -15, -30.25, 7.5, -2.75, -28.25, 7.5, -2.75, -28.25, 7.5, -4.25, -30.25, 7.5, -4.25, -30.75, 7.5, -4.75, -30.75, 7.5, -14.25, -33.25, 7.5, -14.25, -33.25, 7.5, -0.25, -30.75, 7.5, -2.25, -30.25, 7.5, -2.75, -30.25, 7.5, -4.25, -30.75, 7.5, -4.75, -33.25, 7.5, -0.25, -33.25, 7.5, -0.25, -30.75, 7.5, -0.25, -30.75, 7.5, -2.25, 81.25, 7.5, -11.75, 73.75, 7.5, -11.75, 73.75, 7.5, -9.75, 73.75, 7.5, -9.75, 72.75, 7.5, -9.25, 73, 7.5, -1.75, 81.25, 7.5, -1.75, 81.25, 7.5, -11.75, 72.25, 7.5, -1.25, 73, 7.5, -1.75, 72.75, 7.5, -9.25, 33.75, 7.5, -9.25, 33.75, 7.5, 4.25, 33.75, 7.5, 4.25, 72.25, 7.5, 4.25, 72.25, 7.5, -1.25, -3.75, 7.5, 15.75, -5.75, 7.5, 15.75, -5.75, 7.5, 18.25, -3.25, 7.5, 15.25, -3.75, 7.5, 15.75, -5.75, 7.5, 18.25, 3.25, 7.5, 18.25, 3.25, 7.5, -6.25, -3.25, 7.5, -6.25, -3.25, 7.5, 15.25, 3.25, 7.5, 18.25, -28.25, 7.5, -2.75, -10.75, 7.5, -2.75, -10.75, 7.5, -4.25, -28.25, 7.5, -4.25, -29, 1.5, -4, -29, 1.5, -2.75, -10.75, 1.5, -2.75, -10.75, 1.5, -4, -9.75, 1.5, -1, -11.5, 1.5, -1, -11.25, 1.5, 2.25, -9.5, 1.5, 2.25, -4.75, 1.5, -3.5, -9, 1.5, -3.5, -9, 1.5, -1.75, -9.75, 1.5, -1, -9.5, 1.5, 2.25, -9, 1.5, 2.75, -4.75, 1.5, 6, -4.75, 1.5, -3.5, -9, 1.5, -1.75, -9, 1.5, 2.75, -9, 1.5, 5.75, -4.75, 1.5, 6, -29, 1.5, 6, -27.75, 1.5, 5.75, -27.75, 1.5, 2.75, -29, 1.5, -1, -27.25, 1.5, 2.25, -11.25, 1.5, 2.25, -11.5, 1.5, -1, -29, 1.5, -1, -29, 1.5, -1, -27.75, 1.5, 2.75, -27.25, 1.5, 2.25, -28.25, 7.5, 18.25, -28.25, 7.5, 15.75, -30.25, 7.5, 15.75, -28.25, 7.5, 18.25, -30.25, 7.5, 15.75, -30.75, 7.5, 15.25, -33.25, 7.5, 18.25, -30.75, 7.5, 15.25, -30.75, 7.5, -0.25, -33.25, 7.5, -0.25, -33.25, 7.5, 18.25, -26.25, 7.5, 3.75, -26.25, 7.5, 6.25, -10.75, 7.5, 6.25, -10.75, 7.5, 3.75, -26, 1.5, 4, -26, 1.5, 6.25, -10.75, 1.5, 6.25, -10.75, 1.5, 4, -27.75, 1.5, 7.5, -27.75, 1.5, 5.75, -29, 1.5, 6, -29, 1.5, 14.25, -4.75, 1.5, 6, -9, 1.5, 5.75, -9, 1.5, 7.25, -4.75, 1.5, 6, -9, 1.5, 7.25, -9.75, 1.5, 8, -4.75, 1.5, 14.25, -29, 1.5, 14.25, -4.75, 1.5, 14.25, -9.75, 1.5, 8, -27.25, 1.5, 8, -27.25, 1.5, 8, -27.75, 1.5, 7.5, -29, 1.5, 14.25, -28.25, 7.5, 18.25, -5.75, 7.5, 18.25, -5.75, 7.5, 15.75, -28.25, 7.5, 15.75)
 polygons = [PackedInt32Array(3, 2, 0), PackedInt32Array(0, 2, 1), PackedInt32Array(7, 6, 4), PackedInt32Array(4, 6, 5), PackedInt32Array(11, 10, 8), PackedInt32Array(8, 10, 9), PackedInt32Array(13, 12, 14), PackedInt32Array(14, 12, 15), PackedInt32Array(15, 12, 16), PackedInt32Array(20, 19, 17), PackedInt32Array(17, 19, 18), PackedInt32Array(22, 21, 23), PackedInt32Array(23, 21, 24), PackedInt32Array(24, 21, 25), PackedInt32Array(27, 26, 28), PackedInt32Array(28, 26, 29), PackedInt32Array(29, 26, 30), PackedInt32Array(30, 26, 31), PackedInt32Array(35, 34, 32), PackedInt32Array(32, 34, 33), PackedInt32Array(39, 38, 36), PackedInt32Array(36, 38, 37), PackedInt32Array(42, 41, 40), PackedInt32Array(44, 43, 45), PackedInt32Array(45, 43, 46), PackedInt32Array(46, 43, 48), PackedInt32Array(46, 48, 47), PackedInt32Array(51, 50, 49), PackedInt32Array(55, 54, 52), PackedInt32Array(52, 54, 53), PackedInt32Array(58, 57, 56), PackedInt32Array(60, 59, 61), PackedInt32Array(61, 59, 62), PackedInt32Array(62, 59, 64), PackedInt32Array(62, 64, 63), PackedInt32Array(67, 66, 65), PackedInt32Array(71, 70, 68), PackedInt32Array(68, 70, 69), PackedInt32Array(74, 73, 72), PackedInt32Array(78, 77, 75), PackedInt32Array(75, 77, 76), PackedInt32Array(81, 80, 79), PackedInt32Array(83, 82, 84), PackedInt32Array(84, 82, 85), PackedInt32Array(85, 82, 86), PackedInt32Array(89, 88, 87), PackedInt32Array(93, 92, 90), PackedInt32Array(90, 92, 91), PackedInt32Array(97, 96, 94), PackedInt32Array(94, 96, 95), PackedInt32Array(101, 100, 98), PackedInt32Array(98, 100, 99), PackedInt32Array(105, 104, 102), PackedInt32Array(102, 104, 103), PackedInt32Array(109, 108, 106), PackedInt32Array(106, 108, 107), PackedInt32Array(113, 112, 110), PackedInt32Array(110, 112, 111), PackedInt32Array(117, 116, 114), PackedInt32Array(114, 116, 115), PackedInt32Array(119, 118, 120), PackedInt32Array(120, 118, 121), PackedInt32Array(125, 124, 122), PackedInt32Array(122, 124, 123), PackedInt32Array(126, 131, 127), PackedInt32Array(127, 131, 130), PackedInt32Array(127, 130, 128), PackedInt32Array(128, 130, 129), PackedInt32Array(132, 134, 133), PackedInt32Array(135, 137, 136), PackedInt32Array(139, 138, 140), PackedInt32Array(140, 138, 141), PackedInt32Array(144, 143, 142), PackedInt32Array(147, 146, 145), PackedInt32Array(149, 148, 150), PackedInt32Array(150, 148, 152), PackedInt32Array(150, 152, 151), PackedInt32Array(156, 155, 153), PackedInt32Array(153, 155, 154), PackedInt32Array(160, 159, 157), PackedInt32Array(157, 159, 158), PackedInt32Array(164, 163, 161), PackedInt32Array(161, 163, 162), PackedInt32Array(166, 165, 167), PackedInt32Array(167, 165, 168), PackedInt32Array(170, 169, 171), PackedInt32Array(171, 169, 172), PackedInt32Array(175, 174, 173), PackedInt32Array(177, 176, 178), PackedInt32Array(178, 176, 179), PackedInt32Array(182, 181, 180), PackedInt32Array(183, 185, 184), PackedInt32Array(189, 188, 186), PackedInt32Array(186, 188, 187), PackedInt32Array(193, 192, 190), PackedInt32Array(190, 192, 191), PackedInt32Array(197, 196, 194), PackedInt32Array(194, 196, 195), PackedInt32Array(201, 200, 198), PackedInt32Array(198, 200, 199), PackedInt32Array(204, 203, 202), PackedInt32Array(207, 206, 205), PackedInt32Array(210, 209, 208), PackedInt32Array(212, 211, 213), PackedInt32Array(213, 211, 214), PackedInt32Array(214, 211, 215), PackedInt32Array(218, 217, 216), PackedInt32Array(220, 219, 221), PackedInt32Array(221, 219, 222), PackedInt32Array(224, 223, 225), PackedInt32Array(225, 223, 226), PackedInt32Array(230, 229, 227), PackedInt32Array(227, 229, 228), PackedInt32Array(233, 232, 231), PackedInt32Array(236, 235, 234), PackedInt32Array(239, 238, 237), PackedInt32Array(241, 240, 242), PackedInt32Array(242, 240, 245), PackedInt32Array(242, 245, 244), PackedInt32Array(242, 244, 243), PackedInt32Array(247, 246, 248), PackedInt32Array(248, 246, 249), PackedInt32Array(252, 251, 250), PackedInt32Array(254, 253, 255), PackedInt32Array(255, 253, 256), PackedInt32Array(256, 253, 257), PackedInt32Array(261, 260, 258), PackedInt32Array(258, 260, 259), PackedInt32Array(263, 262, 264), PackedInt32Array(264, 262, 265), PackedInt32Array(267, 266, 268), PackedInt32Array(268, 266, 269), PackedInt32Array(269, 266, 270), PackedInt32Array(273, 272, 271), PackedInt32Array(277, 276, 274), PackedInt32Array(274, 276, 275), PackedInt32Array(281, 280, 278), PackedInt32Array(278, 280, 279), PackedInt32Array(284, 283, 282), PackedInt32Array(286, 285, 287), PackedInt32Array(287, 285, 288), PackedInt32Array(290, 289, 291), PackedInt32Array(291, 289, 292), PackedInt32Array(294, 293, 295), PackedInt32Array(295, 293, 297), PackedInt32Array(295, 297, 296), PackedInt32Array(299, 298, 300), PackedInt32Array(300, 298, 301), PackedInt32Array(304, 303, 302), PackedInt32Array(307, 306, 308), PackedInt32Array(308, 306, 305), PackedInt32Array(310, 309, 311), PackedInt32Array(311, 309, 313), PackedInt32Array(311, 313, 312), PackedInt32Array(316, 315, 314), PackedInt32Array(320, 319, 317), PackedInt32Array(317, 319, 318), PackedInt32Array(322, 321, 323), PackedInt32Array(323, 321, 325), PackedInt32Array(323, 325, 324), PackedInt32Array(328, 327, 326), PackedInt32Array(330, 329, 331), PackedInt32Array(331, 329, 334), PackedInt32Array(331, 334, 333), PackedInt32Array(331, 333, 332), PackedInt32Array(336, 335, 337), PackedInt32Array(337, 335, 338), PackedInt32Array(342, 341, 339), PackedInt32Array(339, 341, 340), PackedInt32Array(346, 345, 343), PackedInt32Array(343, 345, 344), PackedInt32Array(348, 347, 349), PackedInt32Array(349, 347, 350), PackedInt32Array(352, 351, 353), PackedInt32Array(353, 351, 354), PackedInt32Array(354, 351, 355), PackedInt32Array(358, 357, 356), PackedInt32Array(361, 360, 359), PackedInt32Array(363, 362, 364), PackedInt32Array(364, 362, 365), PackedInt32Array(365, 362, 366), PackedInt32Array(368, 367, 369), PackedInt32Array(369, 367, 370), PackedInt32Array(370, 367, 371), PackedInt32Array(374, 373, 372), PackedInt32Array(377, 376, 375), PackedInt32Array(379, 378, 380), PackedInt32Array(380, 378, 381), PackedInt32Array(383, 382, 384), PackedInt32Array(384, 382, 385), PackedInt32Array(389, 388, 386), PackedInt32Array(386, 388, 387), PackedInt32Array(393, 392, 390), PackedInt32Array(390, 392, 391), PackedInt32Array(397, 396, 394), PackedInt32Array(394, 396, 395), PackedInt32Array(400, 399, 398), PackedInt32Array(402, 401, 403), PackedInt32Array(403, 401, 406), PackedInt32Array(403, 406, 405), PackedInt32Array(403, 405, 404), PackedInt32Array(409, 408, 407), PackedInt32Array(411, 410, 412), PackedInt32Array(412, 410, 413), PackedInt32Array(415, 414, 416), PackedInt32Array(416, 414, 417), PackedInt32Array(418, 420, 419), PackedInt32Array(423, 422, 421), PackedInt32Array(425, 424, 426), PackedInt32Array(426, 424, 427), PackedInt32Array(429, 428, 430), PackedInt32Array(430, 428, 431), PackedInt32Array(435, 434, 432), PackedInt32Array(432, 434, 433), PackedInt32Array(439, 438, 436), PackedInt32Array(436, 438, 437), PackedInt32Array(441, 440, 442), PackedInt32Array(442, 440, 443), PackedInt32Array(446, 445, 444), PackedInt32Array(448, 447, 449), PackedInt32Array(449, 447, 450), PackedInt32Array(454, 453, 451), PackedInt32Array(451, 453, 452), PackedInt32Array(457, 456, 455), PackedInt32Array(461, 460, 458), PackedInt32Array(458, 460, 459)]
 agent_radius = 0.6
+
+[sub_resource type="GDScript" id="GDScript_psd3x"]
+script/source = "@tool
+class_name QodotMap
+extends QodotNode3D
+
+## Builds Godot scenes from .map files
+##
+## A QodotMap node lets you define the source file for a map, as well as specify
+## the definitions for entities, textures, and materials that appear in the map.
+## To use this node, select an instance of the node in the Godot editor and
+## select \"Quick Build\", \"Full Build\", or \"Unwrap UV2\" from the toolbar.
+## Alternatively, call [method manual_build] from code.
+##
+## @tutorial: https://qodotplugin.github.io/docs/beginner's-guide-to-qodot/
+
+## Force reinitialization of Qodot on map build
+const DEBUG := false
+## How long to wait between child/owner batches
+const YIELD_DURATION := 0.0
+
+## Emitted when the build process successfully completes
+signal build_complete()
+## Emitted when the build process finishes a step. [code]progress[/code] is from 0.0-1.0
+signal build_progress(step, progress)
+## Emitted when the build process fails
+signal build_failed()
+
+## Emitted when UV2 unwrapping is completed
+signal unwrap_uv2_complete()
+
+@export_category(\"Map\")
+## Trenchbroom Map file to build a scene from
+@export_global_file(\"*.map\") var map_file := \"\"
+## Ratio between Trenchbroom units in the .map file and Godot units.
+## An inverse scale factor of 16 would cause 16 Trenchbroom units to correspond to 1 Godot unit. See [url=https://qodotplugin.github.io/docs/geometry.html#scale]Scale[/url] in the Qodot documentation.
+@export var inverse_scale_factor := 16.0
+@export_category(\"Entities\")
+## [QodotFGDFile] for the map.
+## This resource will translate between Trenchbroom classnames and Godot scripts/scenes. See [url=https://qodotplugin.github.io/docs/entities/]Entities[/url] in the Qodot manual.
+@export var entity_fgd: QodotFGDFile = load(\"res://addons/qodot/game_definitions/fgd/qodot_fgd.tres\")
+@export_category(\"Textures\")
+## Base directory for textures. When building materials, Qodot will search this directory for texture files matching the textures assigned to Trenchbroom faces.
+@export_dir var base_texture_dir := \"res://textures\"
+## File extensions to search for texture data.
+@export var texture_file_extensions := PackedStringArray([\"png\", \"jpg\", \"jpeg\", \"bmp\"])
+## Optional. List of worldspawn layers.
+## A worldspawn layer converts any brush of a certain texture to a certain kind of node. See example 1-2.
+@export var worldspawn_layers: Array[QodotWorldspawnLayer]
+## Optional. Path for the clip texture, relative to [member base_texture_dir].
+## Brushes textured with the clip texture will be turned into invisible but solid volumes.
+@export var brush_clip_texture := \"special/clip\"
+## Optional. Path for the skip texture, relative to [member base_texture_dir].
+## Faces textured with the skip texture will not be rendered.
+@export var face_skip_texture := \"special/skip\"
+## Optional. WAD files to pull textures from.
+## Quake engine games are distributed with .WAD files, which are packed texture libraries. Qodot can import these files as [QuakeWadFile]s.
+@export var texture_wads: Array[QuakeWadFile]
+@export_category(\"Materials\")
+## File extensions to search for Material definitions
+@export var material_file_extension := \"tres\"
+## If true, all materials will be unshaded, i.e. will ignore light. Also known as \"fullbright\".
+@export var unshaded := false
+## Material used as template when generating missing materials.
+@export var default_material : Material = StandardMaterial3D.new()
+## Default albedo texture (used when [member default_material] is a [ShaderMaterial])
+@export var default_material_albedo_uniform := \"\"
+@export_category(\"UV Unwrap\")
+## Texel size for UV2 unwrapping.
+## A texel size of 1 will lead to a 1:1 correspondence between texture texels and lightmap texels. Larger values will produce less detailed lightmaps. To conserve memory and filesize, use the largest value that still looks good.
+@export var uv_unwrap_texel_size := 1.0
+@export_category(\"Build\")
+## If true, print profiling data before and after each build step
+@export var print_profiling_data := false
+## If true, Qodot will build a hierarchy from Trenchbroom groups, each group being a node. Otherwise, Qodot nodes will ignore Trenchbroom groups and have a flat structure.
+@export var use_trenchbroom_group_hierarchy := false
+## If true, stop the whole editor until build is complete
+@export var block_until_complete := false
+## How many nodes to set the owner of, or add children of, at once. Higher values may lead to quicker build times, but a less responsive editor.
+@export var set_owner_batch_size := 1000
+
+# Build context variables
+var qodot = null
+
+var profile_timestamps := {}
+
+var add_child_array := []
+var set_owner_array := []
+
+var should_add_children := true
+var should_set_owners := true
+
+var texture_list := []
+var texture_loader = null
+var texture_dict := {}
+var texture_size_dict := {}
+var material_dict := {}
+var entity_definitions := {}
+var entity_dicts := []
+var worldspawn_layer_dicts := []
+var entity_mesh_dict := {}
+var worldspawn_layer_mesh_dict := {}
+var entity_nodes := []
+var worldspawn_layer_nodes := []
+var entity_mesh_instances := {}
+var entity_occluder_instances := {}
+var worldspawn_layer_mesh_instances := {}
+var entity_collision_shapes := []
+var worldspawn_layer_collision_shapes := []
+
+# Overrides
+func _ready() -> void:
+	if not DEBUG:
+		return
+	
+	if not Engine.is_editor_hint():
+		if verify_parameters():
+			build_map()
+
+# Utility
+## Verify that Qodot is functioning and that [member map_file] exists. If so, build the map. If not, signal [signal build_failed]
+func verify_and_build():
+	if verify_parameters():
+		build_map()
+	else:
+		emit_signal(\"build_failed\")
+
+## Build the map.
+func manual_build():
+	should_add_children = false
+	should_set_owners = false
+	verify_and_build()
+
+## Return true if parameters are valid; Qodot should be functioning and [member map_file] should exist.
+func verify_parameters():
+	if not qodot or DEBUG:
+		qodot = load(\"res://addons/qodot/src/core/qodot.gd\").new()
+	
+	if not qodot:
+		push_error(\"Error: Failed to load qodot.\")
+		return false
+	
+	if map_file == \"\":
+		push_error(\"Error: Map file not set\")
+		return false
+	
+	if not FileAccess.file_exists(map_file):
+		push_error(\"Error: No such file %s\" % map_file)
+		return false
+	
+	return true
+
+## Reset member variables that affect the current build
+func reset_build_context():
+	add_child_array = []
+	set_owner_array = []
+	
+	texture_list = []
+	texture_loader = null
+	texture_dict = {}
+	texture_size_dict = {}
+	material_dict = {}
+	entity_definitions = {}
+	entity_dicts = []
+	worldspawn_layer_dicts = []
+	entity_mesh_dict = {}
+	worldspawn_layer_mesh_dict = {}
+	entity_nodes = []
+	worldspawn_layer_nodes = []
+	entity_mesh_instances = {}
+	entity_occluder_instances = {}
+	worldspawn_layer_mesh_instances = {}
+	entity_collision_shapes = []
+	worldspawn_layer_collision_shapes = []
+	
+	build_step_index = 0
+	build_step_count = 0
+	
+	if qodot:
+		qodot = load(\"res://addons/qodot/src/core/qodot.gd\").new()
+		
+## Record the start time of a build step for profiling
+func start_profile(item_name: String) -> void:
+	if print_profiling_data:
+		print(item_name)
+		profile_timestamps[item_name] = Time.get_unix_time_from_system()
+
+## Finish profiling for a build step; print associated timing data
+func stop_profile(item_name: String) -> void:
+	if print_profiling_data:
+		if item_name in profile_timestamps:
+			var delta: float = Time.get_unix_time_from_system() - profile_timestamps[item_name]
+			print(\"Done in %s sec.\\n\" % snapped(delta, 0.01))
+			profile_timestamps.erase(item_name)
+
+## Run a build step. [code]step_name[/code] is the method corresponding to the step, [code]params[/code] are parameters to pass to the step, and [code]func_name[/code] does nothing.
+func run_build_step(step_name: String, params: Array = [], func_name: String = \"\"):
+	start_profile(step_name)
+	if func_name == \"\":
+		func_name = step_name
+	var result = callv(step_name, params)
+	stop_profile(step_name)
+	return result
+
+## Add [code]node[/code] as a child of parent, or as a child of [code]below[/code] if non-null. Also queue for ownership assignment.
+func add_child_editor(parent, node, below = null) -> void:
+	var prev_parent = node.get_parent()
+	if prev_parent:
+		prev_parent.remove_child(node)
+	
+	if below:
+		below.add_sibling(node)
+	else:
+		parent.add_child(node)
+	
+	set_owner_array.append(node)
+
+## Set the owner of [code]node[/code] to the current scene.
+func set_owner_editor(node):
+	var tree := get_tree()
+	
+	if not tree:
+		return
+	
+	var edited_scene_root := tree.get_edited_scene_root()
+	
+	if not edited_scene_root:
+		return
+	
+	node.set_owner(edited_scene_root)
+
+var build_step_index := 0
+var build_step_count := 0
+var build_steps := []
+var post_attach_steps := []
+
+## Register a build step.
+## [code]build_step[/code] is a string that corresponds to a method on this class, [code]arguments[/code] a list of arguments to pass to this method, and [code]target[/code] is a property on this class to save the return value of the build step in. If [code]post_attach[/code] is true, the step will be run after the scene hierarchy is completed.
+func register_build_step(build_step: String, arguments := [], target := \"\", post_attach := false) -> void:
+	(post_attach_steps if post_attach else build_steps).append([build_step, arguments, target])
+	build_step_count += 1
+
+## Run all build steps. Emits [signal build_progress] after each step.
+## If [code]post_attach[/code] is true, run post-attach steps instead and signal [signal build_complete] when finished.
+func run_build_steps(post_attach := false) -> void:
+	var target_array = post_attach_steps if post_attach else build_steps
+	
+	while target_array.size() > 0:
+		var build_step = target_array.pop_front()
+		emit_signal(\"build_progress\", build_step[0], float(build_step_index + 1) / float(build_step_count))
+		
+		var scene_tree := get_tree()
+		if scene_tree and not block_until_complete:
+			await get_tree().create_timer(YIELD_DURATION).timeout
+		
+		var result = run_build_step(build_step[0], build_step[1])
+		var target = build_step[2]
+		if target != \"\":
+			set(target, result)
+			
+		build_step_index += 1
+		
+		if scene_tree and not block_until_complete:
+			await get_tree().create_timer(YIELD_DURATION).timeout
+
+	if post_attach:
+		_build_complete()
+	else:
+		start_profile('add_children')
+		add_children()
+
+## Register all steps for the build. See [method register_build_step] and [method run_build_steps]
+func register_build_steps() -> void:
+	register_build_step('remove_children')
+	register_build_step('load_map')
+	register_build_step('fetch_texture_list', [], 'texture_list')
+	register_build_step('init_texture_loader', [], 'texture_loader')
+	register_build_step('load_textures', [], 'texture_dict')
+	register_build_step('build_texture_size_dict', [], 'texture_size_dict')
+	register_build_step('build_materials', [], 'material_dict')
+	register_build_step('fetch_entity_definitions', [], 'entity_definitions')
+	register_build_step('set_qodot_entity_definitions', [])
+	register_build_step('set_qodot_worldspawn_layers', [])
+	register_build_step('generate_geometry', [])
+	register_build_step('fetch_entity_dicts', [], 'entity_dicts')
+	register_build_step('fetch_worldspawn_layer_dicts', [], 'worldspawn_layer_dicts')
+	register_build_step('build_entity_nodes', [], 'entity_nodes')
+	register_build_step('build_worldspawn_layer_nodes', [], 'worldspawn_layer_nodes')
+	register_build_step('resolve_group_hierarchy', [])
+	register_build_step('build_entity_mesh_dict', [], 'entity_mesh_dict')
+	register_build_step('build_worldspawn_layer_mesh_dict', [], 'worldspawn_layer_mesh_dict')
+	register_build_step('build_entity_mesh_instances', [], 'entity_mesh_instances')
+	register_build_step('build_entity_occluder_instances', [], 'entity_occluder_instances')
+	register_build_step('build_worldspawn_layer_mesh_instances', [], 'worldspawn_layer_mesh_instances')
+	register_build_step('build_entity_collision_shape_nodes', [], 'entity_collision_shapes')
+	register_build_step('build_worldspawn_layer_collision_shape_nodes', [], 'worldspawn_layer_collision_shapes')
+
+## Register all post-attach steps for the build. See [method register_build_step] and [method run_build_steps]
+func register_post_attach_steps() -> void:
+	register_build_step('build_entity_collision_shapes', [], \"\", true)
+	register_build_step('build_worldspawn_layer_collision_shapes', [], \"\", true)
+	register_build_step('apply_entity_meshes', [], \"\", true)
+	register_build_step('apply_entity_occluders', [], \"\", true)
+	register_build_step('apply_worldspawn_layer_meshes', [], \"\", true)
+	register_build_step('apply_properties', [], \"\", true)
+	register_build_step('connect_signals', [], \"\", true)
+	register_build_step('remove_transient_nodes', [], \"\", true)
+
+# Actions
+## Build the map
+func build_map() -> void:
+	reset_build_context()
+	
+	print('Building %s\\n' % map_file)
+	start_profile('build_map')
+	
+	register_build_steps()
+	register_post_attach_steps()
+	
+	run_build_steps()
+
+## Recursively unwrap UV2s for [code]node[/code] and its children, in preparation for baked lighting.
+func unwrap_uv2(node: Node = null) -> void:
+	var target_node = null
+	
+	if node:
+		target_node = node
+	else:
+		target_node = self
+		print(\"Unwrapping mesh UV2s\")
+	
+	if target_node is MeshInstance3D:
+		var mesh = target_node.get_mesh()
+		if mesh is ArrayMesh:
+			mesh.lightmap_unwrap(Transform3D.IDENTITY, uv_unwrap_texel_size / inverse_scale_factor)
+	
+	for child in target_node.get_children():
+		unwrap_uv2(child)
+	
+	if not node:
+		print(\"Unwrap complete\")
+		emit_signal(\"unwrap_uv2_complete\")
+
+# Build Steps
+## Recursively remove and delete all children of this node
+func remove_children() -> void:
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+
+## Parse and load [member map_file]
+func load_map() -> void:
+	var file: String = map_file
+	qodot.load_map(file)
+
+## Get textures found in [member map_file]
+func fetch_texture_list() -> Array:
+	return qodot.get_texture_list() as Array
+
+## Initialize texture loader, allowing textures in [member base_texture_dir] and [member texture_wads] to be turned into materials
+func init_texture_loader() -> QodotTextureLoader:
+	var tex_ldr := QodotTextureLoader.new(
+		base_texture_dir,
+		texture_file_extensions,
+		texture_wads
+	)
+	tex_ldr.unshaded = unshaded
+	return tex_ldr
+
+## Build a dictionary from Trenchbroom texture names to their corresponding Texture2D resources in Godot
+func load_textures() -> Dictionary:
+	return texture_loader.load_textures(texture_list) as Dictionary
+
+## Build a dictionary from Trenchbroom texture names to Godot materials
+func build_materials() -> Dictionary:
+	return texture_loader.create_materials(texture_list, material_file_extension, default_material, default_material_albedo_uniform)
+
+## Collect entity definitions from [member entity_fgd], as a dictionary from Trenchbroom classnames to entity definitions
+func fetch_entity_definitions() -> Dictionary:
+	return entity_fgd.get_entity_definitions()
+
+## Hand the Qodot C# core the entity definitions
+func set_qodot_entity_definitions() -> void:
+	qodot.set_entity_definitions(build_libmap_entity_definitions(entity_definitions))
+
+## Hand the Qodot C# core the worldspawn layer definitions. See [member worldspawn_layers]
+func set_qodot_worldspawn_layers() -> void:
+	qodot.set_worldspawn_layers(build_libmap_worldspawn_layers(worldspawn_layers))
+
+## Generate geometry from map file
+func generate_geometry() -> void:
+	qodot.generate_geometry(texture_size_dict);
+
+## Get a list of dictionaries representing each entity from the Qodot C# core
+func fetch_entity_dicts() -> Array:
+	return qodot.get_entity_dicts()
+
+## Get a list of dictionaries representing each worldspawn layer from the Qodot C# core
+func fetch_worldspawn_layer_dicts() -> Array:
+	var layer_dicts = qodot.get_worldspawn_layer_dicts()
+	return layer_dicts if layer_dicts else []
+
+## Build a dictionary from Trenchbroom textures to the sizes of their corresponding Godot textures
+func build_texture_size_dict() -> Dictionary:
+	var texture_size_dict := {}
+	
+	for tex_key in texture_dict:
+		var texture := texture_dict[tex_key] as Texture2D
+		if texture:
+			texture_size_dict[tex_key] = texture.get_size()
+		else:
+			texture_size_dict[tex_key] = Vector2.ONE
+	
+	return texture_size_dict
+
+## Marshall Qodot FGD definitions for transfer to libmap
+func build_libmap_entity_definitions(entity_definitions: Dictionary) -> Dictionary:
+	var libmap_entity_definitions = {}
+	for classname in entity_definitions:
+		libmap_entity_definitions[classname] = {}
+		if entity_definitions[classname] is QodotFGDSolidClass:
+			libmap_entity_definitions[classname]['spawn_type'] = entity_definitions[classname].spawn_type
+	return libmap_entity_definitions
+
+## Marshall worldspawn layer definitions for transfer to libmap
+func build_libmap_worldspawn_layers(worldspawn_layers: Array) -> Array:
+	var libmap_worldspawn_layers := []
+	for worldspawn_layer in worldspawn_layers:
+		libmap_worldspawn_layers.append({
+			'name': worldspawn_layer.name,
+			'texture': worldspawn_layer.texture,
+			'node_class': worldspawn_layer.node_class,
+			'build_visuals': worldspawn_layer.build_visuals,
+			'collision_shape_type': worldspawn_layer.collision_shape_type,
+			'script_class': worldspawn_layer.script_class
+		})
+	return libmap_worldspawn_layers
+
+## Build nodes from the entities in [member entity_dicts]
+func build_entity_nodes() -> Array:
+	var entity_nodes := []
+
+	for entity_idx in range(0, entity_dicts.size()):
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var properties := entity_dict['properties'] as Dictionary
+		
+		var node = QodotEntity.new()
+		var node_name = \"entity_%s\" % entity_idx
+		
+		var should_add_child = should_add_children
+		
+		if 'classname' in properties:
+			var classname = properties['classname']
+			node_name += \"_\" + classname
+			if classname in entity_definitions:
+				var entity_definition := entity_definitions[classname] as QodotFGDClass
+				if entity_definition is QodotFGDSolidClass:
+					if entity_definition.spawn_type == QodotFGDSolidClass.SpawnType.MERGE_WORLDSPAWN:
+						entity_nodes.append(null)
+						continue
+					elif use_trenchbroom_group_hierarchy and entity_definition.spawn_type == QodotFGDSolidClass.SpawnType.GROUP:
+						should_add_child = false
+					if entity_definition.node_class != \"\":
+						node.queue_free()
+						node = ClassDB.instantiate(entity_definition.node_class)
+				elif entity_definition is QodotFGDPointClass:
+					if entity_definition.scene_file:
+						var flag = PackedScene.GEN_EDIT_STATE_DISABLED
+						if Engine.is_editor_hint():
+							flag = PackedScene.GEN_EDIT_STATE_INSTANCE
+						node.queue_free()
+						node = entity_definition.scene_file.instantiate(flag)
+					elif entity_definition.node_class != \"\":
+						node.queue_free()
+						node = ClassDB.instantiate(entity_definition.node_class)
+					if 'rotation_degrees' in node and entity_definition.apply_rotation_on_map_build:
+						var angles := Vector3.ZERO
+						if 'angles' in properties or 'mangle' in properties:
+							var key := 'angles' if 'angles' in properties else 'mangle'
+							var angles_raw = properties[key]
+							if not angles_raw is Vector3:
+								angles_raw = angles_raw.split_floats(' ')
+							if angles_raw.size() > 2:
+								angles = Vector3(-angles_raw[0], angles_raw[1], -angles_raw[2])
+								if key == 'mangle':
+									if entity_definition.classname.begins_with('light'):
+										angles = Vector3(angles_raw[1], angles_raw[0], -angles_raw[2])
+									elif entity_definition.classname == 'info_intermission':
+										angles = Vector3(angles_raw[0], angles_raw[1], -angles_raw[2])
+							else:
+								push_error(\"Invalid vector format for \\'\" + key + \"\\' in entity \\'\" + classname + \"\\'\")
+						elif 'angle' in properties:
+							var angle = properties['angle']
+							if not angle is float:
+								angle = float(angle)
+							angles.y += angle
+						angles.y += 180
+						node.rotation_degrees = angles
+				if entity_definition.script_class:
+					node.set_script(entity_definition.script_class)
+		
+		node.name = node_name
+		
+		if 'origin' in properties:
+			var origin_vec = Vector3.ZERO
+			var origin_comps = properties['origin'].split_floats(' ')
+			if origin_comps.size() > 2:
+				origin_vec = Vector3(origin_comps[1], origin_comps[2], origin_comps[0])
+			else:
+				push_error(\"Invalid vector format for \\'origin\\' in \" + node.name)
+			if \"position\" in node:
+				if node.position is Vector3:
+					node.position = origin_vec / inverse_scale_factor
+				elif node.position is Vector2:
+					node.position = Vector2(origin_vec.z, -origin_vec.y)
+		else:
+			if entity_idx != 0 and \"position\" in node:
+				if node.position is Vector3:
+					node.position = entity_dict['center'] / inverse_scale_factor
+		
+		entity_nodes.append(node)
+		
+		if should_add_child:
+			queue_add_child(self, node)
+	
+	return entity_nodes
+
+## Build nodes from the worldspawn layers in [member worldspawn_layers]
+func build_worldspawn_layer_nodes() -> Array:
+	var worldspawn_layer_nodes := []
+	
+	for worldspawn_layer in worldspawn_layers:
+		var node = ClassDB.instantiate(worldspawn_layer.node_class)
+		node.name = \"entity_0_\" + worldspawn_layer.name
+		if worldspawn_layer.script_class:
+			node.set_script(worldspawn_layer.script_class)
+		
+		worldspawn_layer_nodes.append(node)
+		queue_add_child(self, node, entity_nodes[0])
+	
+	return worldspawn_layer_nodes
+
+## Resolve entity group hierarchy, turning Trenchbroom groups into nodes and queueing their contents to be added to said nodes as children
+func resolve_group_hierarchy() -> void:
+	if not use_trenchbroom_group_hierarchy:
+		return
+	
+	var group_entities := {}
+	var owner_entities := {}
+	
+	# Gather group entities and their owning children
+	for node_idx in range(0, entity_nodes.size()):
+		var node = entity_nodes[node_idx]
+		var properties = entity_dicts[node_idx]['properties']
+		
+		if not properties: continue
+		
+		if not '_tb_id' in properties and not '_tb_group' in properties:
+			continue
+		
+		if not 'classname' in properties: continue
+		var classname = properties['classname']
+		
+		if not classname in entity_definitions: continue
+		var entity_definition = entity_definitions[classname]
+		# TODO: Add clause on this line for point entities, which do not have a spawn type. Add as child of the current group owner.
+		if entity_definition.spawn_type == QodotFGDSolidClass.SpawnType.GROUP:
+			group_entities[node_idx] = node
+		else:
+			owner_entities[node_idx] = node
+	
+	var group_to_entity_map := {}
+	
+	for node_idx in owner_entities:
+		var node = owner_entities[node_idx]
+		var properties = entity_dicts[node_idx]['properties']
+		var tb_group = properties['_tb_group']
+		
+		var parent_idx = null
+		var parent = null
+		var parent_properties = null
+		for group_idx in group_entities:
+			var group_entity = group_entities[group_idx]
+			var group_properties = entity_dicts[group_idx]['properties']
+			if group_properties['_tb_id'] == tb_group:
+				parent_idx = group_idx
+				parent = group_entity
+				parent_properties = group_properties
+				break
+		
+		if parent:
+			group_to_entity_map[parent_idx] = node_idx
+	
+	var group_to_group_map := {}
+	
+	for node_idx in group_entities:
+		var node = group_entities[node_idx]
+		var properties = entity_dicts[node_idx]['properties']
+		
+		if not '_tb_group' in properties:
+			continue
+		
+		var tb_group = properties['_tb_group']
+		
+		var parent_idx = null
+		var parent = null
+		var parent_properties = null
+		for group_idx in group_entities:
+			var group_entity = group_entities[group_idx]
+			var group_properties = entity_dicts[group_idx]['properties']
+			if group_properties['_tb_id'] == tb_group:
+				parent_idx = group_idx
+				parent = group_entity
+				parent_properties = group_properties
+				break
+		
+		if parent:
+			group_to_group_map[parent_idx] = node_idx
+	
+	for parent_idx in group_to_group_map:
+		var child_idx = group_to_group_map[parent_idx]
+		
+		var parent_entity_idx = group_to_entity_map[parent_idx]
+		var child_entity_idx = group_to_entity_map[child_idx]
+		
+		var parent = entity_nodes[parent_entity_idx]
+		var child = entity_nodes[child_entity_idx]
+		
+		queue_add_child(parent, child, null, true)
+	
+	for child_idx in group_to_entity_map:
+		var parent_idx = group_to_entity_map[child_idx]
+		
+		var parent = entity_nodes[parent_idx]
+		var child = entity_nodes[child_idx]
+		
+		queue_add_child(parent, child, null, true)
+
+## Return the node associated with a Trenchbroom index. Unused.
+func get_node_by_tb_id(target_id: String, entity_nodes: Dictionary):
+	for node_idx in entity_nodes:
+		var node = entity_nodes[node_idx]
+		
+		if not node:
+			continue
+		
+		if not 'properties' in node:
+			continue
+		
+		var properties = node['properties']
+		
+		if not '_tb_id' in properties:
+			continue
+		
+		var parent_id = properties['_tb_id']
+		if parent_id == target_id:
+			return node
+		
+	return null
+
+## Build [CollisionShape3D] nodes for brush entities
+func build_entity_collision_shape_nodes() -> Array:
+	var entity_collision_shapes_arr := []
+	
+	for entity_idx in range(0, entity_nodes.size()):
+		var entity_collision_shapes := []
+		
+		var entity_dict = entity_dicts[entity_idx]
+		var properties = entity_dict['properties']
+		
+		var node := entity_nodes[entity_idx] as Node
+		var concave = false
+		
+		if 'classname' in properties:
+			var classname = properties['classname']
+			if classname in entity_definitions:
+				var entity_definition := entity_definitions[classname] as QodotFGDSolidClass
+				if entity_definition:
+					if entity_definition.collision_shape_type == QodotFGDSolidClass.CollisionShapeType.NONE:
+						entity_collision_shapes_arr.append(null)
+						continue
+					elif entity_definition.collision_shape_type == QodotFGDSolidClass.CollisionShapeType.CONCAVE:
+						concave = true
+					
+					if entity_definition.spawn_type == QodotFGDSolidClass.SpawnType.MERGE_WORLDSPAWN:
+						# TODO: Find the worldspawn object instead of assuming index 0
+						node = entity_nodes[0] as Node
+					
+					if node and node is CollisionObject3D:
+						(node as CollisionObject3D).collision_layer = entity_definition.collision_layer
+						(node as CollisionObject3D).collision_mask = entity_definition.collision_mask
+						(node as CollisionObject3D).collision_priority = entity_definition.collision_priority
+		
+		# don't create collision shapes that wont be attached to a CollisionObject3D as they are a waste
+		if not node or (not node is CollisionObject3D):
+			entity_collision_shapes_arr.append(null)
+			continue
+		
+		if concave:
+			var collision_shape := CollisionShape3D.new()
+			collision_shape.name = \"entity_%s_collision_shape\" % entity_idx
+			entity_collision_shapes.append(collision_shape)
+			queue_add_child(node, collision_shape)
+		else:
+			for brush_idx in entity_dict['brush_indices']:
+				var collision_shape := CollisionShape3D.new()
+				collision_shape.name = \"entity_%s_brush_%s_collision_shape\" % [entity_idx, brush_idx]
+				entity_collision_shapes.append(collision_shape)
+				queue_add_child(node, collision_shape)
+		entity_collision_shapes_arr.append(entity_collision_shapes)
+	
+	return entity_collision_shapes_arr
+
+## Build CollisionShape3D nodes for worldspawn layers
+func build_worldspawn_layer_collision_shape_nodes() -> Array:
+	var worldspawn_layer_collision_shapes := []
+	
+	for layer_idx in range(0, worldspawn_layers.size()):
+		if layer_idx >= worldspawn_layer_dicts.size():
+			continue
+		
+		var layer = worldspawn_layers[layer_idx]
+		
+		var layer_dict = worldspawn_layer_dicts[layer_idx]
+		var node := worldspawn_layer_nodes[layer_idx] as Node
+		var concave = false
+		
+		var shapes := []
+		
+		if layer.collision_shape_type == QodotFGDSolidClass.CollisionShapeType.NONE:
+			worldspawn_layer_collision_shapes.append(shapes)
+			continue
+		elif layer.collision_shape_type == QodotFGDSolidClass.CollisionShapeType.CONCAVE:
+			concave = true
+		
+		if not node:
+			worldspawn_layer_collision_shapes.append(shapes)
+			continue
+		
+		if concave:
+			var collision_shape := CollisionShape3D.new()
+			collision_shape.name = \"entity_0_%s_collision_shape\" % layer.name
+			shapes.append(collision_shape)
+			queue_add_child(node, collision_shape)
+		else:
+			for brush_idx in layer_dict['brush_indices']:
+				var collision_shape := CollisionShape3D.new()
+				collision_shape.name = \"entity_0_%s_brush_%s_collision_shape\" % [layer.name, brush_idx]
+				shapes.append(collision_shape)
+				queue_add_child(node, collision_shape)
+		
+		worldspawn_layer_collision_shapes.append(shapes)
+	
+	return worldspawn_layer_collision_shapes
+
+## Build the concrete [Shape3D] resources for each brush
+func build_entity_collision_shapes() -> void:
+	for entity_idx in range(0, entity_dicts.size()):
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var properties = entity_dict['properties']
+		var entity_position: Vector3 = Vector3.ZERO
+		if entity_nodes[entity_idx] != null and entity_nodes[entity_idx].get(\"position\"):
+			if entity_nodes[entity_idx].position is Vector3:
+				entity_position = entity_nodes[entity_idx].position
+		var entity_collision_shape = entity_collision_shapes[entity_idx]
+		
+		if entity_collision_shape == null:
+			continue
+		
+		var concave: bool = false
+		var shape_margin: float = 0.04
+		
+		if 'classname' in properties:
+			var classname = properties['classname']
+			if classname in entity_definitions:
+				var entity_definition = entity_definitions[classname] as QodotFGDSolidClass
+				if entity_definition:
+					match(entity_definition.collision_shape_type):
+						QodotFGDSolidClass.CollisionShapeType.NONE:
+							continue
+						QodotFGDSolidClass.CollisionShapeType.CONVEX:
+							concave = false
+						QodotFGDSolidClass.CollisionShapeType.CONCAVE:
+							concave = true
+					shape_margin = entity_definition.collision_shape_margin
+		
+		if entity_collision_shapes[entity_idx] == null:
+			continue
+		
+		if concave:
+			qodot.gather_entity_concave_collision_surfaces(entity_idx, face_skip_texture)
+		else:
+			qodot.gather_entity_convex_collision_surfaces(entity_idx)
+		
+		var entity_surfaces := qodot.fetch_surfaces(inverse_scale_factor) as Array
+		
+		var entity_verts := PackedVector3Array()
+		
+		for surface_idx in range(0, entity_surfaces.size()):
+			var surface_verts = entity_surfaces[surface_idx]
+			
+			if surface_verts == null:
+				continue
+			
+			if concave:
+				var vertices := surface_verts[Mesh.ARRAY_VERTEX] as PackedVector3Array
+				var indices := surface_verts[Mesh.ARRAY_INDEX] as PackedInt32Array
+				for vert_idx in indices:
+					entity_verts.append(vertices[vert_idx])
+			else:
+				var shape_points = PackedVector3Array()
+				for vertex in surface_verts[Mesh.ARRAY_VERTEX]:
+					if not vertex in shape_points:
+						shape_points.append(vertex)
+				
+				var shape = ConvexPolygonShape3D.new()
+				shape.set_points(shape_points)
+				shape.margin = shape_margin
+				
+				var collision_shape = entity_collision_shape[surface_idx]
+				collision_shape.set_shape(shape)
+				
+		if concave:
+			if entity_verts.size() == 0:
+				continue
+			
+			var shape = ConcavePolygonShape3D.new()
+			shape.set_faces(entity_verts)
+			shape.margin = shape_margin
+			
+			var collision_shape = entity_collision_shapes[entity_idx][0]
+			collision_shape.set_shape(shape)
+
+## Build the concrete [Shape3D] resources for each worldspawn layer
+func build_worldspawn_layer_collision_shapes() -> void:
+	for layer_idx in range(0, worldspawn_layers.size()):
+		if layer_idx >= worldspawn_layer_dicts.size():
+			continue
+		
+		var layer = worldspawn_layers[layer_idx]
+		var concave = false
+		
+		match(layer.collision_shape_type):
+			QodotFGDSolidClass.CollisionShapeType.NONE:
+				continue
+			QodotFGDSolidClass.CollisionShapeType.CONVEX:
+				concave = false
+			QodotFGDSolidClass.CollisionShapeType.CONCAVE:
+				concave = true
+		
+		var layer_dict = worldspawn_layer_dicts[layer_idx]
+		
+		if not worldspawn_layer_collision_shapes[layer_idx]:
+			continue
+		
+		qodot.gather_worldspawn_layer_collision_surfaces(0)
+		
+		var layer_surfaces := qodot.FetchSurfaces(inverse_scale_factor) as Array
+		
+		var verts := PackedVector3Array()
+		
+		for i in range(0, layer_dict.brush_indices.size()):
+			var surface_idx = layer_dict.brush_indices[i]
+			var surface_verts = layer_surfaces[surface_idx]
+			
+			if not surface_verts:
+				continue
+			
+			if concave:
+				var vertices := surface_verts[0] as PackedVector3Array
+				var indices := surface_verts[8] as PackedInt32Array
+				for vert_idx in indices:
+					verts.append(vertices[vert_idx])
+			else:
+				var shape_points = PackedVector3Array()
+				for vertex in surface_verts[0]:
+					if not vertex in shape_points:
+						shape_points.append(vertex)
+				
+				var shape = ConvexPolygonShape3D.new()
+				shape.set_points(shape_points)
+				
+				var collision_shape = worldspawn_layer_collision_shapes[layer_idx][i]
+				collision_shape.set_shape(shape)
+		
+		if concave:
+			if verts.size() == 0:
+				continue
+			
+			var shape = ConcavePolygonShape3D.new()
+			shape.set_faces(verts)
+			
+			var collision_shape = worldspawn_layer_collision_shapes[layer_idx][0]
+			collision_shape.set_shape(shape)
+
+## Build Dictionary from entity indices to [ArrayMesh] instances
+func build_entity_mesh_dict() -> Dictionary:
+	var meshes := {}
+	
+	var texture_surf_map: Dictionary
+	for texture in texture_dict:
+		texture_surf_map[texture] = Array()
+	
+	var gather_task = func(i):
+		var texture = texture_dict.keys()[i]
+		texture_surf_map[texture] = qodot.gather_texture_surfaces_mt(texture, brush_clip_texture, face_skip_texture, inverse_scale_factor)
+	
+	var task_id:= WorkerThreadPool.add_group_task(gather_task, texture_dict.keys().size(), 4, true)
+	WorkerThreadPool.wait_for_group_task_completion(task_id)
+	
+	for texture in texture_dict:
+		var texture_surfaces := texture_surf_map[texture] as Array
+		
+		for entity_idx in range(0, texture_surfaces.size()):
+			var entity_dict := entity_dicts[entity_idx] as Dictionary
+			var properties = entity_dict['properties']
+			
+			var entity_surface = texture_surfaces[entity_idx]
+			
+			if 'classname' in properties:
+				var classname = properties['classname']
+				if classname in entity_definitions:
+					var entity_definition = entity_definitions[classname] as QodotFGDSolidClass
+					if entity_definition:
+						if entity_definition.spawn_type == QodotFGDSolidClass.SpawnType.MERGE_WORLDSPAWN:
+							entity_surface = null
+							
+						if not entity_definition.build_visuals and not entity_definition.build_occlusion:
+							entity_surface = null
+						
+			if entity_surface == null:
+				continue
+			
+			if not entity_idx in meshes:
+				meshes[entity_idx] = ArrayMesh.new()
+			
+			var mesh: ArrayMesh = meshes[entity_idx]
+			mesh.add_surface_from_arrays(ArrayMesh.PRIMITIVE_TRIANGLES, entity_surface)
+			mesh.surface_set_name(mesh.get_surface_count() - 1, texture)
+			mesh.surface_set_material(mesh.get_surface_count() - 1, material_dict[texture])
+	
+	return meshes
+
+## Build Dictionary from worldspawn layers (via textures) to [ArrayMesh] instances
+func build_worldspawn_layer_mesh_dict() -> Dictionary:
+	var meshes := {}
+	
+	for layer in worldspawn_layer_dicts:
+		var texture = layer.texture
+		qodot.gather_worldspawn_layer_surfaces(texture, brush_clip_texture, face_skip_texture)
+		var texture_surfaces := qodot.fetch_surfaces(inverse_scale_factor) as Array
+		
+		var mesh: Mesh = null
+		if not texture in meshes:
+			meshes[texture] = ArrayMesh.new()
+		
+		mesh = meshes[texture]
+		mesh.add_surface_from_arrays(ArrayMesh.PRIMITIVE_TRIANGLES, texture_surfaces[0])
+		mesh.surface_set_name(mesh.get_surface_count() - 1, texture)
+		mesh.surface_set_material(mesh.get_surface_count() - 1, material_dict[texture])
+	
+	return meshes
+
+## Build [MeshInstance3D]s from brush entities and add them to the add child queue
+func build_entity_mesh_instances() -> Dictionary:
+	var entity_mesh_instances := {}
+	for entity_idx in entity_mesh_dict:
+		var use_in_baked_light = false
+		var shadow_casting_setting := GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+		var render_layers: int = 1
+		
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var properties = entity_dict['properties']
+		var classname = properties['classname']
+		if classname in entity_definitions:
+			var entity_definition = entity_definitions[classname] as QodotFGDSolidClass
+			if entity_definition:
+				if not entity_definition.build_visuals:
+					continue
+				
+				if entity_definition.use_in_baked_light:
+					use_in_baked_light = true
+				elif '_shadow' in properties:
+					if properties['_shadow'] == \"1\":
+						use_in_baked_light = true
+				shadow_casting_setting = entity_definition.shadow_casting_setting
+				render_layers = entity_definition.render_layers
+		
+		if not entity_mesh_dict[entity_idx]:
+			continue
+		
+		var mesh_instance := MeshInstance3D.new()
+		mesh_instance.name = 'entity_%s_mesh_instance' % entity_idx
+		mesh_instance.gi_mode = MeshInstance3D.GI_MODE_STATIC if use_in_baked_light else GeometryInstance3D.GI_MODE_DISABLED
+		mesh_instance.cast_shadow = shadow_casting_setting
+		mesh_instance.layers = render_layers
+		
+		queue_add_child(entity_nodes[entity_idx], mesh_instance)
+		
+		entity_mesh_instances[entity_idx] = mesh_instance
+	
+	return entity_mesh_instances
+
+func build_entity_occluder_instances() -> Dictionary:
+	var entity_occluder_instances := {}
+	for entity_idx in entity_mesh_dict:
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var properties = entity_dict['properties']
+		var classname = properties['classname']
+		if classname in entity_definitions:
+			var entity_definition = entity_definitions[classname] as QodotFGDSolidClass
+			if entity_definition:
+				if entity_definition.build_occlusion:
+					if not entity_mesh_dict[entity_idx]:
+						continue
+					
+					var occluder_instance := OccluderInstance3D.new()
+					occluder_instance.name = 'entity_%s_occluder_instance' % entity_idx
+					
+					queue_add_child(entity_nodes[entity_idx], occluder_instance)
+					entity_occluder_instances[entity_idx] = occluder_instance
+	
+	return entity_occluder_instances
+
+## Build Dictionary from worldspawn layers (via textures) to [MeshInstance3D]s
+func build_worldspawn_layer_mesh_instances() -> Dictionary:
+	var worldspawn_layer_mesh_instances := {}
+	var idx = 0
+	for i in range(0, worldspawn_layers.size()):
+		var worldspawn_layer = worldspawn_layers[i]
+		var texture_name = worldspawn_layer.texture
+		
+		if not texture_name in worldspawn_layer_mesh_dict:
+			continue
+		
+		var mesh := worldspawn_layer_mesh_dict[texture_name] as Mesh
+		
+		if not mesh:
+			continue
+		
+		var mesh_instance := MeshInstance3D.new()
+		mesh_instance.name = 'entity_0_%s_mesh_instance' % worldspawn_layer.name
+		mesh_instance.gi_mode = MeshInstance3D.GI_MODE_STATIC
+		
+		queue_add_child(worldspawn_layer_nodes[idx], mesh_instance)
+		idx += 1
+		
+		worldspawn_layer_mesh_instances[texture_name] = mesh_instance
+	
+	return worldspawn_layer_mesh_instances
+
+## Assign [ArrayMesh]es to their [MeshInstance3D] counterparts
+func apply_entity_meshes() -> void:
+	for entity_idx in entity_mesh_instances:
+		var mesh := entity_mesh_dict[entity_idx] as Mesh
+		var mesh_instance := entity_mesh_instances[entity_idx] as MeshInstance3D
+		if not mesh or not mesh_instance:
+			continue
+		
+		mesh_instance.set_mesh(mesh)
+		queue_add_child(entity_nodes[entity_idx], mesh_instance)
+
+func apply_entity_occluders() -> void:
+	for entity_idx in entity_mesh_dict:
+		var mesh := entity_mesh_dict[entity_idx] as Mesh
+		var occluder_instance : OccluderInstance3D
+		
+		if entity_idx in entity_occluder_instances:
+			occluder_instance = entity_occluder_instances[entity_idx]
+		
+		if not mesh or not occluder_instance:
+			continue
+		
+		var verts: PackedVector3Array
+		var indices: PackedInt32Array
+		for surf_idx in range(mesh.get_surface_count()):
+			var vert_count := verts.size()
+			var surf_array := mesh.surface_get_arrays(surf_idx)
+			verts.append_array(surf_array[Mesh.ARRAY_VERTEX])
+			indices.resize(indices.size() + surf_array[Mesh.ARRAY_INDEX].size())
+			for new_index in surf_array[Mesh.ARRAY_INDEX]:
+				indices.append(new_index + vert_count)
+		
+		var occluder := ArrayOccluder3D.new()
+		occluder.set_arrays(verts, indices)
+		
+		occluder_instance.occluder = occluder
+		
+## Assign [ArrayMesh]es to their [MeshInstance3D] counterparts for worldspawn layers
+func apply_worldspawn_layer_meshes() -> void:
+	for texture_name in worldspawn_layer_mesh_dict:
+		var mesh = worldspawn_layer_mesh_dict[texture_name]
+		var mesh_instance = worldspawn_layer_mesh_instances[texture_name]
+		
+		if not mesh or not mesh_instance:
+			continue
+		
+		mesh_instance.set_mesh(mesh)
+
+## Add a child and its new parent to the add child queue. If [code]below[/code] is a node, add it as a child to that instead. If [code]relative[/code] is true, set the location of node relative to parent.
+func queue_add_child(parent, node, below = null, relative = false) -> void:
+	add_child_array.append({\"parent\": parent, \"node\": node, \"below\": below, \"relative\": relative})
+
+## Assign children to parents based on the contents of the add child queue (see [method queue_add_child])
+func add_children() -> void:
+	while true:
+		for i in range(0, set_owner_batch_size):
+			var data = add_child_array.pop_front()
+			if data:
+				add_child_editor(data['parent'], data['node'], data['below'])
+				if data['relative']:
+					data['node'].global_transform.origin -= data['parent'].global_transform.origin
+			else:
+				add_children_complete()
+				return
+		
+		var scene_tree := get_tree()
+		if scene_tree and not block_until_complete:
+			await get_tree().create_timer(YIELD_DURATION).timeout
+
+## Set owners and start post-attach build steps
+func add_children_complete():
+	stop_profile('add_children')
+	
+	if should_set_owners:
+		start_profile('set_owners')
+		set_owners()
+	else:
+		run_build_steps(true)
+
+## Set owner of nodes generated by Qodot to scene root based on [member set_owner_array]
+func set_owners():
+	while true:
+		for i in range(0, set_owner_batch_size):
+			var node = set_owner_array.pop_front()
+			if node:
+				set_owner_editor(node)
+			else:
+				set_owners_complete()
+				return
+				
+		var scene_tree := get_tree()
+		if scene_tree and not block_until_complete:
+			await get_tree().create_timer(YIELD_DURATION).timeout
+
+## Finish profiling for set_owners and start post-attach build steps
+func set_owners_complete():
+	stop_profile('set_owners')
+	run_build_steps(true)
+
+## Apply Trenchbroom properties to [QodotEntity] instances, transferring Trenchbroom dictionaries to [QodotEntity.properties]
+func apply_properties() -> void:
+	for entity_idx in range(0, entity_nodes.size()):
+		var entity_node = entity_nodes[entity_idx]
+		if not entity_node:
+			continue
+		
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var properties := entity_dict['properties'] as Dictionary
+		
+		if 'classname' in properties:
+			var classname = properties['classname']
+			if classname in entity_definitions:
+				var entity_definition := entity_definitions[classname] as QodotFGDClass
+				
+				for property in properties:
+					var prop_string = properties[property]
+					if property in entity_definition.class_properties:
+						var prop_default = entity_definition.class_properties[property]
+						if prop_default is int:
+							properties[property] = prop_string.to_int()
+						elif prop_default is float:
+							properties[property] = prop_string.to_float()
+						elif prop_default is Vector3:
+							var prop_comps = prop_string.split_floats(\" \")
+							if prop_comps.size() > 2:
+								properties[property] = Vector3(prop_comps[0], prop_comps[1], prop_comps[2])
+							else:
+								push_error(\"Invalid vector format for \\'\" + property + \"\\' in entity \\'\" + classname + \"\\': \" + prop_string)
+								properties[property] = prop_default
+						elif prop_default is Color:
+							var prop_color = prop_default
+							var prop_comps = prop_string.split(\" \")
+							if prop_comps.size() > 2:
+								if \".\" in prop_comps[0] or \".\" in prop_comps[1] or \".\" in prop_comps[2]:
+									prop_color.r = prop_comps[0].to_float()
+									prop_color.g = prop_comps[1].to_float()
+									prop_color.b = prop_comps[2].to_float()
+								else:
+									prop_color.r8 = prop_comps[0].to_int()
+									prop_color.g8 = prop_comps[1].to_int()
+									prop_color.b8 = prop_comps[2].to_int()
+							else:
+								push_error(\"Invalid color format for \\'\" + property + \"\\' in entity \\'\" + classname + \"\\': \" + prop_string)
+								
+							properties[property] = prop_color
+						elif prop_default is Dictionary:
+							properties[property] = prop_string.to_int()
+						elif prop_default is Array:
+							properties[property] = prop_string.to_int()
+				
+				# Assign properties not defined with defaults from the entity definition
+				for property in entity_definitions[classname].class_properties:
+					if not property in properties:
+						var prop_default = entity_definition.class_properties[property]
+						# Flags
+						if prop_default is Array:
+							var prop_flags_sum := 0
+							for prop_flag in prop_default:
+								if prop_flag is Array and prop_flag.size() > 2:
+									if prop_flag[2] and prop_flag[1] is int:
+										prop_flags_sum += prop_flag[1]
+							properties[property] = prop_flags_sum
+						# Choices
+						elif prop_default is Dictionary:
+							var prop_desc = entity_definition.class_property_descriptions[property]
+							if prop_desc is Array and prop_desc.size() > 1 and prop_desc[1] is int:
+								properties[property] = prop_desc[1]
+							else:
+								properties[property] = 0
+						# Everything else
+						else:
+							properties[property] = prop_default
+						
+		if 'properties' in entity_node:
+			entity_node.properties = properties
+
+## Wire signals based on Trenchbroom [code]target[/code] and [code]targetname[/code] properties
+func connect_signals() -> void:
+	for entity_idx in range(0, entity_nodes.size()):
+		var entity_node = entity_nodes[entity_idx]
+		if not entity_node:
+			continue
+		
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var entity_properties := entity_dict['properties'] as Dictionary
+		
+		if not 'target' in entity_properties:
+			continue
+		
+		var target_nodes := get_nodes_by_targetname(entity_properties['target'])
+		for target_node in target_nodes:
+			connect_signal(entity_node, target_node)
+
+## Connect a signal on [code]entity_node[/code] to [code]target_node[/code], possibly mediated by the contents of a [code]signal[/code] or [code]receiver[/code] entity
+func connect_signal(entity_node: Node, target_node: Node) -> void:
+	if target_node.properties['classname'] == 'signal':
+		var signal_name = target_node.properties['signal_name']
+		
+		var receiver_nodes := get_nodes_by_targetname(target_node.properties['target'])
+		for receiver_node in receiver_nodes:
+			if receiver_node.properties['classname'] != 'receiver':
+				continue
+			
+			var receiver_name = receiver_node.properties['receiver_name']
+			
+			var target_nodes := get_nodes_by_targetname(receiver_node.properties['target'])
+			for node in target_nodes:
+				entity_node.connect(signal_name,Callable(node,receiver_name),CONNECT_PERSIST)
+	else:
+		var signal_list = entity_node.get_signal_list()
+		for signal_dict in signal_list:
+			if signal_dict['name'] == 'trigger':
+				entity_node.connect(\"trigger\",Callable(target_node,\"use\"),CONNECT_PERSIST)
+				break
+
+## Remove nodes marked transient. See [member QodotFGDClass.transient_node]
+func remove_transient_nodes() -> void:
+	for entity_idx in range(0, entity_nodes.size()):
+		var entity_node = entity_nodes[entity_idx]
+		if not entity_node:
+			continue
+		
+		var entity_dict := entity_dicts[entity_idx] as Dictionary
+		var entity_properties := entity_dict['properties'] as Dictionary
+		
+		if not 'classname' in entity_properties:
+			continue
+		
+		var classname = entity_properties['classname']
+		
+		if not classname in entity_definitions:
+			continue
+		
+		var entity_definition = entity_definitions[classname]
+		if entity_definition.transient_node:
+			entity_node.get_parent().remove_child(entity_node)
+			entity_node.queue_free()
+
+## Find all nodes with matching targetname property
+func get_nodes_by_targetname(targetname: String) -> Array:
+	var nodes := []
+	
+	for node_idx in range(0, entity_nodes.size()):
+		var node = entity_nodes[node_idx]
+		if not node:
+			continue
+		
+		var entity_dict := entity_dicts[node_idx] as Dictionary
+		var entity_properties := entity_dict['properties'] as Dictionary
+		
+		if not 'targetname' in entity_properties:
+			continue
+		
+		if entity_properties['targetname'] == targetname:
+			nodes.append(node)
+	
+	return nodes
+
+# Cleanup after build is finished (internal)
+func _build_complete():
+	reset_build_context()
+	
+	stop_profile('build_map')
+	if not print_profiling_data:
+		print('\\n')
+	print('Build complete\\n')
+	
+	emit_signal(\"build_complete\")
+"
+
+[sub_resource type="GDScript" id="GDScript_guq8p"]
+script/source = "@tool
+class_name QodotFGDSolidClass
+extends QodotFGDClass
+
+enum SpawnType {
+	WORLDSPAWN = 0, ## Is worldspawn
+	MERGE_WORLDSPAWN = 1, ## Should be combined with worldspawn
+	ENTITY = 2, ## Is its own separate entity
+	GROUP = 3 ## Is a group
+}
+
+enum CollisionShapeType {
+	NONE, ## Should have no collision shape
+	CONVEX, ## Should have a convex collision shape
+	CONCAVE ## Should have a concave collision shape
+}
+
+@export_group(\"Spawn\")
+## Controls whether a given SolidClass is the worldspawn, is combined with the worldspawn, or is spawned as its own free-standing entity
+@export var spawn_type: SpawnType = SpawnType.ENTITY
+
+@export_group(\"Visual Build\")
+## Controls whether a visual mesh is built for this SolidClass
+@export var build_visuals := true
+## Automatically unwrap the UV2 for lightmapping on build
+@export var use_in_baked_light := true
+## Shadow casting setting allows for further lightmapping customization
+@export var shadow_casting_setting := GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+## Automatically build OccluderInstance3D for this entity
+@export var build_occlusion := false
+## This entity will only be visible for Camera3Ds whose cull mask includes any of the render layers this VisualInstance3D is set to
+@export_flags_3d_render var render_layers: int = 1
+
+@export_group(\"Collision Build\")
+## Controls how collisions are built for this SolidClass
+@export var collision_shape_type: CollisionShapeType = CollisionShapeType.CONVEX
+## The physics layers this SolidClass is in.
+@export_flags_3d_physics var collision_layer: int = 1
+## The physics layers this SolidClass scans.
+@export_flags_3d_physics var collision_mask: int = 1
+## The priority used to solve colliding when occurring penetration. The higher the priority is, the lower the penetration into the SolidClass will be. This can for example be used to prevent the player from breaking through the boundaries of a level.
+@export var collision_priority: float = 1.0
+## The collision margin for the SolidClass' collision shapes. Not used in Godot Physics. See Shape3D docs for details.
+@export var collision_shape_margin: float = 0.04
+
+@export_group(\"Scripting\")
+## The script file to associate with this SolidClass
+## On building the map, this will be attached to any brush entities created via this classname
+@export var script_class: Script
+
+func _init():
+	prefix = \"@SolidClass\"
+"
+
+[sub_resource type="Resource" id="Resource_x7csv"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 0
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = true
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+classname = "worldspawn"
+description = "World Entity"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "StaticBody3D"
+transient_node = false
+
+[sub_resource type="Resource" id="Resource_e0gk1"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 3
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+classname = "func_group"
+description = "TrenchBroom Group"
+qodot_internal = true
+base_classes = Array[Resource]([])
+class_properties = {}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "StaticBody3D"
+transient_node = false
+
+[sub_resource type="Resource" id="Resource_rl7iy"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 1
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+classname = "group"
+description = "Brush Group"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "StaticBody3D"
+transient_node = false
+
+[sub_resource type="Resource" id="Resource_1pkwh"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 1
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 0
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+classname = "illusionary"
+description = "Non-colliding Brush"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "Node3D"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_o65v4"]
+script/source = "@tool
+class_name PhysicsEntity
+extends RigidBody3D
+
+@export var properties: Dictionary :
+	get:
+		return properties
+	set(new_properties):
+		if(properties != new_properties):
+			properties = new_properties
+			update_properties()
+
+func update_properties():
+	if 'velocity' in properties:
+		linear_velocity = properties['velocity']
+
+	if 'mass' in properties:
+		mass = properties.mass
+
+
+func use():
+	bounce()
+
+func bounce():
+	linear_velocity.y = 10
+"
+
+[sub_resource type="Resource" id="Resource_m38ob"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 2
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+script_class = SubResource("GDScript_o65v4")
+classname = "physics"
+description = "Physics Brush"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"mass": 1.0,
+"velocity": Vector3(0, 0, 0)
+}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "RigidBody"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_hokqv"]
+script/source = "@tool
+class_name QodotFGDBaseClass
+extends QodotFGDClass
+
+func _init():
+	prefix = \"@BaseClass\"
+"
+
+[sub_resource type="Resource" id="Resource_ioylw"]
+script = SubResource("GDScript_hokqv")
+classname = "Targetname"
+description = "Subscribes to actions (signal callbacks, reciever methods) performed by other entities with a matching 'target'."
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"targetname": ""
+}
+class_property_descriptions = {
+"targetname": "Name of target to subscribe to."
+}
+meta_properties = {}
+node_class = ""
+transient_node = false
+
+[sub_resource type="Resource" id="Resource_s7qay"]
+script = SubResource("GDScript_hokqv")
+classname = "Target"
+description = "Performs actions (signal callbacks, methods) on entities with a matching 'targetname'."
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"target": ""
+}
+class_property_descriptions = {
+"target": "Name of entity (targetname) to target."
+}
+meta_properties = {}
+node_class = ""
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_d4knb"]
+script/source = "@tool
+class_name QodotFGDPointClass
+extends QodotFGDClass
+
+func _init():
+	prefix = \"@PointClass\"
+
+# The scene file to associate with this PointClass
+# On building the map, this scene will be instanced into the scene tree
+@export_group (\"Scene\")
+@export var scene_file: PackedScene
+
+# The script file to associate with this PointClass
+# On building the map, this will be attached to any brush entities created
+# via this classname if no scene_file is specified
+@export_group (\"Scripting\")
+@export var script_class: Script
+
+@export_group(\"Build\")
+## Entity will use `angles`, `mangle`, or `angle` to determine rotations on QodotMap build, prioritizing the key value pairs in that order.
+@export var apply_rotation_on_map_build := true
+"
+
+[sub_resource type="Resource" id="Resource_i1xvc"]
+script = SubResource("GDScript_d4knb")
+apply_rotation_on_map_build = true
+classname = "signal"
+description = "Name of signal to call target."
+qodot_internal = false
+base_classes = Array[Resource]([SubResource("Resource_ioylw"), SubResource("Resource_s7qay")])
+class_properties = {
+"signal_name": ""
+}
+class_property_descriptions = {
+"signal_name": "Name of signal to call on target."
+}
+meta_properties = {
+"size": AABB(-8, -8, -8, 8, 8, 8)
+}
+node_class = ""
+transient_node = true
+
+[sub_resource type="Resource" id="Resource_gb4px"]
+script = SubResource("GDScript_d4knb")
+apply_rotation_on_map_build = true
+classname = "receiver"
+description = "Calls methods on target."
+qodot_internal = false
+base_classes = Array[Resource]([SubResource("Resource_ioylw"), SubResource("Resource_s7qay")])
+class_properties = {
+"receiver_name": ""
+}
+class_property_descriptions = {
+"reciever_name": "Name of method to call on target. "
+}
+meta_properties = {
+"size": AABB(-8, -8, -8, 8, 8, 8)
+}
+node_class = ""
+transient_node = true
+
+[sub_resource type="Resource" id="Resource_t8qjg"]
+script = SubResource("GDScript_hokqv")
+classname = "Light"
+description = ""
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"_color": Color(1, 1, 1, 1),
+"delay": {
+"Inverse distance falloff": 1,
+"Inverse distance squared": 2,
+"Inverse distance squared B": 5,
+"Linear falloff (Default)": 0,
+"Local minlight": 4,
+"No falloff": 3
+},
+"light": 300,
+"mangle": Vector3(0.005, 0, 0),
+"wait": 1
+}
+class_property_descriptions = {
+"_color": "Light color",
+"delay": "Attenuation",
+"light": "Brightness",
+"mangle": "Spotlight angle",
+"wait": "Fade distance multiplier"
+}
+meta_properties = {
+"color": Color(1, 1, 0.156863, 1)
+}
+node_class = ""
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_737ox"]
+script/source = "@tool
+class_name QodotLight
+extends QodotEntity
+
+var light_node: Light3D = null
+
+func update_properties():
+	if not Engine.is_editor_hint():
+		return
+	
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	
+	if 'mangle' in properties:
+		light_node = SpotLight3D.new()
+	
+		var yaw = properties['mangle'].x
+		var pitch = properties['mangle'].y
+		light_node.rotate(Vector3.UP, deg_to_rad(180 + yaw))
+		light_node.rotate(light_node.transform.basis.x, deg_to_rad(180 + pitch))
+	
+		if 'angle' in properties:
+			light_node.set_param(Light3D.PARAM_SPOT_ANGLE, properties['angle'])
+	else:
+		light_node = OmniLight3D.new()
+	
+	var light_brightness = 300
+	if 'light' in properties:
+		light_brightness = properties['light']
+		light_node.set_param(Light3D.PARAM_ENERGY, light_brightness / 100.0)
+		light_node.set_param(Light3D.PARAM_INDIRECT_ENERGY, light_brightness / 100.0)
+	
+	var light_range := 1.0
+	if 'wait' in properties:
+		light_range = properties['wait']
+	
+	var normalized_brightness = light_brightness / 300.0
+	light_node.set_param(Light3D.PARAM_RANGE, 16.0 * light_range * (normalized_brightness * normalized_brightness))
+	
+	var light_attenuation = 0
+	if 'delay' in properties:
+		light_attenuation = properties['delay']
+	
+	var attenuation = 0
+	match light_attenuation:
+		0:
+			attenuation = 1.0
+		1:
+			attenuation = 0.5
+		2:
+			attenuation = 0.25
+		3:
+			attenuation = 0.15
+		4:
+			attenuation = 0
+		5:
+			attenuation = 0.9
+		_:
+			attenuation = 1
+	
+	light_node.set_param(Light3D.PARAM_ATTENUATION, attenuation)
+	light_node.set_shadow(true)
+	light_node.set_bake_mode(Light3D.BAKE_STATIC)
+	
+	var light_color = Color.WHITE
+	if '_color' in properties:
+		light_color = properties['_color']
+	
+	light_node.set_color(light_color)
+	
+	add_child(light_node)
+	
+	if is_inside_tree():
+		var tree = get_tree()
+		if tree:
+			var edited_scene_root = tree.get_edited_scene_root()
+			if edited_scene_root:
+				light_node.set_owner(edited_scene_root)
+"
+
+[sub_resource type="Resource" id="Resource_kqvcc"]
+script = SubResource("GDScript_d4knb")
+script_class = SubResource("GDScript_737ox")
+apply_rotation_on_map_build = true
+classname = "light"
+description = "Invisible light source"
+qodot_internal = false
+base_classes = Array[Resource]([SubResource("Resource_t8qjg")])
+class_properties = {
+"angle": 0.0
+}
+class_property_descriptions = {
+"angle": "Rotation Angle"
+}
+meta_properties = {
+"size": AABB(-8, -8, -8, 8, 8, 8)
+}
+node_class = "Node3D"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_nbnsu"]
+script/source = "extends Area3D
+
+signal trigger()
+signal pressed()
+signal released()
+
+@export var properties: Dictionary :
+	get:
+		return properties # TODOConverter40 Non existent get function 
+	set(new_properties):
+		if(properties != new_properties):
+			properties = new_properties
+			update_properties()
+
+var is_pressed = false
+var base_translation = Vector3.ZERO
+var axis := Vector3.DOWN
+var speed := 8.0
+var depth := 0.8
+var release_delay := 0.0
+var trigger_signal_delay :=  0.0
+var press_signal_delay :=  0.0
+var release_signal_delay :=  0.0
+
+var overlaps := 0
+
+func update_properties() -> void:
+	if 'axis' in properties:
+		axis = properties.axis.normalized()
+
+	if 'speed' in properties:
+		speed = properties.speed
+
+	if 'depth' in properties:
+		depth = float(properties.depth)
+
+	if 'release_delay' in properties:
+		release_delay = properties.release_delay
+
+	if 'trigger_signal_delay' in properties:
+		trigger_signal_delay = properties.trigger_signal_delay
+
+	if 'press_signal_delay' in properties:
+		press_signal_delay = properties.press_signal_delay
+
+	if 'release_signal_delay' in properties:
+		release_signal_delay = properties.release_signal_delay
+
+func _init() -> void:
+	connect(\"body_shape_entered\", body_shape_entered)
+	connect(\"body_shape_exited\", body_shape_exited)
+
+func _enter_tree() -> void:
+	base_translation = position
+
+func _process(delta: float) -> void:
+	var target_position = base_translation + (axis * (depth if is_pressed else 0.0))
+	position = position.lerp(target_position, speed * delta)
+
+func body_shape_entered(body_id, body: Node, body_shape_idx: int, self_shape_idx: int) -> void:
+	if body is StaticBody3D:
+		return
+
+	if overlaps == 0:
+		press()
+
+	overlaps += 1
+
+func body_shape_exited(body_id, body: Node, body_shape_idx: int, self_shape_idx: int) -> void:
+	if body is StaticBody3D:
+		return
+
+	overlaps -= 1
+	if overlaps == 0:
+		if release_delay == 0:
+			release()
+		elif release_delay > 0:
+			await get_tree().create_timer(release_delay).timeout
+			release()
+
+func press() -> void:
+	if is_pressed:
+		return
+
+	is_pressed = true
+
+	emit_trigger()
+	emit_pressed()
+
+func emit_trigger() -> void:
+	await get_tree().create_timer(trigger_signal_delay).timeout
+	trigger.emit()
+
+func emit_pressed() -> void:
+	await get_tree().create_timer(press_signal_delay).timeout
+	pressed.emit()
+
+func release() -> void:
+	if not is_pressed:
+		return
+
+	is_pressed = false
+
+	await get_tree().create_timer(release_delay).timeout
+	released.emit()
+"
+
+[sub_resource type="Resource" id="Resource_qnyul"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 2
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+script_class = SubResource("GDScript_nbnsu")
+classname = "button"
+description = "Interactive button brush."
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"axis": Vector3(0, -1, 0),
+"depth": 0.8,
+"press_signal_delay": 0.0,
+"release_delay": 0.0,
+"release_signal_delay": 0.0,
+"speed": 8.0,
+"target": "",
+"trigger_signal_delay": 0.0
+}
+class_property_descriptions = {
+"axis": "Direction of movement when pressed.",
+"depth": "How far to move along the axis when pressed.",
+"press_signal_delay": "Seconds after press() is called, before emitting is own pressed signal.",
+"release_delay": "Seconds after a physics body exits, before calling release()",
+"release_signal_delay": "Seconds after release() is called, before emitting is own released signal.",
+"speed": "Delta multiplier for a lerp weight to move the button to its desired position.",
+"trigger_signal_delay": "Seconds after press() is called, before emitting the trigger signal."
+}
+meta_properties = {}
+node_class = "Area3D"
+transient_node = false
+
+[sub_resource type="Resource" id="Resource_8t1kq"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 1
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+classname = "detail"
+description = "Detail Brush"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "StaticBody3D"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_4ipid"]
+script/source = "extends CharacterBody3D
+
+@export var properties: Dictionary :
+	get:
+		return properties # TODOConverter40 Non existent get function 
+	set(new_properties):
+		if(properties != new_properties):
+			properties = new_properties
+			update_properties()
+
+var base_transform: Transform3D
+var offset_transform: Transform3D
+var target_transform: Transform3D
+
+var speed := 1.0
+
+func update_properties() -> void:
+	if 'translation' in properties:
+		offset_transform.origin = properties.translation
+
+	if 'rotation' in properties:
+		offset_transform.basis = offset_transform.basis.rotated(Vector3.RIGHT, properties.rotation.x)
+		offset_transform.basis = offset_transform.basis.rotated(Vector3.UP, properties.rotation.y)
+		offset_transform.basis = offset_transform.basis.rotated(Vector3.FORWARD, properties.rotation.z)
+
+	if 'scale' in properties:
+		offset_transform.basis = offset_transform.basis.scaled(properties.scale)
+
+	if 'speed' in properties:
+		speed = properties.speed
+
+func _process(delta: float) -> void:
+	transform = transform.interpolate_with(target_transform, speed * delta)
+
+func _ready() -> void:
+	base_transform = transform
+	target_transform = base_transform
+
+func use() -> void:
+	play_motion()
+
+func play_motion() -> void:
+	target_transform = base_transform * offset_transform
+
+func reverse_motion() -> void:
+	target_transform = base_transform
+"
+
+[sub_resource type="Resource" id="Resource_1sdiv"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 2
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+script_class = SubResource("GDScript_4ipid")
+classname = "mover"
+description = "Moving brush."
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"rotation": Vector3(0, 0, 0),
+"scale": Vector3(1, 1, 1),
+"speed": 1.0,
+"targetname": "",
+"translation": Vector3(0, 0, 0)
+}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "CharacterBody3D"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_0kwxr"]
+script/source = "class_name QodotRotateEntity
+extends CharacterBody3D
+
+@export var properties: Dictionary :
+	get:
+		return properties # TODOConverter40 Non existent get function 
+	set(new_properties):
+		if(properties != new_properties):
+			properties = new_properties
+			update_properties()
+	
+var rotate_axis := Vector3.UP
+var rotate_speed := 360.0
+
+func update_properties():
+	if 'axis' in properties:
+		rotate_axis = properties['axis']
+
+	if 'speed' in properties:
+		rotate_speed = properties['speed']
+
+func _ready() -> void:
+	update_properties()
+
+func _process(delta: float) -> void:
+	rotate(rotate_axis, deg_to_rad(rotate_speed * delta))
+"
+
+[sub_resource type="Resource" id="Resource_sg6ih"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 2
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+script_class = SubResource("GDScript_0kwxr")
+classname = "rotate"
+description = "Rotating Brush"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"axis": Vector3(0, 1, 0),
+"speed": 360.0
+}
+class_property_descriptions = {
+"axis": "Rotation Axis",
+"speed": "Rotation Speed"
+}
+meta_properties = {}
+node_class = "CharacterBody3D"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_duamx"]
+script/source = "extends Area3D
+
+signal trigger()
+
+func _ready():
+	connect(\"body_entered\", handle_body_entered)
+
+func handle_body_entered(body: Node):
+	if body is StaticBody3D:
+		return
+
+	emit_signal(\"trigger\")
+"
+
+[sub_resource type="Resource" id="Resource_jisfx"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 2
+build_visuals = false
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+script_class = SubResource("GDScript_duamx")
+classname = "trigger"
+description = "Trigger Volume"
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {
+"target": ""
+}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "Area3D"
+transient_node = false
+
+[sub_resource type="Resource" id="Resource_i3ir6"]
+script = SubResource("GDScript_guq8p")
+spawn_type = 2
+build_visuals = true
+use_in_baked_light = true
+shadow_casting_setting = 1
+build_occlusion = false
+render_layers = 1
+collision_shape_type = 1
+collision_layer = 1
+collision_mask = 1
+collision_priority = 1.0
+collision_shape_margin = 0.04
+classname = "wall"
+description = "Basic entity brush."
+qodot_internal = false
+base_classes = Array[Resource]([])
+class_properties = {}
+class_property_descriptions = {}
+meta_properties = {}
+node_class = "StaticBody3D"
+transient_node = false
+
+[sub_resource type="GDScript" id="GDScript_n3kl5"]
+script/source = "@tool
+class_name QodotFGDFile
+extends Resource
+
+## A node used to to express a set of entity definitions that can be exproted
+
+#psuedo-button to export
+@export var export_file: bool:
+	get:
+		return export_file # TODO Converter40 Non existent get function
+	set(new_export_file):
+		if new_export_file != export_file:
+			do_export_file()
+func do_export_file():
+	if Engine.is_editor_hint() and get_fgd_classes().size() > 0:
+				if target_folder.is_empty():
+					print(\"Skipping export: No target folder\")
+					return
+
+				if fgd_name == \"\":
+					print(\"Skipping export: Empty FGD name\")
+
+				var fgd_file = target_folder + \"/\" + fgd_name + \".fgd\"
+
+				print(\"Exporting FGD to \", fgd_file)
+				var file_obj := FileAccess.open(fgd_file, FileAccess.WRITE)
+				file_obj.store_string(build_class_text())
+				file_obj.close()
+@export_global_dir var target_folder : String # (String, DIR, GLOBAL)
+@export var fgd_name: String = \"Qodot\"
+@export var base_fgd_files: Array[Resource] = [] # (Array, Resource)
+@export var entity_definitions: Array[Resource] = [ # (Array, Resource)
+]
+
+func build_class_text() -> String:
+	var res : String = \"\"
+
+	for base_fgd in base_fgd_files:
+		res += base_fgd.build_class_text()
+
+	var entities = get_fgd_classes()
+	for ent in entities:
+		if ent.qodot_internal:
+			continue
+		
+		var ent_text = ent.build_def_text()
+		res += ent_text
+		if ent != entities[-1]:
+			res += \"\\n\"
+	return res
+
+#This getter does a little bit of validation. Providing only an array of non-null uniquely-named entity definitions
+func get_fgd_classes() -> Array:
+	var res : Array = []
+	for cur_ent_def_ind in range(entity_definitions.size()):
+		var cur_ent_def = entity_definitions[cur_ent_def_ind]
+		if cur_ent_def == null:
+			continue
+		elif not (cur_ent_def is QodotFGDClass):
+			printerr(\"Bad value in entity definition set at position %s! Not an entity defintion.\" % cur_ent_def_ind)
+			continue
+		res.append(cur_ent_def)
+	return res
+
+func get_entity_definitions() -> Dictionary:
+	var res : Dictionary = {}
+
+	for base_fgd in base_fgd_files:
+		var fgd_res = base_fgd.get_entity_definitions()
+		for key in fgd_res:
+			res[key] = fgd_res[key]
+
+	for ent in get_fgd_classes():
+		if ent is QodotFGDPointClass or ent is QodotFGDSolidClass:
+			var entity_def = ent.duplicate()
+			var meta_properties := {}
+			var class_properties := {}
+			var class_property_descriptions := {}
+
+			for base_class in _generate_base_class_list(entity_def):
+				for meta_property in base_class.meta_properties:
+					meta_properties[meta_property] = base_class.meta_properties[meta_property]
+
+				for class_property in base_class.class_properties:
+					class_properties[class_property] = base_class.class_properties[class_property]
+
+				for class_property_desc in base_class.class_property_descriptions:
+					class_property_descriptions[class_property_desc] = base_class.class_property_descriptions[class_property_desc]
+
+			for meta_property in entity_def.meta_properties:
+				meta_properties[meta_property] = entity_def.meta_properties[meta_property]
+
+			for class_property in entity_def.class_properties:
+				class_properties[class_property] = entity_def.class_properties[class_property]
+
+			for class_property_desc in entity_def.class_property_descriptions:
+				class_property_descriptions[class_property_desc] = entity_def.class_property_descriptions[class_property_desc]
+
+			entity_def.meta_properties = meta_properties
+			entity_def.class_properties = class_properties
+			entity_def.class_property_descriptions = class_property_descriptions
+
+			res[ent.classname] = entity_def
+	return res
+
+func _generate_base_class_list(entity_def : Resource, visited_base_classes = []) -> Array:
+	var base_classes : Array = []
+
+	visited_base_classes.append(entity_def.classname)
+
+	# End recursive search if no more base_classes
+	if len(entity_def.base_classes) == 0:
+		return base_classes
+
+	# Traverse up to the next level of hierarchy, if not already visited
+	for base_class in entity_def.base_classes:
+		if not base_class.classname in visited_base_classes:
+			base_classes.append(base_class)
+			base_classes += _generate_base_class_list(base_class, visited_base_classes)
+		else:
+			printerr(str(\"Entity '\", entity_def.classname,\"' contains cycle/duplicate to Entity '\", base_class.classname, \"'\"))
+
+	return base_classes
+"
+
+[sub_resource type="Resource" id="Resource_y8141"]
+script = SubResource("GDScript_n3kl5")
+export_file = false
+target_folder = ""
+fgd_name = "Qodot"
+base_fgd_files = Array[Resource]([])
+entity_definitions = Array[Resource]([SubResource("Resource_x7csv"), SubResource("Resource_e0gk1"), SubResource("Resource_rl7iy"), SubResource("Resource_1pkwh"), SubResource("Resource_m38ob"), SubResource("Resource_i1xvc"), SubResource("Resource_gb4px"), SubResource("Resource_kqvcc"), SubResource("Resource_qnyul"), SubResource("Resource_8t1kq"), SubResource("Resource_1sdiv"), SubResource("Resource_sg6ih"), SubResource("Resource_jisfx"), SubResource("Resource_i3ir6")])
+
+[sub_resource type="GDScript" id="GDScript_8e35p"]
+script/source = "class_name QodotWorldspawnLayer
+extends Resource
+
+@export var name := \"\"
+@export var texture := \"\"
+@export var node_class := \"\"
+@export var build_visuals := true
+@export var collision_shape_type: QodotFGDSolidClass.CollisionShapeType = QodotFGDSolidClass.CollisionShapeType.CONVEX # (QodotFGDSolidClass.CollisionShapeType)
+@export var script_class: Script = null
+
+func _init():
+	resource_name = \"Worldspawn Layer\"
+"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xw00j"]
 
@@ -244,11 +2525,25 @@ environment = SubResource("Environment_5c4vw")
 navigation_mesh = SubResource("NavigationMesh_n7db8")
 
 [node name="QodotMap" type="Node3D" parent="NavigationRegion3D"]
-script = ExtResource("3_wjm7a")
+script = SubResource("GDScript_psd3x")
 map_file = "D:/Godot/Trypophobia-Game/maps/MiningFacility.map"
-entity_fgd = ExtResource("4_swgl6")
+inverse_scale_factor = 16.0
+entity_fgd = SubResource("Resource_y8141")
+base_texture_dir = "res://textures"
 texture_file_extensions = PackedStringArray("png", "jpg", "jpeg", "bmp")
+worldspawn_layers = Array[SubResource("GDScript_8e35p")]([])
+brush_clip_texture = "special/clip"
+face_skip_texture = "special/skip"
+texture_wads = Array[SubResource("GDScript_8e35p")]([])
+material_file_extension = "tres"
+unshaded = false
 default_material = SubResource("StandardMaterial3D_xw00j")
+default_material_albedo_uniform = ""
+uv_unwrap_texel_size = 1.0
+print_profiling_data = false
+use_trenchbroom_group_hierarchy = false
+block_until_complete = false
+set_owner_batch_size = 1000
 
 [node name="entity_0_worldspawn" type="StaticBody3D" parent="NavigationRegion3D/QodotMap"]
 
