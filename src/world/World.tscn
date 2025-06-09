@@ -1,12 +1,12 @@
-[gd_scene load_steps=88 format=4 uid="uid://c6qrt61xbgo1t"]
+[gd_scene load_steps=87 format=4 uid="uid://c6qrt61xbgo1t"]
 
 [ext_resource type="Texture2D" uid="uid://cod3jas8d7eq0" path="res://assets/env/textures/Floor1.png" id="5_0d5tl"]
 [ext_resource type="Texture2D" uid="uid://criq8nhtfa1af" path="res://assets/env/textures/Wall1.png" id="6_fdh0i"]
 [ext_resource type="Texture2D" uid="uid://bswmp2iso73mv" path="res://assets/env/textures/Floor3.png" id="7_k3cou"]
 [ext_resource type="Texture2D" uid="uid://cc1uqx1sc6fub" path="res://assets/env/textures/Floor2.png" id="8_hdc72"]
-[ext_resource type="PackedScene" uid="uid://ck1ipaot64eyp" path="res://scenes/player/playerbase.tscn" id="9_1hbvd"]
+[ext_resource type="PackedScene" uid="uid://ck1ipaot64eyp" path="res://src/player/playerbase.tscn" id="9_1hbvd"]
 [ext_resource type="Texture2D" uid="uid://bepcgwwpvw0m6" path="res://assets/env/textures/Floor4.png" id="9_jj73r"]
-[ext_resource type="ArrayOccluder3D" uid="uid://y8llo0nayys7" path="res://scenes/world/World.occ" id="10_dbdg5"]
+[ext_resource type="ArrayOccluder3D" uid="uid://y8llo0nayys7" path="res://src/world/World.occ" id="10_dbdg5"]
 
 [sub_resource type="Environment" id="Environment_5c4vw"]
 background_mode = 1
@@ -2287,21 +2287,6 @@ fgd_name = "Qodot"
 base_fgd_files = Array[Resource]([])
 entity_definitions = Array[Resource]([SubResource("Resource_x7csv"), SubResource("Resource_e0gk1"), SubResource("Resource_rl7iy"), SubResource("Resource_1pkwh"), SubResource("Resource_m38ob"), SubResource("Resource_i1xvc"), SubResource("Resource_gb4px"), SubResource("Resource_kqvcc"), SubResource("Resource_qnyul"), SubResource("Resource_8t1kq"), SubResource("Resource_1sdiv"), SubResource("Resource_sg6ih"), SubResource("Resource_jisfx"), SubResource("Resource_i3ir6")])
 
-[sub_resource type="GDScript" id="GDScript_8e35p"]
-script/source = "class_name QodotWorldspawnLayer
-extends Resource
-
-@export var name := \"\"
-@export var texture := \"\"
-@export var node_class := \"\"
-@export var build_visuals := true
-@export var collision_shape_type: QodotFGDSolidClass.CollisionShapeType = QodotFGDSolidClass.CollisionShapeType.CONVEX # (QodotFGDSolidClass.CollisionShapeType)
-@export var script_class: Script = null
-
-func _init():
-	resource_name = \"Worldspawn Layer\"
-"
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xw00j"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fsgwd"]
@@ -2531,10 +2516,10 @@ inverse_scale_factor = 16.0
 entity_fgd = SubResource("Resource_y8141")
 base_texture_dir = "res://textures"
 texture_file_extensions = PackedStringArray("png", "jpg", "jpeg", "bmp")
-worldspawn_layers = Array[SubResource("GDScript_8e35p")]([])
+worldspawn_layers = []
 brush_clip_texture = "special/clip"
 face_skip_texture = "special/skip"
-texture_wads = Array[SubResource("GDScript_8e35p")]([])
+texture_wads = []
 material_file_extension = "tres"
 unshaded = false
 default_material = SubResource("StandardMaterial3D_xw00j")

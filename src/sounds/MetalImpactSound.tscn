@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://ddgb28xwrvwxa"]
 
-[ext_resource type="Script" path="res://scripts/Sound.gd" id="1_gi75m"]
-[ext_resource type="AudioStream" uid="uid://dmybggn2q4jpy" path="res://assets/audio/sounds/metal impact.wav" id="2_f8fpy"]
+[ext_resource type="Script" path="res://src/sounds/Sound.gd" id="1_gi75m"]
+[ext_resource type="AudioStream" path="res://assets/audio/sounds/metal impact.wav" id="2_f8fpy"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_xsys3"]
 radius = 20.0

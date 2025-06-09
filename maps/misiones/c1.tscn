@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bfwa36v3ynguy"]
 
-[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://scene/character_body_3d.tscn" id="1_4odmi"]
+[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://src/player/character_body_3d.tscn" id="1_4odmi"]
 [ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_i4wtw"]
 
 [node name="world" type="Node3D"]
