@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://do6d60od41vmg"
-path="res://.godot/imported/Pin.svg-83b09f5c00a829c5d8b136bf5bae65bc.ctex"
+uid="uid://2kohi3tb3c70"
+path="res://.godot/imported/intersection.svg-a7d56bc571616c4c8343b7fe260d4607.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/anthonyec.camera_preview/Pin.svg"
-dest_files=["res://.godot/imported/Pin.svg-83b09f5c00a829c5d8b136bf5bae65bc.ctex"]
+source_file="res://addons/csg_toolkit/res/icons/intersection.svg"
+dest_files=["res://.godot/imported/intersection.svg-a7d56bc571616c4c8343b7fe260d4607.ctex"]
 
 [params]
 
@@ -32,6 +32,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=2.0
+svg/scale=1.0
 editor/scale_with_editor_scale=false
 editor/convert_colors_with_editor_theme=false

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://btc01wc11tiid"
-path="res://.godot/imported/GuiResizerTopLeft.svg-eb563f557424c74239e878a1213a5bf4.ctex"
+uid="uid://cg5jbylrlg00x"
+path="res://.godot/imported/empty-material.svg-3f6f61e9606d6bae9d37867d9ac3ad0b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/anthonyec.camera_preview/GuiResizerTopLeft.svg"
-dest_files=["res://.godot/imported/GuiResizerTopLeft.svg-eb563f557424c74239e878a1213a5bf4.ctex"]
+source_file="res://addons/csg_toolkit/res/icons/empty-material.svg"
+dest_files=["res://.godot/imported/empty-material.svg-3f6f61e9606d6bae9d37867d9ac3ad0b.ctex"]
 
 [params]
 
@@ -32,6 +32,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=2.0
+svg/scale=1.0
 editor/scale_with_editor_scale=false
 editor/convert_colors_with_editor_theme=false
