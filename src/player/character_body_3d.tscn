@@ -1,7 +1,7 @@
 [gd_scene load_steps=9 format=3 uid="uid://bpoyiguthcyqw"]
 
 [ext_resource type="Script" path="res://src/player/movimiento jugador.gd" id="1_m5ixq"]
-[ext_resource type="Shader" path="res://src/shaders/pixel_outline.gdshader" id="2_rq6fi"]
+[ext_resource type="Shader" path="res://src/shaders/pixel_effects.gdshader" id="2_rq6fi"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hcfog"]
 
@@ -17,7 +17,7 @@ colors = PackedColorArray(0.00458587, 0.0813924, 0.1306, 1, 0.0994449, 0.0766504
 gradient = SubResource("Gradient_bfbmf")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_5wjxy"]
-render_priority = 0
+render_priority = 2
 shader = ExtResource("2_rq6fi")
 shader_parameter/TwixelAngle = 0.0
 shader_parameter/PixelSize = 8.0
@@ -45,7 +45,7 @@ fov = 100.0
 size = 4.0
 near = 0.001
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="CameraPivot/Camera3D"]
-transform = Transform3D(7.97313, 0, 0, 0, -3.48517e-07, 7.97313, 0, -7.97313, -3.48517e-07, 0, 0, -1.26158)
+[node name="Postprocess" type="MeshInstance3D" parent="CameraPivot/Camera3D"]
+transform = Transform3D(7.97313, 0, 0, 0, 7.97313, -2.84217e-14, 0, 2.84217e-14, 7.97313, 0, 0, -1.26158)
 mesh = SubResource("QuadMesh_6wvxv")
 surface_material_override/0 = SubResource("ShaderMaterial_5wjxy")

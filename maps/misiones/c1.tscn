@@ -281,4 +281,4 @@ light_specular = 3.086
 light_bake_mode = 1
 
 [node name="characterBody3D" parent="." instance=ExtResource("3_4d1sw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0412378, 1.52884, 8.68321)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5614, 1.52884, 8.68321)

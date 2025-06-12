@@ -17,31 +17,33 @@ uniform float FogEnd = 300.0;     // Distance where fog becomes fully opaque
 uniform bool Quantize = true;
 uniform sampler2D PaletteTexture : source_color;
 
+//Delineado
+
+
+
 void vertex(){
 	//put this shader on a simple 1x1 quad mesh instance
 	POSITION = vec4(VERTEX.xy*2.0, 1.0, 1.0);
 }
 
 vec3 quantized_color(vec3 original_color){
-	// Palette quantization
     ivec2 palette_size = textureSize(PaletteTexture, 0);
-    vec3 quantized_color = vec3(0.0, 1.0, 0.0); //bright debug-green color
-    float min_dist = 9999.0;
+    vec3 quantized_color = vec3(0.0, 1.0, 0.0);
+    float min_dist_sq = 9999.0 * 9999.0; // Distancia cuadrática inicial
 
-    // Search through palette texture
     for (int y = 0; y < palette_size.y; y++) {
         for (int x = 0; x < palette_size.x; x++) {
-			//get the color of the pixel at the center of each pixel rather than the corner.
-            vec2 palette_uv = (vec2(float(x), float(y)) +0.5) / vec2(palette_size);
+            vec2 palette_uv = (vec2(float(x), float(y)) + 0.5) / vec2(palette_size);
             vec3 palette_color = textureLod(PaletteTexture, palette_uv, 0.0).rgb;
-            float dist = distance(original_color, palette_color);
-	      	if (dist < min_dist) {
-                min_dist = dist;
-            	quantized_color = palette_color;
+            vec3 delta = original_color - palette_color;
+            float dist_sq = dot(delta, delta); // Cálculo optimizado
+            if (dist_sq < min_dist_sq) {
+                min_dist_sq = dist_sq;
+                quantized_color = palette_color;
             }
         }
     }
-	return quantized_color;
+    return quantized_color;
 }
 
 void fragment() {
