@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://bfwa36v3ynguy"]
+[gd_scene load_steps=8 format=3 uid="uid://bfwa36v3ynguy"]
 
+[ext_resource type="PackedScene" uid="uid://didgsfluc7fcm" path="res://src/shaders/post_process.tscn" id="1_cow6k"]
 [ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_i4wtw"]
 [ext_resource type="PackedScene" path="res://assets/env/test/Ladder_Model.tscn" id="2_hha4v"]
-[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://scene/character_body_3d.tscn" id="3_4d1sw"]
+[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://src/player/character_body_3d.tscn" id="3_4d1sw"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_pmr7d"]
 sky_top_color = Color(0.129, 0.129, 0.129, 1)
@@ -20,6 +21,8 @@ tonemap_mode = 2
 
 [node name="world" type="Node3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.270843, 39.4088, 2.62177)
+
+[node name="PostProcess" parent="." instance=ExtResource("1_cow6k")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_b48c8")
@@ -39,6 +42,16 @@ material_override = ExtResource("1_i4wtw")
 size = Vector3(3, 1, 4)
 material = ExtResource("1_i4wtw")
 
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="CSGCombiner3D"]
+transform = Transform3D(0.999999, 0, 0, 0, 1, 0, 0, 0, 0.999999, -0.456888, 0.209465, 1.18306)
+operation = 2
+
+[node name="CSGBox3D18" type="CSGBox3D" parent="CSGCombiner3D"]
+transform = Transform3D(0.175141, 0, 0, 0, 5.21446, 0, 0, 0, 0.119617, -0.456888, 3.1981, 0.212806)
+material_override = ExtResource("1_i4wtw")
+size = Vector3(3, 1, 4)
+material = ExtResource("1_i4wtw")
+
 [node name="CSGBox3D3" type="CSGBox3D" parent="CSGCombiner3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.33063, 0.0639841, 1.14961)
 material_override = ExtResource("1_i4wtw")
@@ -46,9 +59,15 @@ size = Vector3(2.16943, 1, 2.06689)
 material = ExtResource("1_i4wtw")
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5887, 0.0639841, 1.1491)
+transform = Transform3D(0.999999, 0, 0, 0, 1, 0, 0, 0, 0.999999, -5.19057, 0.0639877, 1.1491)
 material_override = ExtResource("1_i4wtw")
-size = Vector3(11.6487, 1, 1)
+size = Vector3(6.44496, 1, 1)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D21" type="CSGBox3D" parent="CSGCombiner3D"]
+transform = Transform3D(0.999999, 0, 0, 0, 1, 0, 0, 0, 0.999999, 2.14236, 0.0639877, 1.1491)
+material_override = ExtResource("1_i4wtw")
+size = Vector3(2.19352, 1, 1)
 material = ExtResource("1_i4wtw")
 
 [node name="CSGBox3D11" type="CSGBox3D" parent="CSGCombiner3D"]
@@ -151,10 +170,6 @@ polygon = PackedVector2Array(-0.18425, 7.51956, -0.128302, 8.82728, 1, 1, 1.1511
 transform = Transform3D(-1, 0, -4.1162e-08, 0, 1, 0, 1.85674e-07, 0, -1, -0.371586, 3.99351e-06, -0.970803)
 polygon = PackedVector2Array(0.134201, 18.6683, 0.226456, 21.8132, 1, 1, 1, 0)
 
-[node name="CSGCylinder3D" type="CSGCylinder3D" parent="CSGCombiner3D"]
-transform = Transform3D(0.20177, 0, 0, 0, 2.32531, 0, 0, 0, 0.225863, -0.435979, 2.24183, -0.357152)
-material = ExtResource("1_i4wtw")
-
 [node name="CSGCylinder3D5" type="CSGCylinder3D" parent="CSGCombiner3D"]
 transform = Transform3D(4.47106, 0, 0, 0, 56.4426, 0, 0, 0, 4.57988, -12.5019, 11.7694, 1.12699)
 material = ExtResource("1_i4wtw")
@@ -229,15 +244,6 @@ material = ExtResource("1_i4wtw")
 transform = Transform3D(2, 0, 0, 0, 0.00980428, 0, 0, 0, 2, -2.14577e-06, -0.204498, 2.38419e-07)
 material = ExtResource("1_i4wtw")
 
-[node name="CSGCylinder3D2" type="CSGCylinder3D" parent="CSGCombiner3D"]
-transform = Transform3D(0.20177, 0, 0, 0, 2.32531, 0, 0, 0, 0.225863, -0.168369, 0.563254, -0.357152)
-material = ExtResource("1_i4wtw")
-
-[node name="CSGCylinder3D3" type="CSGCylinder3D" parent="CSGCombiner3D"]
-transform = Transform3D(0.20177, 0, 0, 0, 2.32531, 0, 0, 0, 0.225863, -0.156891, -1.12557, -0.118472)
-height = 2.89373
-material = ExtResource("1_i4wtw")
-
 [node name="CSGCylinder3D4" type="CSGCylinder3D" parent="CSGCombiner3D"]
 transform = Transform3D(8.94212, 0, 0, 0, 0.553379, 0, 0, 0, 9.15976, -12.8297, 0.226997, -7.98553)
 material = ExtResource("1_i4wtw")
@@ -275,4 +281,4 @@ light_specular = 3.086
 light_bake_mode = 1
 
 [node name="characterBody3D" parent="." instance=ExtResource("3_4d1sw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0412378, 2.18371, 8.68321)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0412378, 1.52884, 8.68321)
