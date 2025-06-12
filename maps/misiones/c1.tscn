@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://bfwa36v3ynguy"]
 
-[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://src/player/character_body_3d.tscn" id="1_4odmi"]
 [ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_i4wtw"]
 [ext_resource type="PackedScene" path="res://assets/env/test/Ladder_Model.tscn" id="2_hha4v"]
+[ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://scene/character_body_3d.tscn" id="3_4d1sw"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_pmr7d"]
 sky_top_color = Color(0.129, 0.129, 0.129, 1)
@@ -274,8 +274,5 @@ light_volumetric_fog_energy = 0.0
 light_specular = 3.086
 light_bake_mode = 1
 
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-
-[node name="CharacterBody3D" parent="." instance=ExtResource("1_4odmi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90.8211, 2.34723, 0.689801)
-script = null
+[node name="characterBody3D" parent="." instance=ExtResource("3_4d1sw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0412378, 2.18371, 8.68321)
