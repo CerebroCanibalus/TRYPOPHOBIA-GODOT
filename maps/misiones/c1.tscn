@@ -278,3 +278,4 @@ light_bake_mode = 1
 
 [node name="CharacterBody3D" parent="." instance=ExtResource("1_4odmi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90.8211, 2.34723, 0.689801)
+script = null
