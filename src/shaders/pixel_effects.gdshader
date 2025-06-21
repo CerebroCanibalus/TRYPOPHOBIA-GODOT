@@ -50,36 +50,36 @@ void fragment() {
     // Reconstruct screen-space coordinates
     vec2 frag_coord = FRAGCOORD.xy;
     vec2 screen_pixel_size = 1.0 / VIEWPORT_SIZE;
-	
+
     // Center rotation at fragment center
     float aRad = radians(TwixelAngle);
     mat2 rotation = mat2(
         vec2(cos(aRad), -sin(aRad)),
         vec2(sin(aRad),  cos(aRad))
     );
-    
+
     // Apply rotation and pixelation
     vec2 rotated_coord = rotation * frag_coord;
     vec2 pixelated_coord = round(rotated_coord / PixelSize) * PixelSize;
     vec2 final_coord = transpose(rotation) * pixelated_coord;
 	final_coord = clamp(final_coord, vec2(1.0), VIEWPORT_SIZE - vec2(1.0));
-    
+
 	//Get the linear depth for fog
 	float depth = texture(DepthTexture, final_coord * screen_pixel_size).x;
 	vec3 ndc = vec3(final_coord * screen_pixel_size * 2.0 - 1.0, depth);
 	vec4 view = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
 	view.xyz /= view.w;
 	float linear_depth = -view.z;
-	
+
     // Sample screen texture with NEAREST filtering for crisp pixels
     vec3 original_color = textureLod(ScreenTexture, final_coord * screen_pixel_size, 0.0).rgb;
 
 	//get the fog
 	float fog_factor = clamp((linear_depth - FogStart) / (FogEnd - FogStart), 0.0, 1.0);
-	
+
 	if(Quantize){
 		vec3 quantized = quantized_color(original_color);
-	    ALBEDO = mix(quantized, FogColor, fog_factor);	
+	    ALBEDO = mix(quantized, FogColor, fog_factor);
 	}else{
 		ALBEDO = mix(original_color, FogColor, fog_factor);
 	}
