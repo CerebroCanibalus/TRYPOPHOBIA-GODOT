@@ -47,5 +47,6 @@ near = 0.001
 
 [node name="Postprocess" type="MeshInstance3D" parent="CameraPivot/Camera3D"]
 transform = Transform3D(7.97313, 0, 0, 0, 7.97313, -2.84217e-14, 0, 2.84217e-14, 7.97313, 0, 0, -1.26158)
+visible = false
 mesh = SubResource("QuadMesh_6wvxv")
 surface_material_override/0 = SubResource("ShaderMaterial_5wjxy")
