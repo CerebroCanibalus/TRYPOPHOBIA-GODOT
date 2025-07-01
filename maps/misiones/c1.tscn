@@ -9,7 +9,7 @@
 [sub_resource type="BoxMesh" id="BoxMesh_c3iuh"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_po6j1"]
-render_priority = 0
+render_priority = 1
 shader = ExtResource("4_5kbou")
 shader_parameter/absorption_color = Color(0.850306, 0.80337, 0.174637, 1)
 shader_parameter/fresnel_radius = 0.38
@@ -377,7 +377,6 @@ sky_material = SubResource("ShaderMaterial_ki21p")
 
 [sub_resource type="Environment" id="Environment_5ji5r"]
 background_mode = 2
-background_energy_multiplier = 1.48
 sky = SubResource("Sky_spllm")
 ambient_light_energy = 1.45
 fog_light_color = Color(0.710257, 0.488322, 0.413656, 1)
@@ -394,11 +393,12 @@ volumetric_fog_detail_spread = 1.0
 volumetric_fog_ambient_inject = 0.5
 volumetric_fog_sky_affect = 0.589
 
-[node name="world" type="Node3D"]
+[node name="world_campaign1" type="Node3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.270843, 39.4088, 2.62177)
 
 [node name="Ocean" type="MeshInstance3D" parent="."]
-transform = Transform3D(3719.53, 0, 0, 0, 3.45892, 0, 0, 0, 2023.13, -51.8264, -15.8297, -46.1921)
+transform = Transform3D(3719.53, 0, 0, 0, 3.45892, 0, 0, 0, 2023.13, -51.8264, -13.6855, -46.1921)
+visible = false
 mesh = SubResource("BoxMesh_c3iuh")
 surface_material_override/0 = SubResource("ShaderMaterial_po6j1")
 
@@ -406,7 +406,8 @@ surface_material_override/0 = SubResource("ShaderMaterial_po6j1")
 environment = SubResource("Environment_5ji5r")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.541312, 0.592732, -0.596364, -2.45588e-08, 0.709263, 0.704944, 0.840822, -0.381595, 0.383933, -276.889, -58.5803, 57.8901)
+transform = Transform3D(0.541312, 0.592732, -0.596364, -2.45588e-08, 0.709263, 0.704944, 0.840822, -0.381595, 0.383933, -277.839, 22.769, 55.9991)
+visible = false
 shadow_enabled = true
 shadow_blur = 1.101
 
@@ -577,10 +578,90 @@ polygon = PackedVector2Array(0.134201, 18.6683, 0.226456, 21.8132, 1, 1, 1, 0)
 
 [node name="CSGCylinder3D5" type="CSGCylinder3D" parent="CSGCombiner3D"]
 transform = Transform3D(4.47106, 0, 0, 0, 56.4426, 0, 0, 0, 4.57988, -12.5019, 11.7694, 1.12699)
+radius = 0.567066
+height = 25.1075
 material = ExtResource("1_i4wtw")
 
 [node name="CSGCylinder3D4" type="CSGCylinder3D" parent="CSGCombiner3D/CSGCylinder3D5"]
 transform = Transform3D(2, 0, 0, 0, 0.00980428, 0, 0, 0, 2, -2.14577e-06, -0.204498, 2.38419e-07)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(1.20303, 0, 0, 0, 0.285124, 0, 0, 0, 0.201992, 0, -0.131494, 0)
+operation = 2
+size = Vector3(1, 0.44043, 1)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.101838, 0, 0, 0, 0.285124, 0, 0, 0, 0.493557, 0, -0.131494, 0.316978)
+operation = 2
+size = Vector3(1, 0.44043, 0.889679)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.101838, 0, 0, 0, 0.285124, 0, 0, 0, 0.110978, -0.159976, -0.0762746, 0.316978)
+operation = 2
+size = Vector3(2.1604, 0.827759, 0.889679)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.101838, 0, 0, 0, 0.285124, 0, 0, 0, 0.110974, -0.229872, -0.0147713, 0.190148)
+operation = 2
+size = Vector3(0.78772, 0.387024, 1.44099)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D12" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.101838, 0, 0, 0, 0.285124, 0, 0, 0, 0.0380761, -0.309099, -0.0147713, 0.190148)
+operation = 2
+size = Vector3(0.78772, 0.387024, 1.44099)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D13" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.101838, 0, 0, 0, 0.285124, 0, 0, 0, 0.139947, -0.389581, -0.0147713, 0.190148)
+operation = 2
+size = Vector3(1.4523, 0.387024, 1.44099)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.101838, 0, 0, 0, 0.285124, 0, 0, 0, 0.493549, 0.143334, -0.131494, 0.310818)
+operation = 2
+size = Vector3(1.81641, 0.44043, 0.184235)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.052863, 0, 0, 0, 0.148004, 0, 0, 0, 0.256196, 0.143334, -0.131494, 0.243079)
+operation = 2
+size = Vector3(1.81641, 0.44043, 0.184235)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.052863, 0, 0, 0, 0.148004, 0, 0, 0, 0.256195, 0.0034163, 0.0987787, -0.124141)
+operation = 2
+size = Vector3(1.81641, 0.44043, 0.184235)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.052863, 0, 0, 0, 0.148004, 0, 0, 0, 0.256195, 0.0034163, 0.0987787, 0.122341)
+operation = 2
+size = Vector3(1.81641, 0.44043, 0.184235)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.052863, 0, 0, 0, 0.148004, 0, 0, 0, 0.256195, 0.0034163, 0.256643, 0.122341)
+operation = 2
+size = Vector3(1.81641, 0.44043, 0.184235)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.052863, 0, 0, 0, 0.148004, 0, 0, 0, 0.256195, 0.0034163, 0.256643, -0.124267)
+operation = 2
+size = Vector3(1.81641, 0.44043, 0.184235)
+material = ExtResource("1_i4wtw")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="CSGCombiner3D/CSGCylinder3D5"]
+transform = Transform3D(0.247707, 0, 0, 0, 0.285124, 0, 0, 0, 0.201988, -0.00636435, 0.879132, 0)
+operation = 2
+size = Vector3(1, 6.64958, 1)
 material = ExtResource("1_i4wtw")
 
 [node name="CSGCylinder3D6" type="CSGCylinder3D" parent="CSGCombiner3D"]
@@ -654,7 +735,7 @@ transform = Transform3D(2, 0, 0, 0, 0.00980428, 0, 0, 0, 2, -2.14577e-06, -0.204
 material = ExtResource("1_i4wtw")
 
 [node name="Ladder_Model" parent="CSGCombiner3D" instance=ExtResource("2_hha4v")]
-transform = Transform3D(-3.59127e-09, 0, 0.0873493, 0, 2.27001, 0, -0.0821586, 0, -3.81816e-09, -22.8292, 0.517487, -20.2645)
+transform = Transform3D(-3.59127e-09, 0, 0.0873493, 0, 2.27001, 0, -0.0821586, 0, -3.81816e-09, -22.8292, 0.517494, -20.2709)
 
 [node name="Ladder_Model2" parent="CSGCombiner3D/Ladder_Model" instance=ExtResource("2_hha4v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.01967, 0)
@@ -686,5 +767,4 @@ light_specular = 3.086
 light_bake_mode = 1
 
 [node name="characterBody3D" parent="." instance=ExtResource("3_4d1sw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5614, 1.52884, 8.68321)
-visible = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5614, 1.52884, 8.60682)

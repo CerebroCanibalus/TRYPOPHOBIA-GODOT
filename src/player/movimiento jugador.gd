@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-@export var speed := 5.0
+@export var speed := 10.0
 @export var mouse_sensitivity := 0.002
 @export var jump_velocity := 8.0
 @export var crouch_height := 0.5  # Altura de la cámara agachado

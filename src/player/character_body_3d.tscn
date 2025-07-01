@@ -10,21 +10,21 @@
 [sub_resource type="QuadMesh" id="QuadMesh_6wvxv"]
 
 [sub_resource type="Gradient" id="Gradient_bfbmf"]
-offsets = PackedFloat32Array(0, 0.286885, 0.631148, 1)
-colors = PackedColorArray(0.00458587, 0.0813924, 0.1306, 1, 0.0994449, 0.0766504, 0.21831, 1, 0.443137, 0.364706, 0.254902, 1, 0.972549, 0.956863, 0.694118, 1)
+offsets = PackedFloat32Array(0, 0.180328, 0.459016, 0.688525, 1)
+colors = PackedColorArray(0.00392157, 0, 0.0745098, 1, 0.211765, 0.329412, 0.345098, 1, 0.533333, 0.576471, 0.501961, 1, 1, 1, 0.792157, 1, 1, 1, 1, 1)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_0frk1"]
 gradient = SubResource("Gradient_bfbmf")
+width = 64
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_5wjxy"]
-render_priority = 2
+render_priority = 1
 shader = ExtResource("2_rq6fi")
-shader_parameter/TwixelAngle = 0.0
+shader_parameter/TwixelAngle = 45.0
 shader_parameter/PixelSize = 8.0
-shader_parameter/FogColor = Color(0.00270588, 0.0499636, 0.0851807, 1)
-shader_parameter/FogStart = 0.0
-shader_parameter/FogEnd = 80.0
 shader_parameter/Quantize = true
+shader_parameter/Posterize = true
+shader_parameter/ColorSteps = 13
 shader_parameter/PaletteTexture = SubResource("GradientTexture1D_0frk1")
 
 [node name="characterBody3D" type="CharacterBody3D"]
