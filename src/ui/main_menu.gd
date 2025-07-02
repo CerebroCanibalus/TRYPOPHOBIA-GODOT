@@ -6,7 +6,7 @@ func _ready():
 
 func _on_play_pressed():
 	print("Iniciando juego...")
-	get_tree().change_scene_to_file("res://scene/world.tscn")  # ← cambia esta ruta si es diferente
+	get_tree().change_scene_to_file("res://maps/misiones/c1.tscn")  # ← cambia esta ruta si es diferente
 
 func _on_config_pressed():
 	print("Abriendo configuración...")

@@ -1,49 +1,15 @@
-[gd_scene load_steps=12 format=3 uid="uid://bfwa36v3ynguy"]
+[gd_scene load_steps=11 format=3 uid="uid://bfwa36v3ynguy"]
 
 [ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_i4wtw"]
 [ext_resource type="PackedScene" path="res://assets/env/test/Ladder_Model.tscn" id="2_hha4v"]
 [ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://src/player/character_body_3d.tscn" id="3_4d1sw"]
 [ext_resource type="Shader" path="res://src/shaders/agua1.gdshader" id="4_5kbou"]
-[ext_resource type="Texture2D" uid="uid://bagan5m48ok23" path="res://assets/env/textures/nature/agua1_nm.png" id="5_ehe3n"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_c3iuh"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_po6j1"]
 render_priority = 1
 shader = ExtResource("4_5kbou")
-shader_parameter/absorption_color = Color(0.850306, 0.80337, 0.174637, 1)
-shader_parameter/fresnel_radius = 0.38
-shader_parameter/fresnel_color = Color(0.0696164, 0.277069, 0.426876, 1)
-shader_parameter/roughness = 0.66
-shader_parameter/specular = 0.25
-shader_parameter/depth_distance = 2.5
-shader_parameter/beers_law = 5.4
-shader_parameter/displacement_strength = 0.1
-shader_parameter/displacement_scroll_speed = 0.111
-shader_parameter/displacement_scroll_offset = Vector2(-0.2, 0.3)
-shader_parameter/displacement_scale_offset = 0.5
-shader_parameter/displacement_scale = Vector2(0.04, 0.04)
-shader_parameter/edge_thickness = 0.558
-shader_parameter/edge_speed = 0.395
-shader_parameter/edge_noise_scale = Vector2(0.4, 0.4)
-shader_parameter/influence_size = 1.0
-shader_parameter/player_wave_frequenzy = 10.0
-shader_parameter/player_wave_speed = 5.0
-shader_parameter/caustic_size = 2.0
-shader_parameter/caustic_range = 40.0
-shader_parameter/caustic_strength = 0.08
-shader_parameter/ssr_mix_strength = 0.4
-shader_parameter/ssr_travel = 64.0
-shader_parameter/ssr_resolution_near = 1.7
-shader_parameter/ssr_resolution_far = 5.0
-shader_parameter/ssr_tolerance = 0.99
-shader_parameter/refraction_strength = 1.08
-shader_parameter/normal_map_strength = 1.36
-shader_parameter/scroll_speed = 0.3
-shader_parameter/scroll_offset = Vector2(0.1, -0.3)
-shader_parameter/scale_offset = 0.5
-shader_parameter/normal_map_scale = Vector2(0.1, 0.1)
-shader_parameter/normal_map = ExtResource("5_ehe3n")
 
 [sub_resource type="Shader" id="Shader_tdx3t"]
 code = "shader_type sky;
@@ -398,7 +364,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.270843, 39.4088, 2.62177)
 
 [node name="Ocean" type="MeshInstance3D" parent="."]
 transform = Transform3D(3719.53, 0, 0, 0, 3.45892, 0, 0, 0, 2023.13, -51.8264, -13.6855, -46.1921)
-visible = false
 mesh = SubResource("BoxMesh_c3iuh")
 surface_material_override/0 = SubResource("ShaderMaterial_po6j1")
 
@@ -407,7 +372,6 @@ environment = SubResource("Environment_5ji5r")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.541312, 0.592732, -0.596364, -2.45588e-08, 0.709263, 0.704944, 0.840822, -0.381595, 0.383933, -277.839, 22.769, 55.9991)
-visible = false
 shadow_enabled = true
 shadow_blur = 1.101
 
