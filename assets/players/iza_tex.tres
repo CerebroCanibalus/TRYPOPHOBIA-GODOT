@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://ddec147jvs670"]
+
+[ext_resource type="Texture2D" uid="uid://bkj0vwcf3ju6p" path="res://assets/players/Iza_0.png" id="1_p47h0"]
+[ext_resource type="Texture2D" uid="uid://bkivy2w8ax0d0" path="res://assets/players/iza_normals.png" id="2_j7vol"]
+
+[resource]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+albedo_texture = ExtResource("1_p47h0")
+normal_enabled = true
+normal_scale = 0.2
+normal_texture = ExtResource("2_j7vol")
+texture_filter = 2

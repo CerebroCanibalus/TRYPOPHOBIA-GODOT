@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://cahj06dalv8rx"]
+
+[ext_resource type="PackedScene" uid="uid://djqlcm1hl610i" path="res://assets/players/Iza.gltf" id="1_cyf27"]
+
+[node name="Iza" instance=ExtResource("1_cyf27")]

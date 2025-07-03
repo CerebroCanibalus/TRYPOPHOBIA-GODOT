@@ -1,15 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://bfwa36v3ynguy"]
+[gd_scene load_steps=10 format=3 uid="uid://bfwa36v3ynguy"]
 
 [ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_i4wtw"]
 [ext_resource type="PackedScene" path="res://assets/env/test/Ladder_Model.tscn" id="2_hha4v"]
 [ext_resource type="PackedScene" uid="uid://bpoyiguthcyqw" path="res://src/player/character_body_3d.tscn" id="3_4d1sw"]
-[ext_resource type="Shader" path="res://src/shaders/agua1.gdshader" id="4_5kbou"]
+[ext_resource type="PackedScene" uid="uid://cahj06dalv8rx" path="res://assets/players/iza.tscn" id="4_5171b"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_c3iuh"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_po6j1"]
-render_priority = 1
-shader = ExtResource("4_5kbou")
 
 [sub_resource type="Shader" id="Shader_tdx3t"]
 code = "shader_type sky;
@@ -365,7 +361,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.270843, 39.4088, 2.62177)
 [node name="Ocean" type="MeshInstance3D" parent="."]
 transform = Transform3D(3719.53, 0, 0, 0, 3.45892, 0, 0, 0, 2023.13, -51.8264, -13.6855, -46.1921)
 mesh = SubResource("BoxMesh_c3iuh")
-surface_material_override/0 = SubResource("ShaderMaterial_po6j1")
 
 [node name="Sky" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_5ji5r")
@@ -732,3 +727,6 @@ light_bake_mode = 1
 
 [node name="characterBody3D" parent="." instance=ExtResource("3_4d1sw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5614, 1.52884, 8.60682)
+
+[node name="Iza" parent="." instance=ExtResource("4_5171b")]
+transform = Transform3D(-0.802958, 0, -0.425342, 0, 0.908657, 0, 0.425342, 0, -0.802958, 3.00933, 0.372562, 1.21813)

@@ -21,10 +21,10 @@ width = 64
 render_priority = 1
 shader = ExtResource("2_rq6fi")
 shader_parameter/TwixelAngle = 45.0
-shader_parameter/PixelSize = 8.0
+shader_parameter/PixelSize = 4.0
 shader_parameter/Quantize = true
 shader_parameter/Posterize = true
-shader_parameter/ColorSteps = 13
+shader_parameter/ColorSteps = 16
 shader_parameter/PaletteTexture = SubResource("GradientTexture1D_0frk1")
 
 [node name="characterBody3D" type="CharacterBody3D"]
