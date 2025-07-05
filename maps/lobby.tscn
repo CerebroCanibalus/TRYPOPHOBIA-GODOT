@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://b0k4njunq6kej"]
+
+[node name="Lobby" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.541312, 0.592732, -0.596364, -2.45588e-08, 0.709263, 0.704944, 0.840822, -0.381595, 0.383933, -277.839, 22.769, 55.9991)
+shadow_enabled = true
+shadow_blur = 1.101
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D"]
+transform = Transform3D(4.04318, 0, 0, 0, 4.04318, 0, 0, 0, 4.04318, 0, 0, 0)
