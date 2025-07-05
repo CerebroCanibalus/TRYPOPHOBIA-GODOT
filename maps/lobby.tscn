@@ -1,4 +1,6 @@
-[gd_scene format=3 uid="uid://b0k4njunq6kej"]
+[gd_scene load_steps=2 format=3 uid="uid://b0k4njunq6kej"]
+
+[ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_f6evx"]
 
 [node name="Lobby" type="Node3D"]
 
@@ -10,4 +12,49 @@ shadow_blur = 1.101
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
 
 [node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(4.04318, 0, 0, 0, 4.04318, 0, 0, 0, 4.04318, 0, 0, 0)
+transform = Transform3D(90.0241, 0, 0, 0, 4.04318, 0, 0, 0, 67.69, 0, 27.8658, 0)
+size = Vector3(1, 14.7841, 1)
+material = ExtResource("1_f6evx")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="CSGCombiner3D"]
+transform = Transform3D(76.6802, 0, 0, 0, 3.44387, 0, 0, 0, 57.6565, 0, 27.8658, 0)
+operation = 2
+size = Vector3(1, 14.7841, 1)
+material = ExtResource("1_f6evx")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="CSGCombiner3D"]
+transform = Transform3D(106.768, 0, 0, 0, 3.44387, 0, 0, 0, 19.8465, 0, 13.2994, 0)
+operation = 2
+size = Vector3(1, 6.32481, 1)
+material = ExtResource("1_f6evx")
+
+[node name="Elevador" type="CSGCylinder3D" parent="CSGCombiner3D"]
+transform = Transform3D(26.3312, 0, 0, 0, 26.3312, 0, 0, 0, 26.3312, -0.147617, 3.86258, -1.32965)
+height = 0.184065
+
+[node name="CSGCylinder3D2" type="CSGCylinder3D" parent="CSGCombiner3D/Elevador"]
+transform = Transform3D(0.935438, 0, 0, 0, 0.935438, 0, 0, 0, 0.935438, 0, 0.596984, 0)
+height = 1.19951
+
+[node name="CSGCylinder3D3" type="CSGCylinder3D" parent="CSGCombiner3D/Elevador"]
+transform = Transform3D(0.861597, 0, 0, 0, 0.861597, 0, 0, 0, 0.861597, 0, 0.570722, 0)
+operation = 2
+height = 1.00826
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D/Elevador"]
+transform = Transform3D(0.355721, 0, 0, 0, 0.355721, 0, 0, 0, 1.045, 0, 0.358905, 0)
+operation = 2
+size = Vector3(1, 1.44348, 1)
+
+[node name="SpotLight3D" type="SpotLight3D" parent="CSGCombiner3D/Elevador"]
+transform = Transform3D(0.0379777, 0, 0, 0, -1.66006e-09, 0.0379777, 0, -0.0379777, -1.66006e-09, 0, 0.947326, 0)
+light_energy = 11.182
+light_volumetric_fog_energy = 1.485
+light_size = 0.061
+shadow_bias = 2.555
+shadow_normal_bias = 3.323
+shadow_blur = 2.616
+spot_range = 24.7245
+spot_attenuation = -0.52
+spot_angle = 27.5334
+spot_angle_attenuation = 0.594604
