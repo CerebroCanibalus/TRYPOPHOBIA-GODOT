@@ -1,8 +1,8 @@
 [gd_scene load_steps=9 format=3 uid="uid://bwiacylloduj7"]
 
 [ext_resource type="Script" path="res://src/player/movimiento jugador.gd" id="1_m5ixq"]
-[ext_resource type="PackedScene" uid="uid://cahj06dalv8rx" path="res://assets/players/iza.tscn" id="2_0xcql"]
 [ext_resource type="Shader" path="res://src/player/postprocess.gdshader" id="2_25kiw"]
+[ext_resource type="PackedScene" uid="uid://s6hcxc3wyigt" path="res://assets/players/iza_rig.tscn" id="2_wfc3i"]
 [ext_resource type="Shader" path="res://src/player/outline.gdshader" id="3_hk1ip"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hcfog"]
@@ -12,22 +12,22 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_xbnu7"]
 render_priority = 0
 shader = ExtResource("3_hk1ip")
-shader_parameter/shadow_color = Color(0.00984065, 6.31716e-07, 0.115568, 1)
-shader_parameter/shadow_thickness = 1.75
+shader_parameter/shadow_color = Color(0.365999, 0.116196, 0.115691, 1)
+shader_parameter/shadow_thickness = 2.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_623et"]
 shader = ExtResource("2_25kiw")
-shader_parameter/shake = 0.577
+shader_parameter/shake = 0.032
 shader_parameter/noiseQuality = 250.0
 shader_parameter/noiseIntensity = 0.001
-shader_parameter/offsetIntensity = 0.0045
-shader_parameter/colorOffsetIntensity = 0.2
-shader_parameter/pixelSize = 200.0
+shader_parameter/offsetIntensity = 0.001
+shader_parameter/colorOffsetIntensity = 0.135
+shader_parameter/pixelSize = 464.371
 shader_parameter/grainIntensity = 0.04
 shader_parameter/use_overlay = true
 shader_parameter/use_lens_distortion = true
 shader_parameter/overlay_color = Color(1, 1, 1, 10)
-shader_parameter/lens_distortion_strength = 0.05
+shader_parameter/lens_distortion_strength = 0.012
 
 [node name="characterBody3D" type="CharacterBody3D"]
 script = ExtResource("1_m5ixq")
@@ -36,20 +36,20 @@ script = ExtResource("1_m5ixq")
 transform = Transform3D(2.73424, 0, 0, 0, 2.73424, 0, 0, 0, 2.73424, 0.332237, 2.45265, -0.385603)
 shape = SubResource("CapsuleShape3D_hcfog")
 
-[node name="Iza" parent="." instance=ExtResource("2_0xcql")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.360602, 0.104857, -0.346362)
+[node name="iza_rig" parent="." instance=ExtResource("2_wfc3i")]
+transform = Transform3D(1.74776, 0, 0, 0, 1.74776, 0, 0, 0, 1.74776, 0.380004, -2.38419e-07, -0.346727)
 
 [node name="CameraPivot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.31137, -0.69573)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.517296)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.339131)
 fov = 100.0
 size = 4.0
 near = 0.001
 
 [node name="OutlineShader" type="MeshInstance3D" parent="CameraPivot/Camera3D"]
-transform = Transform3D(7.27419, 0, -3.12386e-06, 0, 7.27419, 0, 1.27186e-06, 0, 17.8664, 0.0910678, -0.637607, -0.944134)
+transform = Transform3D(7.27419, 0, -3.12386e-06, 0, 7.27419, 0, 1.27186e-06, 0, 17.8664, 0.716529, -0.637607, -0.944134)
 gi_mode = 0
 mesh = SubResource("QuadMesh_4ouc4")
 skeleton = NodePath("../../..")

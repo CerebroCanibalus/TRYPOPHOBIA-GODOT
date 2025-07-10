@@ -1,8 +1,11 @@
-[gd_resource type="StandardMaterial3D" load_steps=4 format=3 uid="uid://ddec147jvs670"]
+[gd_resource type="StandardMaterial3D" load_steps=5 format=3 uid="uid://ddec147jvs670"]
 
 [ext_resource type="Texture2D" uid="uid://bkj0vwcf3ju6p" path="res://assets/players/Iza_0.png" id="1_p47h0"]
 [ext_resource type="Texture2D" uid="uid://bkivy2w8ax0d0" path="res://assets/players/iza_normals.png" id="2_j7vol"]
-[ext_resource type="Texture2D" uid="uid://d8te5i0dxwg1" path="res://assets/players/iza_dis.png" id="2_uo7i6"]
+[ext_resource type="Texture2D" uid="uid://byr5mjwjl7q5a" path="res://assets/players/Iza_0_ambient.png" id="2_t5rwe"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_t1ek4"]
+load_path = "res://.godot/imported/Iza_0_displacement.png-8fc9ae0ccee7b3a1547bed6fc181cf74.s3tc.ctex"
 
 [resource]
 transparency = 2
@@ -15,11 +18,17 @@ roughness_texture_channel = 4
 emission = Color(0.00782897, 0.0523255, 0.143025, 1)
 emission_energy_multiplier = 0.5
 normal_enabled = true
-normal_scale = 0.2
+normal_scale = 0.25
 normal_texture = ExtResource("2_j7vol")
 anisotropy = 0.2
-heightmap_scale = -0.01
-heightmap_texture = ExtResource("2_uo7i6")
+ao_enabled = true
+ao_light_affect = 0.46
+ao_texture = ExtResource("2_t5rwe")
+heightmap_scale = 0.05
+heightmap_deep_parallax = true
+heightmap_min_layers = 8
+heightmap_max_layers = 32
+heightmap_texture = SubResource("CompressedTexture2D_t1ek4")
 backlight = Color(0.764937, 0.569467, 0.976386, 1)
 texture_filter = 2
 grow_amount = 1.293
