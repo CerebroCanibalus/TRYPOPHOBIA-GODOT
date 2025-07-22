@@ -43,7 +43,7 @@ transform = Transform3D(1.74776, 0, 0, 0, 1.74776, 0, 0, 0, 1.74776, 0.380004, -
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.31137, -0.69573)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.339131)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.372877, 0, -0.339131)
 fov = 100.0
 size = 4.0
 near = 0.001
@@ -71,4 +71,5 @@ grow_vertical = 2
 metadata/_edit_use_anchors_ = true
 
 [node name="GroundRay" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0178242, 0, -0.00608301)
 target_position = Vector3(0, -0.1, 0)

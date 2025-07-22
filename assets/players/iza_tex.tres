@@ -5,7 +5,6 @@
 [ext_resource type="Texture2D" uid="uid://byr5mjwjl7q5a" path="res://assets/players/Iza_0_ambient.png" id="2_t5rwe"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_t1ek4"]
-load_path = "res://.godot/imported/Iza_0_displacement.png-8fc9ae0ccee7b3a1547bed6fc181cf74.s3tc.ctex"
 
 [resource]
 transparency = 2

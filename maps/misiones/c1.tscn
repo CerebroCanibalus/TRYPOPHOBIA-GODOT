@@ -362,7 +362,7 @@ size = Vector3(1, 1.2522, 1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.270843, 39.4088, 2.62177)
 
 [node name="Ocean" type="MeshInstance3D" parent="."]
-transform = Transform3D(3719.53, 0, 0, 0, 3.45892, 0, 0, 0, 2023.13, -51.8264, -13.6855, -46.1921)
+transform = Transform3D(3719.53, 0, 0, 0, 3.45892, 0, 0, 0, 2023.13, -51.8686, -17.8693, -42.5857)
 mesh = SubResource("BoxMesh_c3iuh")
 
 [node name="Sky" type="WorldEnvironment" parent="."]
