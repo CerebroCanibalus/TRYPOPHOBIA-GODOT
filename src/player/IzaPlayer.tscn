@@ -1,9 +1,9 @@
 [gd_scene load_steps=9 format=3 uid="uid://bwiacylloduj7"]
 
-[ext_resource type="Script" path="res://src/player/movimiento jugador.gd" id="1_m5ixq"]
-[ext_resource type="Shader" path="res://src/player/postprocess.gdshader" id="2_25kiw"]
+[ext_resource type="Script" uid="uid://csv6l4til3sjk" path="res://src/player/movimiento jugador.gd" id="1_m5ixq"]
+[ext_resource type="Shader" uid="uid://bqpi3gls0yr4d" path="res://src/player/postprocess.gdshader" id="2_25kiw"]
 [ext_resource type="PackedScene" uid="uid://s6hcxc3wyigt" path="res://assets/players/iza_rig.tscn" id="2_wfc3i"]
-[ext_resource type="Shader" path="res://src/player/outline.gdshader" id="3_hk1ip"]
+[ext_resource type="Shader" uid="uid://ircrmsbekoxg" path="res://src/player/outline.gdshader" id="3_hk1ip"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hcfog"]
 

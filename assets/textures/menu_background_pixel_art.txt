@@ -1,0 +1,104 @@
+ESPECIFICACIONES PARA IMAGEN DE FONDO EN PIXEL ART - TRYPOPHOBIA
+
+=== INFORMACIÓN TÉCNICA ===
+- Formato: PNG
+- Resolución: 320x240 píxeles (estilo retro)
+- Profundidad de color: 8 bits por canal (24 bits total)
+- Paleta: Máximo 8 colores para mantener estilo 8-bit
+- Tamaño de archivo objetivo: < 50KB
+
+=== PALETA DE COLORES ===
+1. #000000 - Negro puro (sombras profundas)
+2. #1a1a1a - Gris muy oscuro (paredes principales)
+3. #333333 - Gris oscuro (detalles de pared)
+4. #2d1810 - Marrón muy oscuro (madera podrida)
+5. #1a0a0a - Rojo muy oscuro (manchas de sangre)
+6. #330000 - Rojo oscuro (sangre más visible)
+7. #666666 - Gris medio (reflejos sutiles)
+8. #ffffff - Blanco (puntos de luz mínimos)
+
+=== ESTRUCTURA DE LA IMAGEN ===
+
+FONDO BASE:
+- Color base: #000000 (negro puro)
+- Patrón de "ladrillos" pixelados en #1a1a1a
+- Tamaño de ladrillo: 8x8 píxeles
+- Bordes de ladrillo: #333333
+
+ELEMENTOS DE HORROR:
+- "Goteos" de sangre en #1a0a0a y #330000
+- "Grietas" en negro puro
+- "Venas" de madera en #2d1810
+- "Manchas" aleatorias en rojo oscuro
+
+EFECTOS DE LUZ:
+- Reflejos mínimos en #666666
+- Puntos de luz en #ffffff (muy pocos)
+- Gradientes sutiles entre grises
+
+=== PATRÓN TILEABLE ===
+La imagen debe ser completamente repetible (tileable):
+- Bordes izquierdo y derecho deben coincidir
+- Bordes superior e inferior deben coincidir
+- Patrón debe fluir sin interrupciones
+
+=== ESTILO PIXEL ART ===
+- Sin anti-aliasing (bordes duros)
+- Píxeles individuales visibles
+- Colores planos sin gradientes suaves
+- Estilo retro/8-bit auténtico
+
+=== ELEMENTOS ESPECÍFICOS ===
+
+LADRILLOS:
+- Formato: 8x8 píxeles cada uno
+- Color principal: #1a1a1a
+- Bordes: #333333 (1 píxel de grosor)
+- Variación: Algunos ladrillos ligeramente más claros (#333333)
+
+GOTEO DE SANGRE:
+- Forma: Goteos verticales irregulares
+- Color: #1a0a0a (base) y #330000 (brillo)
+- Tamaño: Variable, máximo 4 píxeles de ancho
+- Distribución: Aleatoria pero equilibrada
+
+GRIETAS:
+- Forma: Líneas irregulares y quebradas
+- Color: #000000 (negro puro)
+- Grosor: 1-2 píxeles
+- Dirección: Principalmente vertical y diagonal
+
+Venas de madera:
+- Forma: Líneas orgánicas y sinuosas
+- Color: #2d1810
+- Grosor: 1-3 píxeles
+- Patrón: Natural, no geométrico
+
+=== DISTRIBUCIÓN ESPACIAL ===
+- 60% del área: Ladrillos base
+- 20% del área: Elementos de sangre
+- 15% del área: Grietas y venas
+- 5% del área: Reflejos y puntos de luz
+
+=== EFECTOS ESPECIALES ===
+- Sombras en las esquinas de los ladrillos
+- Reflejos mínimos en bordes superiores
+- Variación sutil en el color de los ladrillos
+- Patrón de "desgaste" en los bordes
+
+=== INSTRUCCIONES DE CREACIÓN ===
+1. Crear canvas de 320x240 píxeles
+2. Rellenar con color base #000000
+3. Dibujar patrón de ladrillos 8x8
+4. Agregar goteos de sangre aleatorios
+5. Dibujar grietas y venas
+6. Agregar reflejos mínimos
+7. Verificar que sea tileable
+8. Exportar como PNG sin compresión
+
+=== NOTAS IMPORTANTES ===
+- Mantener el estilo pixel art auténtico
+- No usar herramientas de suavizado
+- Asegurar que funcione bien con el shader
+- Optimizar para rendimiento
+- Mantener atmósfera de horror sutil pero efectiva 

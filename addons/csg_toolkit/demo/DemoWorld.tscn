@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bltlelosbn4ky"]
 
-[ext_resource type="Script" path="res://addons/csg_toolkit/scripts/csg_spreader_3d.gd" id="1_oripl"]
-[ext_resource type="Script" path="res://addons/csg_toolkit/scripts/csg_repeater_3d.gd" id="2_fsnkg"]
+[ext_resource type="Script" uid="uid://cctlrr0lhie1d" path="res://addons/csg_toolkit/scripts/csg_spreader_3d.gd" id="1_oripl"]
+[ext_resource type="Script" uid="uid://ddyvf2d6xk70v" path="res://addons/csg_toolkit/scripts/csg_repeater_3d.gd" id="2_fsnkg"]
 
 [node name="DemoWorld" type="Node3D"]
 

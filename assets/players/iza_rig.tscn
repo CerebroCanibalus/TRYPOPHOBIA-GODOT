@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://1bappj7i16c1" path="res://assets/players/iza_rig.fbx" id="1_ertkk"]
 [ext_resource type="Material" uid="uid://ddec147jvs670" path="res://assets/players/iza_tex.tres" id="2_3qgpv"]
-[ext_resource type="Script" path="res://assets/players/skeleton_3d.gd" id="2_hoklp"]
+[ext_resource type="Script" uid="uid://cpho26q3fal1c" path="res://assets/players/skeleton_3d.gd" id="2_hoklp"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_a8x3i"]
 radius = 0.33778
