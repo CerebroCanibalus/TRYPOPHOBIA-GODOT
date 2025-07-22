@@ -20,7 +20,7 @@ uniform float time_scale: hint_range(0.1, 3.0) = 1.0;          // Escala de tiem
 uniform float pulse_speed: hint_range(0.5, 5.0) = 1.5;         // Velocidad de pulso
 
 // Parámetros de color y atmósfera
-uniform vec3 horror_tint: source_color = vec3(0.3, 0.05, 0.05); // Tinte rojizo
+uniform vec3 horror_tint: source_color = vec3(0.2, 0.08, 0.08); // Tinte rojizo más sutil
 uniform float darkness: hint_range(0.0, 1.0) = 0.7;             // Nivel de oscuridad
 uniform float contrast: hint_range(0.5, 2.0) = 1.2;             // Contraste
 
@@ -168,8 +168,8 @@ void fragment() {
     
     // === EFECTOS DE COLOR Y ATMÓSFERA ===
     
-    // Aplicar tinte de horror (rojizo y oscuro)
-    base_color.rgb = mix(base_color.rgb, horror_tint, 0.4);
+    // Aplicar tinte de horror (rojizo y oscuro) más sutil
+    base_color.rgb = mix(base_color.rgb, horror_tint, 0.15);
     
     // Aplicar contraste
     base_color.rgb = (base_color.rgb - 0.5) * contrast + 0.5;
