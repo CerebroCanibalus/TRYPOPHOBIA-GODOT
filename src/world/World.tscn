@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://criq8nhtfa1af" path="res://assets/env/textures/Wall1.png" id="6_fdh0i"]
 [ext_resource type="Texture2D" uid="uid://bswmp2iso73mv" path="res://assets/env/textures/Floor3.png" id="7_k3cou"]
 [ext_resource type="Texture2D" uid="uid://cc1uqx1sc6fub" path="res://assets/env/textures/Floor2.png" id="8_hdc72"]
-[ext_resource type="PackedScene" uid="uid://ck1ipaot64eyp" path="res://src/player/playerbase.tscn" id="9_1hbvd"]
 [ext_resource type="Texture2D" uid="uid://bepcgwwpvw0m6" path="res://assets/env/textures/Floor4.png" id="9_jj73r"]
 [ext_resource type="ArrayOccluder3D" uid="uid://y8llo0nayys7" path="res://src/world/World.occ" id="10_dbdg5"]
 
@@ -2501,6 +2500,9 @@ points = PackedVector3Array(8, 7, -193, 8, 1, -193, 14, 1, -193, 14, 7, -193, 8,
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_rbcrp"]
 points = PackedVector3Array(-8, 7, -193, -8, 1, -193, -6, 1, -193, -6, 7, -193, -8, 7, -187, -8, 1, -187, -6, 1, -187, -6, 7, -187)
 
+[sub_resource type="Resource" id="Resource_rgxpb"]
+metadata/__load_path__ = "res://src/player/playerbase.tscn"
+
 [node name="Node3D" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -2658,5 +2660,5 @@ shape = SubResource("ConvexPolygonShape3D_boeq8")
 [node name="entity_0_brush_39_collision_shape" type="CollisionShape3D" parent="NavigationRegion3D/QodotMap/entity_0_worldspawn"]
 shape = SubResource("ConvexPolygonShape3D_rbcrp")
 
-[node name="Player" parent="." instance=ExtResource("9_1hbvd")]
+[node name="Player" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.262205, 8.03928, -1.73868)

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://b52cuw622kebg"]
 
-[ext_resource type="Script" path="res://src/ui/main_menu.gd" id="1_p3ifl"]
+[ext_resource type="Script" uid="uid://cxlrwnixis5ul" path="res://src/ui/main_menu.gd" id="1_p3ifl"]
 
 [sub_resource type="FontFile" id="FontFile_evth8"]
 cache/0/16/0/ascent = 0.0

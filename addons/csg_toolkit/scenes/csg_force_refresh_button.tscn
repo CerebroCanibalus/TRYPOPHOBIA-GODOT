@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ver5l21tu05h"]
 
-[ext_resource type="Script" path="res://addons/csg_toolkit/scripts/csg_force_refresh_button.gd" id="1_xphgr"]
+[ext_resource type="Script" uid="uid://c8xohscx8h3g5" path="res://addons/csg_toolkit/scripts/csg_force_refresh_button.gd" id="1_xphgr"]
 
 [node name="CsgRefreshRepeaterButton" type="Button"]
 anchors_preset = 15
