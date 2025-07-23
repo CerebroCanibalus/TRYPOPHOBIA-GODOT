@@ -1,4 +1,4 @@
-[gd_scene load_steps=87 format=4 uid="uid://c6qrt61xbgo1t"]
+[gd_scene load_steps=86 format=4 uid="uid://c6qrt61xbgo1t"]
 
 [ext_resource type="Texture2D" uid="uid://cod3jas8d7eq0" path="res://assets/env/textures/Floor1.png" id="5_0d5tl"]
 [ext_resource type="Texture2D" uid="uid://criq8nhtfa1af" path="res://assets/env/textures/Wall1.png" id="6_fdh0i"]
@@ -2499,9 +2499,6 @@ points = PackedVector3Array(8, 7, -193, 8, 1, -193, 14, 1, -193, 14, 7, -193, 8,
 
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_rbcrp"]
 points = PackedVector3Array(-8, 7, -193, -8, 1, -193, -6, 1, -193, -6, 7, -193, -8, 7, -187, -8, 1, -187, -6, 1, -187, -6, 7, -187)
-
-[sub_resource type="Resource" id="Resource_rgxpb"]
-metadata/__load_path__ = "res://src/player/playerbase.tscn"
 
 [node name="Node3D" type="Node3D"]
 

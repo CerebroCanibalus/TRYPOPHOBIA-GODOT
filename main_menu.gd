@@ -11,6 +11,7 @@ extends Control
 @onready var multiplayer_container = $MultiplayerContainer  # Contenedor del menú multijugador
 @onready var settings_container = $SettingsContainer  # Contenedor de configuración
 @onready var language_container = $LanguageContainer  # Contenedor de selección de idioma
+@onready var server_browser_container = $ServerBrowserContainer  # Contenedor del explorador de servidores
 
 # Referencias a botones del menú principal
 @onready var play_button = $MainContainer/VBoxContainer/PlayButton
@@ -34,13 +35,20 @@ extends Control
 @onready var english_button = $LanguageContainer/VBoxContainer/EnglishButton
 @onready var back_from_language = $LanguageContainer/VBoxContainer/BackButton
 
+# Referencias a elementos del explorador de servidores
+@onready var server_list = $ServerBrowserContainer/MainContainer/ServerListContainer/ServerListScrollContainer/ServerList
+@onready var refresh_button = $ServerBrowserContainer/MainContainer/ActionButtonsContainer/RefreshButton
+@onready var direct_connect_button = $ServerBrowserContainer/MainContainer/ActionButtonsContainer/DirectConnectButton
+@onready var back_from_server_browser = $ServerBrowserContainer/MainContainer/ActionButtonsContainer/BackButton
+@onready var server_status_label = $ServerBrowserContainer/StatusLabel
+@onready var server_subtitle_label = $ServerBrowserContainer/SubtitleLabel
+
 # Referencias a elementos de audio para efectos de horror
 @onready var ambient_audio = $AudioContainer/AmbientAudio  # Audio ambiente inquietante
 @onready var ui_sounds = $AudioContainer/UISounds  # Sonidos de interfaz
 @onready var breath_audio = $AudioContainer/BreathAudio  # Sonidos de respiración
 
-# Manager de audio del menú
-var menu_audio_manager: Node
+
 
 # Referencias a elementos visuales
 @onready var background_animation = $BackgroundAnimation  # Animación del fondo
@@ -127,6 +135,7 @@ func setup_initial_state():
 	multiplayer_container.visible = false  # Ocultar menú multijugador
 	settings_container.visible = false     # Ocultar menú configuración
 	language_container.visible = false     # Ocultar menú idiomas
+	server_browser_container.visible = false  # Ocultar explorador de servidores
 	
 	# Cargar idioma guardado desde configuración
 	# PlayerPrefs o similar se usaría aquí en un juego real
@@ -163,6 +172,11 @@ func setup_button_connections():
 	english_button.pressed.connect(_on_english_selected)
 	back_from_language.pressed.connect(_on_back_to_settings)
 	
+	# === BOTONES DEL EXPLORADOR DE SERVIDORES ===
+	refresh_button.pressed.connect(_on_refresh_servers_pressed)
+	direct_connect_button.pressed.connect(_on_direct_connect_pressed)
+	back_from_server_browser.pressed.connect(_on_back_to_multiplayer)
+	
 	# === EFECTOS DE HOVER (pasar mouse sobre botón) ===
 	# mouse_entered se ejecuta cuando el cursor entra en el área del botón
 	# mouse_exited se ejecuta cuando el cursor sale del área del botón
@@ -172,7 +186,8 @@ func setup_button_connections():
 		play_button, multiplayer_button, settings_button, exit_button,
 		host_button, join_button, back_from_multiplayer,
 		language_button, graphics_button, audio_button, back_from_settings,
-		spanish_button, english_button, back_from_language
+		spanish_button, english_button, back_from_language,
+		refresh_button, direct_connect_button, back_from_server_browser
 	]
 	
 	# for es un bucle que repite código para cada elemento en una lista
@@ -189,7 +204,7 @@ func setup_horror_atmosphere():
 	print("Configurando atmósfera de horror...")
 	
 	# === CONFIGURACIÓN DEL SISTEMA DE AUDIO ===
-	setup_menu_audio_manager()
+	setup_direct_audio_system()
 	
 	# === CONFIGURACIÓN DE AUDIO AMBIENTE ===
 	if ambient_audio:  # Verificar que el nodo existe
@@ -228,23 +243,41 @@ func setup_horror_atmosphere():
 		# Crear un efecto de temblor sutil en el título
 		create_title_shake_effect()
 
-# === CONFIGURACIÓN DEL MENU AUDIO MANAGER ===
-func setup_menu_audio_manager():
-	print("🎵 Configurando MenuAudioManager...")
+# === CONFIGURACIÓN DIRECTA DEL SISTEMA DE AUDIO ===
+func setup_direct_audio_system():
+	print("🎵 Configurando sistema de audio directo...")
 	
-	# Cargar el script del MenuAudioManager
-	var menu_audio_script = load("res://scripts/MenuAudioManager.gd")
-	if menu_audio_script:
-		# Crear instancia del audio manager
-		menu_audio_manager = menu_audio_script.new()
-		add_child(menu_audio_manager)
-		
-		# Configurar las referencias a los nodos de audio
-		menu_audio_manager.setup_audio_nodes(ui_sounds, ambient_audio, breath_audio)
-		
-		print("✅ MenuAudioManager configurado correctamente")
+	# Verificar que tenemos los nodos de audio
+	if ui_sounds:
+		print("✅ Nodo ui_sounds encontrado")
 	else:
-		print("❌ Error: No se pudo cargar MenuAudioManager.gd")
+		print("❌ Nodo ui_sounds NO encontrado")
+	
+	# Verificar que los archivos de sonido existen
+	test_audio_files()
+
+# Función para probar si los archivos de audio se pueden cargar
+func test_audio_files():
+	print("🔍 Probando archivos de audio...")
+	
+	# Probar cada archivo de sonido
+	var click_sound = load("res://audio/sfx/menu/click.wav")
+	if click_sound:
+		print("✅ click.wav cargado correctamente")
+	else:
+		print("❌ Error: no se pudo cargar click.wav")
+	
+	var hover_sound = load("res://audio/sfx/menu/hover.wav")
+	if hover_sound:
+		print("✅ hover.wav cargado correctamente")
+	else:
+		print("❌ Error: no se pudo cargar hover.wav")
+	
+	var transition_sound = load("res://audio/sfx/menu/transition.wav")
+	if transition_sound:
+		print("✅ transition.wav cargado correctamente")
+	else:
+		print("❌ Error: no se pudo cargar transition.wav")
 
 # === CONFIGURACIÓN DE ANIMACIONES ===
 func setup_animations():
@@ -728,9 +761,8 @@ func _on_button_hover(button: Button):
 	# No necesitamos hacer nada aquí, ya que se actualiza cada frame
 	
 	# === EFECTO DE AUDIO ===
-	# Reproducir sonido de hover usando el audio manager
-	if menu_audio_manager:
-		menu_audio_manager.play_hover()
+	# Reproducir sonido de hover directamente
+	play_hover_sound()
 
 # Función que se ejecuta cuando el mouse sale de un botón
 func _on_button_unhover(button: Button):
@@ -805,11 +837,13 @@ func _on_host_pressed():
 
 # Función para unirse a una partida existente
 func _on_join_pressed():
-	print("Buscando partidas...")
+	print("Abriendo explorador de servidores...")
 	play_click_sound()
+	show_container(server_browser_container)
 	
-	# Aquí iría la lógica para buscar y unirse a servidores
-	# Por ejemplo, mostrar una lista de servidores disponibles
+	# Inicializar el explorador de servidores
+	setup_server_browser()
+	refresh_server_list()
 
 # === FUNCIONES DE RESPUESTA A BOTONES DE CONFIGURACIÓN ===
 
@@ -867,13 +901,52 @@ func _on_back_to_settings():
 
 # Reproducir sonido de clic
 func play_click_sound():
-	# Usar el audio manager para reproducir el sonido de click
-	if menu_audio_manager:
-		menu_audio_manager.play_click()
+	print("🔊 Intentando reproducir sonido de click...")
+	if ui_sounds:
+		var click_sound = load("res://audio/sfx/menu/click.wav")
+		if click_sound:
+			ui_sounds.stream = click_sound
+			ui_sounds.volume_db = -8.0
+			ui_sounds.play()
+			print("✅ Sonido de click reproducido")
+		else:
+			print("❌ No se pudo cargar click.wav")
+	else:
+		print("❌ Nodo ui_sounds no disponible")
 	
 	# === EFECTO DE VIBRACIÓN TERRORÍFICA ===
 	# Activar vibración en el fondo al hacer clic
 	trigger_horror_shake()
+
+# Reproducir sonido de hover
+func play_hover_sound():
+	print("🔊 Intentando reproducir sonido de hover...")
+	if ui_sounds:
+		var hover_sound = load("res://audio/sfx/menu/hover.wav")
+		if hover_sound:
+			ui_sounds.stream = hover_sound
+			ui_sounds.volume_db = -12.0
+			ui_sounds.play()
+			print("✅ Sonido de hover reproducido")
+		else:
+			print("❌ No se pudo cargar hover.wav")
+	else:
+		print("❌ Nodo ui_sounds no disponible")
+
+# Reproducir sonido de transición
+func play_transition_sound():
+	print("🔊 Intentando reproducir sonido de transición...")
+	if ui_sounds:
+		var transition_sound = load("res://audio/sfx/menu/transition.wav")
+		if transition_sound:
+			ui_sounds.stream = transition_sound
+			ui_sounds.volume_db = -6.0
+			ui_sounds.play()
+			print("✅ Sonido de transición reproducido")
+		else:
+			print("❌ No se pudo cargar transition.wav")
+	else:
+		print("❌ Nodo ui_sounds no disponible")
 
 # === FUNCIONES DE EFECTOS INTERACTIVOS ===
 
@@ -899,10 +972,7 @@ func trigger_horror_shake():
 	print("⚡ ACTIVANDO DISTORSIÓN DIGITAL FUTURISTA")
 	
 	# === REPRODUCIR SONIDO DE TRANSICIÓN ===
-	if menu_audio_manager:
-		menu_audio_manager.play_transition()
-	else:
-		print("⚠️ MenuAudioManager no disponible para sonido de transición")
+	play_transition_sound()
 	
 	if not background_material:
 		print("❌ No hay material para distorsionar")
@@ -934,9 +1004,8 @@ func _on_digital_distortion_finished():
 
 # Reproducir sonido de retroceso
 func play_back_sound():
-	# Usar el audio manager para reproducir sonido de click (como back)
-	if menu_audio_manager:
-		menu_audio_manager.play_click()
+	# Usar el sonido de click para retroceder
+	play_click_sound()
 
 # === FUNCIONES DE PERSISTENCIA ===
 
@@ -971,3 +1040,243 @@ func save_language_preference():
 		print("Idioma guardado correctamente: ", current_language)
 	else:
 		print("Error al guardar configuración de idioma")
+
+# === FUNCIONES DEL EXPLORADOR DE SERVIDORES ===
+
+# Configuración inicial del explorador de servidores
+func setup_server_browser():
+	print("🌐 Configurando explorador de servidores...")
+	
+	# Configurar textos iniciales con temática de horror
+	update_server_browser_texts()
+	
+	# Limpiar lista anterior
+	clear_server_list()
+	
+	# Configurar estado inicial
+	server_status_label.text = "Estado: Preparando antenas de comunicación..."
+	
+	print("✅ Explorador de servidores configurado")
+
+# Actualizar textos del explorador con temática del juego
+func update_server_browser_texts():
+	var title_text = "EXPEDICIONES PERDIDAS"
+	var subtitle_text = "Señales detectadas en el vacío cósmico..."
+	
+	server_browser_container.get_node("TitleLabel").text = title_text
+	server_subtitle_label.text = subtitle_text
+
+# Limpiar la lista de servidores
+func clear_server_list():
+	print("🧹 Limpiando lista de servidores...")
+	
+	# Eliminar todos los elementos hijos del contenedor de lista
+	for child in server_list.get_children():
+		child.queue_free()  # queue_free() elimina el nodo de forma segura
+
+# Refrescar la lista de servidores
+func refresh_server_list():
+	print("🔄 Buscando expediciones disponibles...")
+	
+	# Actualizar estado
+	server_status_label.text = "Estado: Escaneando frecuencias de emergencia..."
+	server_subtitle_label.text = "Interceptando transmisiones de supervivientes..."
+	
+	# Limpiar lista actual
+	clear_server_list()
+	
+	# Simular búsqueda con delay
+	await get_tree().create_timer(1.5).timeout
+	
+	# Por ahora, generar servidores de ejemplo
+	generate_sample_servers()
+	
+	# Actualizar estado final
+	server_status_label.text = "Estado: Exploración completada"
+
+# Generar servidores de ejemplo para demostración
+func generate_sample_servers():
+	print("📡 Generando lista de expediciones...")
+	
+	# Lista de expediciones ficticias con temática del juego
+	var sample_servers = [
+		{
+			"name": "🚀 Expedición Aurora - ACTIVA",
+			"description": "7/8 tripulantes • Estación Minera Artemis",
+			"ping": 45,
+			"players": 7,
+			"max_players": 8,
+			"status": "active",
+			"ip": "192.168.1.100",
+			"port": 7777
+		},
+		{
+			"name": "⚠️ Carabela En Peligro - CRÍTICO", 
+			"description": "4/8 tripulantes • Sistema Kepler-442",
+			"ping": 89,
+			"players": 4,
+			"max_players": 8,
+			"status": "critical",
+			"ip": "192.168.1.101", 
+			"port": 7777
+		},
+		{
+			"name": "🔴 Expedición Perdida - SIN RESPUESTA",
+			"description": "1/8 tripulantes • Ubicación Desconocida",
+			"ping": 999,
+			"players": 1,
+			"max_players": 8,
+			"status": "lost",
+			"ip": "192.168.1.102",
+			"port": 7777
+		},
+		{
+			"name": "🟢 Estación Segura - ESTABLE",
+			"description": "6/8 tripulantes • Base Lunar Europa", 
+			"ping": 23,
+			"players": 6,
+			"max_players": 8,
+			"status": "safe",
+			"ip": "192.168.1.103",
+			"port": 7777
+		}
+	]
+	
+	# Crear un elemento visual para cada servidor
+	for server_data in sample_servers:
+		create_server_item(server_data)
+
+# Crear un elemento visual para un servidor individual
+func create_server_item(server_data: Dictionary):
+	# Crear contenedor principal del servidor
+	var server_item = Panel.new()
+	server_item.custom_minimum_size = Vector2(750, 80)
+	
+	# Configurar estilo del panel según el estado del servidor
+	var style_box = StyleBoxFlat.new()
+	match server_data.status:
+		"active":
+			style_box.bg_color = Color(0.1, 0.3, 0.1, 0.8)  # Verde oscuro
+			style_box.border_color = Color(0.3, 0.8, 0.3, 1)
+		"critical":
+			style_box.bg_color = Color(0.3, 0.2, 0.1, 0.8)  # Naranja oscuro
+			style_box.border_color = Color(0.9, 0.6, 0.2, 1)
+		"lost":
+			style_box.bg_color = Color(0.3, 0.1, 0.1, 0.8)  # Rojo oscuro
+			style_box.border_color = Color(0.8, 0.3, 0.3, 1)
+		"safe":
+			style_box.bg_color = Color(0.1, 0.1, 0.3, 0.8)  # Azul oscuro
+			style_box.border_color = Color(0.3, 0.3, 0.8, 1)
+	
+	style_box.border_width_left = 2
+	style_box.border_width_right = 2
+	style_box.border_width_top = 2
+	style_box.border_width_bottom = 2
+	style_box.corner_radius_top_left = 5
+	style_box.corner_radius_top_right = 5
+	style_box.corner_radius_bottom_left = 5
+	style_box.corner_radius_bottom_right = 5
+	
+	server_item.add_theme_stylebox_override("panel", style_box)
+	
+	# Crear contenedor horizontal para organizar elementos
+	var h_container = HBoxContainer.new()
+	h_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	h_container.add_theme_constant_override("separation", 15)
+	server_item.add_child(h_container)
+	
+	# Información principal del servidor
+	var info_container = VBoxContainer.new()
+	info_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h_container.add_child(info_container)
+	
+	# Nombre del servidor
+	var name_label = Label.new()
+	name_label.text = server_data.name
+	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_color_override("font_color", Color.WHITE)
+	info_container.add_child(name_label)
+	
+	# Descripción del servidor
+	var desc_label = Label.new()
+	desc_label.text = server_data.description
+	desc_label.add_theme_font_size_override("font_size", 14)
+	desc_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8, 1))
+	info_container.add_child(desc_label)
+	
+	# Información de conexión (ping)
+	var ping_container = VBoxContainer.new()
+	ping_container.custom_minimum_size = Vector2(80, 0)
+	h_container.add_child(ping_container)
+	
+	var ping_label = Label.new()
+	var ping_color = Color.GREEN if server_data.ping < 50 else (Color.YELLOW if server_data.ping < 100 else Color.RED)
+	ping_label.text = str(server_data.ping) + "ms"
+	ping_label.add_theme_font_size_override("font_size", 16)
+	ping_label.add_theme_color_override("font_color", ping_color)
+	ping_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ping_container.add_child(ping_label)
+	
+	# Botón de conexión
+	var connect_button = Button.new()
+	connect_button.text = "UNIRSE"
+	connect_button.custom_minimum_size = Vector2(100, 60)
+	connect_button.add_theme_font_size_override("font_size", 16)
+	
+	# Configurar estilo del botón
+	if server_data.status == "lost":
+		connect_button.disabled = true
+		connect_button.text = "PERDIDO"
+		connect_button.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
+	else:
+		connect_button.add_theme_color_override("font_color", Color.WHITE)
+		# Conectar señal del botón para unirse al servidor
+		connect_button.pressed.connect(_on_server_connect_pressed.bind(server_data))
+	
+	h_container.add_child(connect_button)
+	
+	# Agregar el elemento completo a la lista
+	server_list.add_child(server_item)
+
+# === FUNCIONES DE RESPUESTA A BOTONES DEL EXPLORADOR ===
+
+# Función para refrescar servidores
+func _on_refresh_servers_pressed():
+	print("🔄 Botón refrescar presionado")
+	play_click_sound()
+	refresh_server_list()
+
+# Función para conexión directa
+func _on_direct_connect_pressed():
+	print("🔌 Abriendo conexión directa...")
+	play_click_sound()
+	
+	# Aquí iría un popup para ingresar IP y puerto manualmente
+	server_status_label.text = "Estado: Función de conexión directa en desarrollo..."
+
+# Función para volver al menú multijugador
+func _on_back_to_multiplayer():
+	print("⬅️ Volviendo al menú multijugador...")
+	play_back_sound()
+	show_container(multiplayer_container)
+
+# Función para conectarse a un servidor específico
+func _on_server_connect_pressed(server_data: Dictionary):
+	print("🌐 Intentando conectar a: ", server_data.name)
+	print("📡 IP: ", server_data.ip, ":", server_data.port)
+	play_click_sound()
+	
+	# Actualizar estado
+	server_status_label.text = "Estado: Estableciendo enlace cuántico con " + server_data.name + "..."
+	
+	# Aquí iría la lógica real de conexión a servidor
+	# Por ahora solo simular el intento de conexión
+	await get_tree().create_timer(2.0).timeout
+	
+	if server_data.status == "active" or server_data.status == "safe":
+		server_status_label.text = "Estado: ¡Conexión establecida! Iniciando transferencia..."
+		# Aquí cargaría la escena del juego
+		print("✅ Conexión exitosa - Cargar escena de juego")
+	else:
+		server_status_label.text = "Estado: ⚠️ Fallo en la conexión - Señal demasiado débil"
+		print("❌ Conexión fallida")
