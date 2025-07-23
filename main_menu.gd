@@ -39,6 +39,9 @@ extends Control
 @onready var ui_sounds = $AudioContainer/UISounds  # Sonidos de interfaz
 @onready var breath_audio = $AudioContainer/BreathAudio  # Sonidos de respiración
 
+# Manager de audio del menú
+var menu_audio_manager: Node
+
 # Referencias a elementos visuales
 @onready var background_animation = $BackgroundAnimation  # Animación del fondo
 @onready var title_label = $MainContainer/TitleLabel  # Título del juego
@@ -90,11 +93,12 @@ var translations = {
 
 # Diccionario que contiene las rutas de los archivos de audio para efectos de horror
 var horror_sounds = {
-	"hover": "res://audio/sfx/ui/whisper_hover.ogg",      # Susurro al pasar sobre botón
-	"click": "res://audio/sfx/ui/metal_click.ogg",        # Sonido metálico al hacer clic
-	"back": "res://audio/sfx/ui/door_creak.ogg",          # Puerta chirriando al retroceder
-	"ambient": "res://audio/sfx/ui/dark_ambient.ogg",     # Audio ambiente oscuro
-	"breath": "res://audio/sfx/ui/heavy_breath.ogg"       # Respiración pesada
+	"hover": "res://audio/sfx/menu/hover.wav",            # Sonido al pasar sobre botón
+	"click": "res://audio/sfx/menu/click.wav",            # Sonido al hacer clic
+	"transition": "res://audio/sfx/menu/transition.wav",  # Sonido para transiciones/vibraciones
+	"back": "res://audio/sfx/menu/click.wav",             # Usar click para retroceder también
+	"ambient": "res://audio/sfx/ui/dark_ambient.ogg",     # Audio ambiente oscuro (mantener si existe)
+	"breath": "res://audio/sfx/ui/heavy_breath.ogg"       # Respiración pesada (mantener si existe)
 }
 
 # === FUNCIÓN PRINCIPAL DE INICIALIZACIÓN ===
@@ -184,6 +188,9 @@ func setup_button_connections():
 func setup_horror_atmosphere():
 	print("Configurando atmósfera de horror...")
 	
+	# === CONFIGURACIÓN DEL SISTEMA DE AUDIO ===
+	setup_menu_audio_manager()
+	
 	# === CONFIGURACIÓN DE AUDIO AMBIENTE ===
 	if ambient_audio:  # Verificar que el nodo existe
 		# Intentar cargar el archivo de audio ambiente
@@ -220,6 +227,24 @@ func setup_horror_atmosphere():
 	if title_label:
 		# Crear un efecto de temblor sutil en el título
 		create_title_shake_effect()
+
+# === CONFIGURACIÓN DEL MENU AUDIO MANAGER ===
+func setup_menu_audio_manager():
+	print("🎵 Configurando MenuAudioManager...")
+	
+	# Cargar el script del MenuAudioManager
+	var menu_audio_script = load("res://scripts/MenuAudioManager.gd")
+	if menu_audio_script:
+		# Crear instancia del audio manager
+		menu_audio_manager = menu_audio_script.new()
+		add_child(menu_audio_manager)
+		
+		# Configurar las referencias a los nodos de audio
+		menu_audio_manager.setup_audio_nodes(ui_sounds, ambient_audio, breath_audio)
+		
+		print("✅ MenuAudioManager configurado correctamente")
+	else:
+		print("❌ Error: No se pudo cargar MenuAudioManager.gd")
 
 # === CONFIGURACIÓN DE ANIMACIONES ===
 func setup_animations():
@@ -703,12 +728,9 @@ func _on_button_hover(button: Button):
 	# No necesitamos hacer nada aquí, ya que se actualiza cada frame
 	
 	# === EFECTO DE AUDIO ===
-	# Reproducir sonido de hover si existe
-	if ui_sounds:
-		var hover_sound = load(horror_sounds["hover"])
-		if hover_sound:
-			ui_sounds.stream = hover_sound
-			ui_sounds.play()
+	# Reproducir sonido de hover usando el audio manager
+	if menu_audio_manager:
+		menu_audio_manager.play_hover()
 
 # Función que se ejecuta cuando el mouse sale de un botón
 func _on_button_unhover(button: Button):
@@ -845,11 +867,9 @@ func _on_back_to_settings():
 
 # Reproducir sonido de clic
 func play_click_sound():
-	if ui_sounds:
-		var click_sound = load(horror_sounds["click"])
-		if click_sound:
-			ui_sounds.stream = click_sound
-			ui_sounds.play()
+	# Usar el audio manager para reproducir el sonido de click
+	if menu_audio_manager:
+		menu_audio_manager.play_click()
 	
 	# === EFECTO DE VIBRACIÓN TERRORÍFICA ===
 	# Activar vibración en el fondo al hacer clic
@@ -877,6 +897,12 @@ func play_click_sound():
 # Activar vibración terrorífica al hacer clic
 func trigger_horror_shake():
 	print("⚡ ACTIVANDO DISTORSIÓN DIGITAL FUTURISTA")
+	
+	# === REPRODUCIR SONIDO DE TRANSICIÓN ===
+	if menu_audio_manager:
+		menu_audio_manager.play_transition()
+	else:
+		print("⚠️ MenuAudioManager no disponible para sonido de transición")
 	
 	if not background_material:
 		print("❌ No hay material para distorsionar")
@@ -908,11 +934,9 @@ func _on_digital_distortion_finished():
 
 # Reproducir sonido de retroceso
 func play_back_sound():
-	if ui_sounds:
-		var back_sound = load(horror_sounds["back"])
-		if back_sound:
-			ui_sounds.stream = back_sound
-			ui_sounds.play()
+	# Usar el audio manager para reproducir sonido de click (como back)
+	if menu_audio_manager:
+		menu_audio_manager.play_click()
 
 # === FUNCIONES DE PERSISTENCIA ===
 
