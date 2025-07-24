@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://b52cuw622kebg"]
+[gd_scene load_steps=7 format=3 uid="uid://b52cuw622kebg"]
 
 [ext_resource type="Script" uid="uid://4deturxjlos7" path="res://main_menu.gd" id="1_p3ifl"]
+[ext_resource type="Texture2D" uid="uid://dy0sgpaswd7ob" path="res://assets/textures/menubackground.tres" id="2_7vrkn"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_horror_button_hover"]
 bg_color = Color(0.25, 0.08, 0.08, 1)
@@ -53,6 +54,9 @@ grow_vertical = 2
 theme = SubResource("Theme_horror")
 script = ExtResource("1_p3ifl")
 
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.996947, 0.67546, 0.743013, 1)
+
 [node name="BackgroundTexture" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -60,6 +64,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = ExtResource("2_7vrkn")
 expand_mode = 1
 stretch_mode = 6
 

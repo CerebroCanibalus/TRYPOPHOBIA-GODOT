@@ -677,14 +677,12 @@ material = ExtResource("1_i4wtw")
 [node name="CSGBox3D19" type="CSGBox3D" parent="CSGCombiner3D"]
 transform = Transform3D(-1.35987e-08, 0, 0.308915, 0, 1.65051, 0, -0.311102, 0, -1.35031e-08, -22.7113, 0.0869522, -20.2645)
 operation = 2
-snap = 1e-06
 calculate_tangents = false
 material = ExtResource("1_i4wtw")
 
 [node name="CSGBox3D20" type="CSGBox3D" parent="CSGCombiner3D"]
 transform = Transform3D(-1.35987e-08, 0, 0.308915, 0, 1.65051, 0, -0.311102, 0, -1.35031e-08, 10.6193, 0.0869522, -20.6389)
 operation = 2
-snap = 1e-06
 calculate_tangents = false
 material = ExtResource("1_i4wtw")
 
