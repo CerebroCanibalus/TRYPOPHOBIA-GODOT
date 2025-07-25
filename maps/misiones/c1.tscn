@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=3 uid="uid://bfwa36v3ynguy"]
 
-[ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_i4wtw"]
-[ext_resource type="PackedScene" uid="uid://cf54rbky738tn" path="res://assets/env/test/Ladder_Model.tscn" id="2_hha4v"]
+[ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/materials/test/texturetest.tres" id="1_i4wtw"]
+[ext_resource type="PackedScene" uid="uid://cf54rbky738tn" path="res://assets/materials/test/Ladder_Model.tscn" id="2_hha4v"]
 [ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="3_f6g7y"]
 [ext_resource type="PackedScene" uid="uid://d1a8afg5uhuom" path="res://assets/props/barril_aceite.gltf" id="4_m3omv"]
 

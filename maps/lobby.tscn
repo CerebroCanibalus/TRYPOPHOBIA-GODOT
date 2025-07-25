@@ -1,32 +1,105 @@
 [gd_scene load_steps=2 format=3 uid="uid://b0k4njunq6kej"]
 
-[ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/env/test/texturetest.tres" id="1_f6evx"]
+[ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/materials/test/texturetest.tres" id="1_f6evx"]
 
 [node name="Lobby" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11821, 0.100857, 0.0290833)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.541312, 0.592732, -0.596364, -2.45588e-08, 0.709263, 0.704944, 0.840822, -0.381595, 0.383933, -277.839, 22.769, 55.9991)
+transform = Transform3D(0.541312, 0.592732, -0.596364, -2.45588e-08, 0.709263, 0.704944, 0.840822, -0.381595, 0.383933, -162.793, 22.769, 55.9991)
+light_color = Color(0.0435762, 0.133684, 0.179516, 1)
+light_energy = 0.0
 shadow_enabled = true
 shadow_blur = 1.101
 
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
 
 [node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(90.0241, 0, 0, 0, 4.04318, 0, 0, 0, 67.69, 0, 27.8658, 0)
+transform = Transform3D(90.0241, 0, 0, 0, 4.04318, 0, 0, 0, 121.796, 0, 27.8658, 0)
 size = Vector3(1, 14.7841, 1)
 material = ExtResource("1_f6evx")
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(76.6802, 0, 0, 0, 3.44387, 0, 0, 0, 57.6565, 0, 27.8658, 0)
+transform = Transform3D(76.6802, 0, 0, 0, 3.44387, 0, 0, 0, 108.862, 0, 27.8658, 0)
 operation = 2
 size = Vector3(1, 14.7841, 1)
 material = ExtResource("1_f6evx")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="CSGCombiner3D/CSGBox3D2"]
+transform = Transform3D(0.00974473, 0.00432735, -0.0075091, -0.000378611, 0.251797, 0.144615, 0.00610466, -0.00341159, 0.00595612, -0.420333, 2.67346, 0.353938)
+light_energy = 13.216
+light_indirect_energy = 1.973
+light_volumetric_fog_energy = 3.27
+light_specular = 5.797
+light_bake_mode = 1
+shadow_enabled = true
+shadow_bias = 1.111
+shadow_normal_bias = 1.541
+shadow_opacity = 0.87
+shadow_blur = 3.027
+spot_range = 64.9116
+spot_angle = 44.6398
+
+[node name="SpotLight3D2" type="SpotLight3D" parent="CSGCombiner3D/CSGBox3D2"]
+transform = Transform3D(-0.00361808, -0.0112273, 0.00556144, -0.179298, 0.145139, 0.176359, -0.00676119, -0.000871036, -0.00615702, 0.445539, 4.88738, -0.424146)
+light_energy = 13.216
+light_indirect_energy = 1.973
+light_volumetric_fog_energy = 3.27
+light_specular = 5.797
+light_bake_mode = 1
+shadow_enabled = true
+shadow_bias = 1.111
+shadow_normal_bias = 1.541
+shadow_opacity = 0.87
+shadow_blur = 3.027
+spot_range = 64.9116
+spot_angle = 44.6398
+
+[node name="OmniLight3D" type="OmniLight3D" parent="CSGCombiner3D/CSGBox3D2"]
+transform = Transform3D(0.0130412, 0, 0, 0, 0.290371, 0, 0, 0, 0.00918593, 0, 6.97879, 0.226163)
+light_color = Color(0.686275, 0.403922, 0, 1)
+light_energy = 3.27
+light_indirect_energy = 3.162
+light_volumetric_fog_energy = 0.784
+light_specular = 6.554
+omni_range = 9.66517
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="CSGCombiner3D/CSGBox3D2"]
+transform = Transform3D(0.0130412, 0, 0, 0, 0.290371, 0, 0, 0, 0.00918593, 0, 6.97879, -0.252505)
+light_color = Color(0.686275, 0.403922, 0, 1)
+light_energy = 3.27
+light_indirect_energy = 3.162
+light_volumetric_fog_energy = 0.784
+light_specular = 6.554
+omni_range = 9.66517
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="CSGCombiner3D/CSGBox3D2"]
+transform = Transform3D(0.0130412, 0, 0, 0, 0.290371, 0, 0, 0, 0.00918593, -0.343334, 6.97879, 0.00605947)
+light_color = Color(0.686275, 0.403922, 0, 1)
+light_energy = 3.27
+light_indirect_energy = 3.162
+light_volumetric_fog_energy = 0.784
+light_specular = 6.554
+omni_range = 9.66517
+
+[node name="OmniLight3D4" type="OmniLight3D" parent="CSGCombiner3D/CSGBox3D2"]
+transform = Transform3D(0.0130412, 0, 0, 0, 0.290371, 0, 0, 0, 0.00918593, 0.34724, 6.97879, 0.00605947)
+light_color = Color(0.686275, 0.403922, 0, 1)
+light_energy = 3.27
+light_indirect_energy = 3.162
+light_volumetric_fog_energy = 0.784
+light_specular = 6.554
+omni_range = 9.66517
 
 [node name="CSGBox3D3" type="CSGBox3D" parent="CSGCombiner3D"]
 transform = Transform3D(106.768, 0, 0, 0, 3.44387, 0, 0, 0, 19.8465, 0, 13.2994, 0)
 operation = 2
 size = Vector3(1, 6.32481, 1)
 material = ExtResource("1_f6evx")
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="CSGCombiner3D"]
+transform = Transform3D(52.1087, 0, 0, 0, 17.0815, 0, 0, 0, 52.1087, 0, 67.8387, -1.31333)
+operation = 2
 
 [node name="Elevador" type="CSGCylinder3D" parent="CSGCombiner3D"]
 transform = Transform3D(26.3312, 0, 0, 0, 26.3312, 0, 0, 0, 26.3312, -0.147617, 3.86258, -1.32965)
@@ -47,14 +120,20 @@ operation = 2
 size = Vector3(1, 1.44348, 1)
 
 [node name="SpotLight3D" type="SpotLight3D" parent="CSGCombiner3D/Elevador"]
-transform = Transform3D(0.0379777, 0, 0, 0, -1.66006e-09, 0.0379777, 0, -0.0379777, -1.66006e-09, 0, 0.947326, 0)
+transform = Transform3D(0.0379778, 0, 0, 0, -1.66006e-09, 0.0379778, 0, -0.0379778, -1.66006e-09, 0, 0.987348, 0)
+light_color = Color(0.565785, 0.449771, 0.896226, 1)
 light_energy = 11.182
 light_volumetric_fog_energy = 1.485
-light_size = 0.061
-shadow_bias = 2.555
-shadow_normal_bias = 3.323
-shadow_blur = 2.616
-spot_range = 24.7245
-spot_attenuation = -0.52
-spot_angle = 27.5334
+light_size = 0.114
+light_specular = 0.608
+shadow_bias = 0.023
+shadow_normal_bias = 2.98
+shadow_transmittance_bias = -0.382
+shadow_blur = 3.562
+spot_range = 24.589
+spot_attenuation = 0.29
+spot_angle = 89.56
 spot_angle_attenuation = 0.594604
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.660888, -0.305812, -0.685351, 0.00920248, 0.916445, -0.400055, 0.750428, 0.258084, 0.608482, -22.44, 15.5086, 17.7823)
