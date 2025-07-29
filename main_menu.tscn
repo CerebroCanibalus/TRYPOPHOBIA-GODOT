@@ -338,6 +338,34 @@ theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "ESPAÑOL"
 
+[node name="PortugueseButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "PORTUGUÊS"
+
+[node name="ItalianButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "ITALIANO"
+
+[node name="FrenchButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "FRANÇAIS"
+
+[node name="GermanButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "DEUTSCH"
+
 [node name="BackButton" type="Button" parent="LanguageContainer/VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
