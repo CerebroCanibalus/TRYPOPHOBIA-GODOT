@@ -222,20 +222,51 @@ func create_title_shake_effect():
 	if not title_label:
 		return
 	
+	# Crear efecto de pulsación constante para el título
+	create_title_pulse_effect()
+	
 	# Guardar la posición original del título
 	var original_position = title_label.position
 	
-	# Crear un Timer para el efecto de temblor
+	# Crear un Timer para el efecto de temblor sutil
 	var shake_timer = Timer.new()
 	get_parent().add_child(shake_timer)
-	shake_timer.wait_time = 0.1
+	shake_timer.wait_time = 0.15
 	shake_timer.autostart = true
 	shake_timer.timeout.connect(_on_shake_timer_timeout.bind(original_position))
+
+func create_title_pulse_effect():
+	"""Crear efecto de pulsación constante en el título"""
+	if not title_label:
+		return
+	
+	print("--- Creando efecto de pulsación en el título ---")
+	
+	# Crear animación de pulsación continua
+	var pulse_tween = create_tween()
+	pulse_tween.set_loops()  # Hacer que se repita infinitamente
+	
+	# Configurar secuencia de pulsación
+	pulse_tween.tween_property(title_label, "modulate:a", 0.7, 2.0)
+	pulse_tween.tween_property(title_label, "modulate:a", 1.0, 2.0)
+	
+	# Crear efecto de brillo adicional
+	var glow_tween = create_tween()
+	glow_tween.set_loops()
+	
+	# Efecto de cambio de color sutil (más blanco brillante)
+	var original_color = title_label.modulate
+	var bright_color = Color(1.1, 1.1, 1.1, 1.0)
+	
+	glow_tween.tween_property(title_label, "modulate", bright_color, 3.0)
+	glow_tween.tween_property(title_label, "modulate", original_color, 3.0)
+	
+	print("✅ Efecto de pulsación del título activado")
 
 func _on_shake_timer_timeout(original_pos: Vector2):
 	if title_label:
 		# Crear un temblor aleatorio muy sutil
-		var shake_strength = 2.0
+		var shake_strength = 1.0
 		var random_offset = Vector2(
 			randf_range(-shake_strength, shake_strength),
 			randf_range(-shake_strength, shake_strength)
