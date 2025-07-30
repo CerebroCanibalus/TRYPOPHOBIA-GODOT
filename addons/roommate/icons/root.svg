@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Слой_2"
+   data-name="Слой 2"
+   viewBox="0 0 16 16"
+   version="1.1"
+   sodipodi:docname="root.svg"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="35.974058"
+     inkscape:cx="10.91064"
+     inkscape:cy="8.0891626"
+     inkscape:window-width="1880"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Слой_2" />
+  <title
+     id="title1">Кириллино</title>
+  <path
+     d="M 0.41254492,4.8107039 H 10.109751 a 0.52795899,0.52795899 0 0 0 0.34479,-0.9697206 L 5.6382614,0.60858145 a 0.62493104,0.62493104 0 0 0 -0.6680297,0 L 0.11085406,3.8409833 a 0.52795899,0.52795899 0 0 0 0.30169086,0.9697206 z"
+     fill="#fc7f7f"
+     id="path1"
+     style="stroke-width:1" />
+  <path
+     d="m 6.8773489,9.5515601 h 8.6197381 a 0.49563497,0.49563497 0 0 0 0.301692,-0.8942978 l -4.30987,-2.9738098 a 0.57105768,0.57105768 0 0 0 -0.614157,0 L 6.5648834,8.6572623 a 0.49563497,0.49563497 0 0 0 0.3124655,0.8942978 z"
+     fill="#fc7f7f"
+     id="path2"
+     style="stroke-width:1" />
+  <path
+     d="M 0.95127852,3.7332366 V 12.352975 H 9.1939036 V 9.9502231 H 9.5710171 V 3.7332366 Z M 7.5777026,10.736774 H 2.5674796 V 5.3494376 h 5.3873366 v 2.7475416 z"
+     fill="#fc7f7f"
+     id="path3"
+     style="stroke-width:1" />
+  <path
+     d="M 7.5777026,8.3340221 V 15.585377 H 14.829058 V 8.3340221 Z M 13.212856,13.969177 H 9.1939036 V 9.9502231 h 4.0189524 z"
+     fill="#fc7f7f"
+     id="path4"
+     style="stroke-width:1" />
+</svg>
