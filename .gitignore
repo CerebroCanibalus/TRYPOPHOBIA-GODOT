@@ -1,54 +1,14 @@
-```
-# Godot specific ignores
-*.import
-*.uid
-.rid
-.scene
-.tscn
-.gd
-*.gd
-*.gdc
-*.gde
-*.tres
-*.res
-export_presets.cfg
-GodotSharp/
-mono_crash.*
-user://
+# Godot 4+ specific ignores
+.godot/
+/android/
 
-# Dependencies
-node_modules/
-vendor/
+# Imported translations (automatically generated from CSV files)
+*.translation
 
-# Build artifacts
-build/
-dist/
-bin/
 *.exe
-*.dll
-*.so
-*.dylib
 
-# Editor/IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# idk what these are, feel free to unignore if they're needed
 *.tmp
 
-# Logs
-*.log
-
-# Environment
-.env
-.env.local
-*.env.*
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Cache
-.cache/
-*.cache
-```
+*-export.png
+*-export.png.import
