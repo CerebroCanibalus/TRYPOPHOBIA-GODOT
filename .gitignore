@@ -1,4 +1,54 @@
-# Godot 4 ignores
-.godot/
+```
+# Godot specific ignores
+*.import
+*.uid
+.rid
+.scene
+.tscn
+.gd
+*.gd
+*.gdc
+*.gde
+*.tres
+*.res
 export_presets.cfg
-*.import/
+GodotSharp/
+mono_crash.*
+user://
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+build/
+dist/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+*.cache
+```
