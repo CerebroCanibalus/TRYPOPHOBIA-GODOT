@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(npm list:*)",
+      "Bash(npx --yes godot-mcp --version)",
+      "Bash(dir \"C:\\\\Users\\\\Lord Gatito\\\\.claude\\\\backups\"\" /O-D)",
+      "Bash(node:*)"
+    ]
+  }
+}

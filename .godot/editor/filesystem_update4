@@ -1,0 +1,5 @@
+res://maps/misiones/c1.tscn
+res://addons/roommate/defaults/default_generate_shortcut.tres
+res://src/player/player_character.gd
+res://src/player/IzaPlayer.tscn
+res://src/player/characters/placeholder_01.tscn

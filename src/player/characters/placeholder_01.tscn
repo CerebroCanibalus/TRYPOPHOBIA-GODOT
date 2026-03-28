@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://bpf422mibcpc3"]
+
+[ext_resource type="Script" uid="uid://b8lfldxn3aj7v" path="res://src/player/player_character.gd" id="1"]
+[ext_resource type="Script" uid="uid://dkgststtcmpdw" path="res://src/player/character_stats.gd" id="2_fyils"]
+
+[sub_resource type="Resource" id="Resource_jnbqf"]
+script = ExtResource("2_fyils")
+metadata/_custom_type_script = "uid://dkgststtcmpdw"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.4
+height = 1.8
+
+[node name="Placeholder01" type="CharacterBody3D" unique_id=393827517]
+script = ExtResource("1")
+stats = SubResource("Resource_jnbqf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=867877467]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=580032036]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=831435305]
+fov = 90.0
+
+[node name="PushRay" type="RayCast3D" parent="CameraPivot/Camera3D" unique_id=1667765498]
+target_position = Vector3(0, 0, -2.5)
