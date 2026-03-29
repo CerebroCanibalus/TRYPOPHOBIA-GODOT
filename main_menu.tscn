@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://b52cuw622kebg"]
+[gd_scene format=3 uid="uid://b52cuw622kebg"]
 
 [ext_resource type="Script" uid="uid://4deturxjlos7" path="res://main_menu.gd" id="1_p3ifl"]
 [ext_resource type="Texture2D" uid="uid://dy0sgpaswd7ob" path="res://assets/textures/menubackground.tres" id="2_7vrkn"]
@@ -44,7 +44,7 @@ Button/styles/hover = SubResource("StyleBoxFlat_horror_button_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_horror_button")
 Button/styles/pressed = SubResource("StyleBoxFlat_horror_button_pressed")
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=595727785]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -54,10 +54,10 @@ grow_vertical = 2
 theme = SubResource("Theme_horror")
 script = ExtResource("1_p3ifl")
 
-[node name="CanvasModulate" type="CanvasModulate" parent="."]
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=857345197]
 color = Color(0.996947, 0.67546, 0.743013, 1)
 
-[node name="BackgroundTexture" type="TextureRect" parent="."]
+[node name="BackgroundTexture" type="TextureRect" parent="." unique_id=1522986023]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -68,22 +68,22 @@ texture = ExtResource("2_7vrkn")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="BackgroundAnimation" type="AnimationPlayer" parent="."]
+[node name="BackgroundAnimation" type="AnimationPlayer" parent="." unique_id=2111344898]
 
-[node name="AudioContainer" type="Node" parent="."]
+[node name="AudioContainer" type="Node" parent="." unique_id=1225805449]
 
-[node name="AmbientAudio" type="AudioStreamPlayer" parent="AudioContainer"]
+[node name="AmbientAudio" type="AudioStreamPlayer" parent="AudioContainer" unique_id=861984120]
 volume_db = -15.0
 autoplay = true
 
-[node name="UISounds" type="AudioStreamPlayer" parent="AudioContainer"]
+[node name="UISounds" type="AudioStreamPlayer" parent="AudioContainer" unique_id=453678966]
 volume_db = -10.0
 
-[node name="BreathAudio" type="AudioStreamPlayer" parent="AudioContainer"]
+[node name="BreathAudio" type="AudioStreamPlayer" parent="AudioContainer" unique_id=2045803339]
 volume_db = -20.0
 autoplay = true
 
-[node name="MainContainer" type="Control" parent="."]
+[node name="MainContainer" type="Control" parent="." unique_id=48813609]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -91,7 +91,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="MainContainer"]
+[node name="TitleLabel" type="Label" parent="MainContainer" unique_id=913118171]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -115,7 +115,7 @@ text = "TRYPOPHOBIA"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer" unique_id=1884260828]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -130,35 +130,35 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="PlayButton" type="Button" parent="MainContainer/VBoxContainer"]
+[node name="PlayButton" type="Button" parent="MainContainer/VBoxContainer" unique_id=1766293424]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 24
 text = "SINGLE PLAYER"
 
-[node name="MultiplayerButton" type="Button" parent="MainContainer/VBoxContainer"]
+[node name="MultiplayerButton" type="Button" parent="MainContainer/VBoxContainer" unique_id=2146889387]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 24
 text = "MULTIPLAYER"
 
-[node name="SettingsButton" type="Button" parent="MainContainer/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="MainContainer/VBoxContainer" unique_id=402299746]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 24
 text = "SETTINGS"
 
-[node name="ExitButton" type="Button" parent="MainContainer/VBoxContainer"]
+[node name="ExitButton" type="Button" parent="MainContainer/VBoxContainer" unique_id=474337671]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 24
 text = "EXIT"
 
-[node name="MultiplayerContainer" type="Control" parent="."]
+[node name="MultiplayerContainer" type="Control" parent="." unique_id=745684485]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -166,7 +166,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="MultiplayerContainer"]
+[node name="TitleLabel" type="Label" parent="MultiplayerContainer" unique_id=494318902]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -190,7 +190,7 @@ text = "MULTIPLAYER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MultiplayerContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MultiplayerContainer" unique_id=144959816]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -205,28 +205,28 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="HostButton" type="Button" parent="MultiplayerContainer/VBoxContainer"]
+[node name="HostButton" type="Button" parent="MultiplayerContainer/VBoxContainer" unique_id=1187391362]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "HOST GAME"
 
-[node name="JoinButton" type="Button" parent="MultiplayerContainer/VBoxContainer"]
+[node name="JoinButton" type="Button" parent="MultiplayerContainer/VBoxContainer" unique_id=1309808188]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "JOIN GAME"
 
-[node name="BackButton" type="Button" parent="MultiplayerContainer/VBoxContainer"]
+[node name="BackButton" type="Button" parent="MultiplayerContainer/VBoxContainer" unique_id=1348987085]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 20
 text = "BACK"
 
-[node name="SettingsContainer" type="Control" parent="."]
+[node name="SettingsContainer" type="Control" parent="." unique_id=1945344070]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -234,7 +234,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="SettingsContainer"]
+[node name="TitleLabel" type="Label" parent="SettingsContainer" unique_id=1938219316]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -258,7 +258,7 @@ text = "SETTINGS"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SettingsContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsContainer" unique_id=1478896174]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -273,35 +273,35 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="LanguageButton" type="Button" parent="SettingsContainer/VBoxContainer"]
+[node name="LanguageButton" type="Button" parent="SettingsContainer/VBoxContainer" unique_id=670806942]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "LANGUAGE"
 
-[node name="GraphicsButton" type="Button" parent="SettingsContainer/VBoxContainer"]
+[node name="GraphicsButton" type="Button" parent="SettingsContainer/VBoxContainer" unique_id=372866390]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "GRAPHICS"
 
-[node name="AudioButton" type="Button" parent="SettingsContainer/VBoxContainer"]
+[node name="AudioButton" type="Button" parent="SettingsContainer/VBoxContainer" unique_id=1522194813]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "AUDIO"
 
-[node name="BackButton" type="Button" parent="SettingsContainer/VBoxContainer"]
+[node name="BackButton" type="Button" parent="SettingsContainer/VBoxContainer" unique_id=2049158766]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 20
 text = "BACK"
 
-[node name="LanguageContainer" type="Control" parent="."]
+[node name="LanguageContainer" type="Control" parent="." unique_id=1395887734]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -309,7 +309,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="LanguageContainer"]
+[node name="TitleLabel" type="Label" parent="LanguageContainer" unique_id=1517647587]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -333,7 +333,7 @@ text = "LANGUAGE"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="LanguageContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="LanguageContainer" unique_id=2105095060]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -348,56 +348,56 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="EnglishButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="EnglishButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=33354987]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "ENGLISH"
 
-[node name="SpanishButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="SpanishButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=898870639]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "ESPAÑOL"
 
-[node name="PortugueseButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="PortugueseButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=444901819]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "PORTUGUÊS"
 
-[node name="ItalianButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="ItalianButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=521012617]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "ITALIANO"
 
-[node name="FrenchButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="FrenchButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=1992408616]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "FRANÇAIS"
 
-[node name="GermanButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="GermanButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=57430339]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 20
 text = "DEUTSCH"
 
-[node name="BackButton" type="Button" parent="LanguageContainer/VBoxContainer"]
+[node name="BackButton" type="Button" parent="LanguageContainer/VBoxContainer" unique_id=1050084258]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 20
 text = "BACK"
 
-[node name="ServerBrowserContainer" type="Control" parent="."]
+[node name="ServerBrowserContainer" type="Control" parent="." unique_id=605655328]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -405,7 +405,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="ServerBrowserContainer"]
+[node name="TitleLabel" type="Label" parent="ServerBrowserContainer" unique_id=1221296877]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -429,7 +429,7 @@ text = "SERVIDORES DISPONIBLES"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="ServerBrowserContainer"]
+[node name="SubtitleLabel" type="Label" parent="ServerBrowserContainer" unique_id=78278141]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -447,7 +447,7 @@ theme_override_font_sizes/font_size = 16
 text = "Buscando expediciones perdidas en el vacío..."
 horizontal_alignment = 1
 
-[node name="MainContainer" type="VBoxContainer" parent="ServerBrowserContainer"]
+[node name="MainContainer" type="VBoxContainer" parent="ServerBrowserContainer" unique_id=574559432]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -462,50 +462,50 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 15
 
-[node name="ServerListContainer" type="VBoxContainer" parent="ServerBrowserContainer/MainContainer"]
+[node name="ServerListContainer" type="VBoxContainer" parent="ServerBrowserContainer/MainContainer" unique_id=745688816]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="ServerListScrollContainer" type="ScrollContainer" parent="ServerBrowserContainer/MainContainer/ServerListContainer"]
+[node name="ServerListScrollContainer" type="ScrollContainer" parent="ServerBrowserContainer/MainContainer/ServerListContainer" unique_id=1333985540]
 custom_minimum_size = Vector2(0, 350)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="ServerList" type="VBoxContainer" parent="ServerBrowserContainer/MainContainer/ServerListContainer/ServerListScrollContainer"]
+[node name="ServerList" type="VBoxContainer" parent="ServerBrowserContainer/MainContainer/ServerListContainer/ServerListScrollContainer" unique_id=1199287617]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="ActionButtonsContainer" type="HBoxContainer" parent="ServerBrowserContainer/MainContainer"]
+[node name="ActionButtonsContainer" type="HBoxContainer" parent="ServerBrowserContainer/MainContainer" unique_id=1409055913]
 layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="RefreshButton" type="Button" parent="ServerBrowserContainer/MainContainer/ActionButtonsContainer"]
+[node name="RefreshButton" type="Button" parent="ServerBrowserContainer/MainContainer/ActionButtonsContainer" unique_id=2053644816]
 custom_minimum_size = Vector2(180, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 18
 text = "BUSCAR EXPEDICIONES"
 
-[node name="DirectConnectButton" type="Button" parent="ServerBrowserContainer/MainContainer/ActionButtonsContainer"]
+[node name="DirectConnectButton" type="Button" parent="ServerBrowserContainer/MainContainer/ActionButtonsContainer" unique_id=1180972330]
 custom_minimum_size = Vector2(180, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 18
 text = "CONEXIÓN DIRECTA"
 
-[node name="BackButton" type="Button" parent="ServerBrowserContainer/MainContainer/ActionButtonsContainer"]
+[node name="BackButton" type="Button" parent="ServerBrowserContainer/MainContainer/ActionButtonsContainer" unique_id=254280075]
 custom_minimum_size = Vector2(120, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 18
 text = "VOLVER"
 
-[node name="StatusLabel" type="Label" parent="ServerBrowserContainer"]
+[node name="StatusLabel" type="Label" parent="ServerBrowserContainer" unique_id=1288604402]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5

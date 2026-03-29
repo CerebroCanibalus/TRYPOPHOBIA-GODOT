@@ -3,7 +3,7 @@
 [ext_resource type="Material" uid="uid://bpqntqhsay6af" path="res://assets/materials/test/texturetest.tres" id="1_i4wtw"]
 [ext_resource type="PackedScene" uid="uid://cf54rbky738tn" path="res://assets/materials/test/Ladder_Model.tscn" id="2_hha4v"]
 [ext_resource type="PackedScene" uid="uid://d1a8afg5uhuom" path="res://assets/props/barril_aceite.gltf" id="4_m3omv"]
-[ext_resource type="PackedScene" uid="uid://bpf422mibcpc3" path="res://src/player/characters/placeholder_01.tscn" id="4_s8nnb"]
+[ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="4_s8nnb"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_c3iuh"]
 
@@ -727,16 +727,16 @@ light_specular = 3.086
 light_bake_mode = 1
 
 [node name="RigidBody3D" type="RigidBody3D" parent="." unique_id=1302613784]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.66575, 0)
-mass = 60.0
+transform = Transform3D(0.8680515, -0.46746242, 0.16722852, 0.49647412, 0.8173267, -0.29238787, 0, 0.33683237, 0.94156474, 0.5645063, 3.202488, 0)
+mass = 4.0
 angular_damp = 0.5
 
 [node name="blockbench_export" parent="RigidBody3D" unique_id=535492047 instance=ExtResource("4_m3omv")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.16263, -1.18003, 0)
+transform = Transform3D(0.9999893, -0.0032507726, 0.0032630404, 0.0032541172, 0.9999943, -0.0009904504, -0.0032598157, 0.0010009706, 0.9999941, 1.1626301, -1.0430412, 9.536743e-07)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D" unique_id=1437064189]
 transform = Transform3D(1.83101, 0, 0, 0, 2.43416, 0, 0, 0, 2.09428, 1.17403, 0.407974, 0)
 shape = SubResource("BoxShape3D_qcb6e")
 
-[node name="Placeholder01" parent="." unique_id=261556071 instance=ExtResource("4_s8nnb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3415184, 2.751873, 9.982391)
+[node name="characterBody3D" parent="." unique_id=456841213 instance=ExtResource("4_s8nnb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4653454, 0.3725624, 13.157219)

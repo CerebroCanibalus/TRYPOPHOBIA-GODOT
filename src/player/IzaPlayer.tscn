@@ -1,11 +1,14 @@
 [gd_scene format=3 uid="uid://bwiacylloduj7"]
 
-[ext_resource type="Script" uid="uid://csv6l4til3sjk" path="res://src/player/movimiento jugador.gd" id="1_m5ixq"]
+[ext_resource type="Resource" uid="uid://b8p7moiotok7a" path="res://src/player/iza_stats.tres" id="1_izastats"]
+[ext_resource type="Script" uid="uid://c4pibqpwhdw66" path="res://src/player/iza_player.gd" id="1_m5ixq"]
 [ext_resource type="Shader" uid="uid://bqpi3gls0yr4d" path="res://src/player/postprocess.gdshader" id="2_25kiw"]
 [ext_resource type="PackedScene" uid="uid://s6hcxc3wyigt" path="res://assets/players/iza_rig.tscn" id="2_wfc3i"]
 [ext_resource type="Shader" uid="uid://ircrmsbekoxg" path="res://src/player/outline.gdshader" id="3_hk1ip"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hcfog"]
+radius = 0.7
+height = 4.6
 
 [sub_resource type="QuadMesh" id="QuadMesh_4ouc4"]
 
@@ -14,6 +17,9 @@ render_priority = 0
 shader = ExtResource("3_hk1ip")
 shader_parameter/shadow_color = Color(0.365999, 0.116196, 0.115691, 1)
 shader_parameter/shadow_thickness = 2.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_grabcast"]
+radius = 0.35
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_623et"]
 shader = ExtResource("2_25kiw")
@@ -31,19 +37,20 @@ shader_parameter/lens_distortion_strength = 0.012
 
 [node name="characterBody3D" type="CharacterBody3D" unique_id=456841213]
 script = ExtResource("1_m5ixq")
+stats = ExtResource("1_izastats")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=347079493]
-transform = Transform3D(2.73424, 0, 0, 0, 2.73424, 0, 0, 0, 2.73424, 0.332237, 2.45265, -0.385603)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 shape = SubResource("CapsuleShape3D_hcfog")
 
 [node name="iza_rig" parent="." unique_id=187099059 instance=ExtResource("2_wfc3i")]
 transform = Transform3D(1.74776, 0, 0, 0, 1.74776, 0, 0, 0, 1.74776, 0.380004, -2.38419e-07, -0.346727)
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=1006825893]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.31137, -0.69573)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.3, 0)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=251845559]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.372877, 0, -0.339131)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.39582068, 0.2243371, -0.806724)
 fov = 100.0
 size = 4.0
 near = 0.001
@@ -58,6 +65,14 @@ surface_material_override/0 = SubResource("ShaderMaterial_xbnu7")
 [node name="InteractRay" type="RayCast3D" parent="CameraPivot/Camera3D" unique_id=876750757]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0449715, 0.08522)
 target_position = Vector3(0, 0, -3)
+
+[node name="PushRay" type="RayCast3D" parent="CameraPivot/Camera3D" unique_id=970718235]
+target_position = Vector3(0, 0, -2.5)
+
+[node name="GrabCast" type="ShapeCast3D" parent="CameraPivot/Camera3D" unique_id=542318967]
+shape = SubResource("SphereShape3D_grabcast")
+target_position = Vector3(0, 0, -3)
+max_results = 4
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=761182153]
 

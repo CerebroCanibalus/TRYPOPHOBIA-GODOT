@@ -1,5 +1,10 @@
-res://maps/misiones/c1.tscn
-res://addons/roommate/defaults/default_generate_shortcut.tres
-res://src/player/player_character.gd
-res://src/player/IzaPlayer.tscn
 res://src/player/characters/placeholder_01.tscn
+res://src/player/player_character.gd
+res://maps/misiones/c1.tscn
+res://src/ui/stamina_bar.tscn
+res://main_menu.tscn
+res://src/ui/stamina_bar.gd
+res://src/player/IzaPlayer.tscn
+res://src/player/iza_player.gd
+res://assets/players/iza_rig.tscn
+res://src/player/iza_stats.tres
