@@ -28,6 +28,10 @@ NetworkingManager="*res://scripts/NetworkingManager.gd"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/ArmatureEditor/plugin.cfg", "res://addons/hammerforge/plugin.cfg")
+
 [input]
 
 ui_left={

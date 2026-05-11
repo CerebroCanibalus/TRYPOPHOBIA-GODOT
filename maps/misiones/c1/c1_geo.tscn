@@ -1,0 +1,1540 @@
+[gd_scene format=3 uid="uid://dg1sib3415ibp"]
+
+[ext_resource type="Script" uid="uid://2jktco8h5i23" path="res://addons/hammerforge/level_root.gd" id="1_foexl"]
+[ext_resource type="Script" uid="uid://bx7ydxsoo45un" path="res://addons/hammerforge/brush_manager.gd" id="2_28e6v"]
+[ext_resource type="Script" uid="uid://cka1o771brxa2" path="res://addons/hammerforge/material_manager.gd" id="3_23ko6"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_blue.tres" id="4_a20yf"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_brown.tres" id="5_3sowq"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_cyan.tres" id="6_doynr"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_green.tres" id="7_7badi"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_grey.tres" id="8_jf0bh"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_orange.tres" id="9_xhidx"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_pink.tres" id="10_ky445"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_purple.tres" id="11_sigyu"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_red.tres" id="12_3ulsa"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_down_yellow.tres" id="13_qlyau"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_blue.tres" id="14_is5jb"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_brown.tres" id="15_evus0"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_cyan.tres" id="16_3ypv3"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_green.tres" id="17_dfckh"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_grey.tres" id="18_v2liw"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_orange.tres" id="19_ofnim"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_pink.tres" id="20_v4qjs"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_purple.tres" id="21_xnbov"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_red.tres" id="22_rfq23"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_left_yellow.tres" id="23_kcbox"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_blue.tres" id="24_d5jyv"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_brown.tres" id="25_v84lb"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_cyan.tres" id="26_5x71h"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_green.tres" id="27_is26m"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_grey.tres" id="28_j17td"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_orange.tres" id="29_430uu"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_pink.tres" id="30_j8wci"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_purple.tres" id="31_rvnkf"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_red.tres" id="32_uhx6w"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_right_yellow.tres" id="33_beph0"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_blue.tres" id="34_nw02c"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_brown.tres" id="35_aldqw"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_cyan.tres" id="36_gacal"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_green.tres" id="37_mrc7t"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_grey.tres" id="38_f7de2"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_orange.tres" id="39_mos0t"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_pink.tres" id="40_7gpu5"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_purple.tres" id="41_m3qxe"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_red.tres" id="42_wrg3i"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_arrow_up_yellow.tres" id="43_pmlyt"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_blue.tres" id="44_twen8"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_brown.tres" id="45_c86su"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_cyan.tres" id="46_aim7t"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_green.tres" id="47_aleuk"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_grey.tres" id="48_a3de5"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_orange.tres" id="49_26mo3"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_pink.tres" id="50_35do2"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_purple.tres" id="51_wyrkf"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_red.tres" id="52_fegbj"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_brick_yellow.tres" id="53_3t720"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_blue.tres" id="54_cmpsb"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_brown.tres" id="55_cjv6r"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_cyan.tres" id="56_7i6ef"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_green.tres" id="57_4m3jc"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_grey.tres" id="58_20apk"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_orange.tres" id="59_ubgmx"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_pink.tres" id="60_jxi66"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_purple.tres" id="61_tareh"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_red.tres" id="62_d5lbp"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_checker_yellow.tres" id="63_1mt0q"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_blue.tres" id="64_e4tx7"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_brown.tres" id="65_dsaxs"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_cyan.tres" id="66_ypbef"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_green.tres" id="67_jjqbd"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_grey.tres" id="68_38i7g"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_orange.tres" id="69_v0knx"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_pink.tres" id="70_eteaq"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_purple.tres" id="71_w5stm"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_red.tres" id="72_1l3gw"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_cross_yellow.tres" id="73_q5rrh"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_blue.tres" id="74_2lxro"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_brown.tres" id="75_3dtxb"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_cyan.tres" id="76_68fs4"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_green.tres" id="77_37i4s"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_grey.tres" id="78_jho7j"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_orange.tres" id="79_uw05g"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_pink.tres" id="80_nxjsn"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_purple.tres" id="81_c0f2f"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_red.tres" id="82_ovwfd"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_diamond_yellow.tres" id="83_owk5o"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_blue.tres" id="84_bklu8"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_brown.tres" id="85_rq7ha"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_cyan.tres" id="86_4sp4q"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_green.tres" id="87_3ob1t"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_grey.tres" id="88_esyku"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_orange.tres" id="89_v5o3t"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_pink.tres" id="90_8es8g"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_purple.tres" id="91_js3xd"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_red.tres" id="92_ljvab"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_dots_yellow.tres" id="93_ujw2l"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_blue.tres" id="94_yfhep"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_brown.tres" id="95_qmwlt"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_cyan.tres" id="96_6bb8l"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_green.tres" id="97_4sexm"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_grey.tres" id="98_x381o"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_orange.tres" id="99_x6m48"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_pink.tres" id="100_vmcpy"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_purple.tres" id="101_n358q"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_red.tres" id="102_dhp8g"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_hex_yellow.tres" id="103_y1byk"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_blue.tres" id="104_eb3v2"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_brown.tres" id="105_xlsk3"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_cyan.tres" id="106_skieg"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_green.tres" id="107_vraln"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_grey.tres" id="108_dcvjs"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_orange.tres" id="109_wjwpe"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_pink.tres" id="110_tu6b4"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_purple.tres" id="111_waf4w"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_red.tres" id="112_qwrsx"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_solid_yellow.tres" id="113_bo2if"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_blue.tres" id="114_lsm02"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_brown.tres" id="115_fas4c"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_cyan.tres" id="116_30m56"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_green.tres" id="117_8ahyq"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_grey.tres" id="118_5kp6e"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_orange.tres" id="119_lk4kv"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_pink.tres" id="120_e525k"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_purple.tres" id="121_nvb5c"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_red.tres" id="122_jjqek"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_diagonal_yellow.tres" id="123_jsx7b"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_blue.tres" id="124_60tmm"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_brown.tres" id="125_l4jwp"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_cyan.tres" id="126_6ad4k"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_green.tres" id="127_0ruwr"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_grey.tres" id="128_smwai"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_orange.tres" id="129_s702m"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_pink.tres" id="130_xipl4"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_purple.tres" id="131_4cw07"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_red.tres" id="132_1rmd0"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_stripes_horizontal_yellow.tres" id="133_j38pi"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_blue.tres" id="134_vdlh1"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_brown.tres" id="135_qdsil"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_cyan.tres" id="136_3ia87"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_green.tres" id="137_2djse"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_grey.tres" id="138_mi60f"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_orange.tres" id="139_j3r45"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_pink.tres" id="140_50is2"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_purple.tres" id="141_ecy0m"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_red.tres" id="142_kh8xq"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_triangles_yellow.tres" id="143_wmay8"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_blue.tres" id="144_cy28u"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_brown.tres" id="145_htxwg"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_cyan.tres" id="146_2pv6q"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_green.tres" id="147_gpb0i"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_grey.tres" id="148_51vbg"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_orange.tres" id="149_ci66d"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_pink.tres" id="150_5ebp5"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_purple.tres" id="151_wmu8v"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_red.tres" id="152_25iyb"]
+[ext_resource type="Material" path="res://addons/hammerforge/textures/prototypes/materials/proto_zigzag_yellow.tres" id="153_xnk5b"]
+[ext_resource type="Script" uid="uid://cfnswc2a51c0v" path="res://addons/hammerforge/baker.gd" id="154_w8n4e"]
+[ext_resource type="Script" uid="uid://bj0gnjx6mtkyt" path="res://addons/hammerforge/paint/hf_paint_layer_manager.gd" id="155_oocsv"]
+[ext_resource type="Script" uid="uid://wo0ah72vgg5" path="res://addons/hammerforge/paint/hf_paint_grid.gd" id="156_bfc3o"]
+[ext_resource type="Script" uid="uid://c08wqo8o0bomi" path="res://addons/hammerforge/brush_instance.gd" id="157_23ko6"]
+[ext_resource type="Script" uid="uid://d4lu70khcx1cc" path="res://addons/hammerforge/paint/hf_paint_tool.gd" id="157_mkqgg"]
+[ext_resource type="Script" uid="uid://dww1kkncgdafi" path="res://addons/hammerforge/face_data.gd" id="158_a20yf"]
+[ext_resource type="Script" uid="uid://lmlc5c6m638q" path="res://addons/hammerforge/surface_paint.gd" id="158_qm5hw"]
+
+[sub_resource type="Resource" id="Resource_foexl"]
+script = ExtResource("156_bfc3o")
+cell_size = 18.0
+
+[sub_resource type="GDScript" id="GDScript_23ko6"]
+
+[sub_resource type="Resource" id="Resource_a20yf"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -0.1, -36, 0, 0.2, 72)
+local_verts = PackedVector3Array(9, -0.1, 36, 9, 0.1, 36, 9, 0.1, -36, 9, -0.1, -36)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3sowq"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -36, 0, 0.2, 72)
+local_verts = PackedVector3Array(-9, -0.1, -36, -9, 0.1, -36, -9, 0.1, 36, -9, -0.1, 36)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_doynr"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 0.1, -36, 18, 0, 72)
+local_verts = PackedVector3Array(9, 0.1, -36, 9, 0.1, 36, -9, 0.1, 36, -9, 0.1, -36)
+
+[sub_resource type="Resource" id="Resource_7badi"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -36, 18, 0, 72)
+local_verts = PackedVector3Array(9, -0.1, 36, 9, -0.1, -36, -9, -0.1, -36, -9, -0.1, 36)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_jf0bh"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, 36, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, 0.1, 36, 9, 0.1, 36, 9, -0.1, 36, -9, -0.1, 36)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xhidx"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -36, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, -0.1, -36, 9, -0.1, -36, 9, 0.1, -36, -9, 0.1, -36)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ky445"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -0.1, -63, 0, 0.2, 126)
+local_verts = PackedVector3Array(9, -0.1, 63, 9, 0.1, 63, 9, 0.1, -63, 9, -0.1, -63)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_sigyu"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -63, 0, 0.2, 126)
+local_verts = PackedVector3Array(-9, -0.1, -63, -9, 0.1, -63, -9, 0.1, 63, -9, -0.1, 63)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3ulsa"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 0.1, -63, 18, 0, 126)
+local_verts = PackedVector3Array(9, 0.1, -63, 9, 0.1, 63, -9, 0.1, 63, -9, 0.1, -63)
+
+[sub_resource type="Resource" id="Resource_qlyau"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -63, 18, 0, 126)
+local_verts = PackedVector3Array(9, -0.1, 63, 9, -0.1, -63, -9, -0.1, -63, -9, -0.1, 63)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_is5jb"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, 63, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, 0.1, 63, 9, 0.1, 63, 9, -0.1, 63, -9, -0.1, 63)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_evus0"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -63, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, -0.1, -63, 9, -0.1, -63, 9, 0.1, -63, -9, 0.1, -63)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_3ypv3"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(18, -0.1, -45, 0, 0.2, 90)
+local_verts = PackedVector3Array(18, -0.1, 45, 18, 0.1, 45, 18, 0.1, -45, 18, -0.1, -45)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dfckh"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, -45, 0, 0.2, 90)
+local_verts = PackedVector3Array(-18, -0.1, -45, -18, 0.1, -45, -18, 0.1, 45, -18, -0.1, 45)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_v2liw"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, 0.1, -45, 36, 0, 90)
+local_verts = PackedVector3Array(18, 0.1, -45, 18, 0.1, 45, -18, 0.1, 45, -18, 0.1, -45)
+
+[sub_resource type="Resource" id="Resource_ofnim"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, -45, 36, 0, 90)
+local_verts = PackedVector3Array(18, -0.1, 45, 18, -0.1, -45, -18, -0.1, -45, -18, -0.1, 45)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_v4qjs"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, 45, 36, 0.2, 0)
+local_verts = PackedVector3Array(-18, 0.1, 45, 18, 0.1, 45, 18, -0.1, 45, -18, -0.1, 45)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xnbov"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, -45, 36, 0.2, 0)
+local_verts = PackedVector3Array(-18, -0.1, -45, 18, -0.1, -45, 18, 0.1, -45, -18, 0.1, -45)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_rfq23"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -0.1, -9, 0, 0.2, 18)
+local_verts = PackedVector3Array(9, -0.1, 9, 9, 0.1, 9, 9, 0.1, -9, 9, -0.1, -9)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_kcbox"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -9, 0, 0.2, 18)
+local_verts = PackedVector3Array(-9, -0.1, -9, -9, 0.1, -9, -9, 0.1, 9, -9, -0.1, 9)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_d5jyv"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 0.1, -9, 18, 0, 18)
+local_verts = PackedVector3Array(9, 0.1, -9, 9, 0.1, 9, -9, 0.1, 9, -9, 0.1, -9)
+
+[sub_resource type="Resource" id="Resource_v84lb"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -9, 18, 0, 18)
+local_verts = PackedVector3Array(9, -0.1, 9, 9, -0.1, -9, -9, -0.1, -9, -9, -0.1, 9)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_5x71h"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, 9, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, 0.1, 9, 9, 0.1, 9, 9, -0.1, 9, -9, -0.1, 9)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_is26m"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -9, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, -0.1, -9, 9, -0.1, -9, 9, 0.1, -9, -9, 0.1, -9)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_j17td"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -0.1, -54, 0, 0.2, 108)
+local_verts = PackedVector3Array(9, -0.1, 54, 9, 0.1, 54, 9, 0.1, -54, 9, -0.1, -54)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_430uu"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -54, 0, 0.2, 108)
+local_verts = PackedVector3Array(-9, -0.1, -54, -9, 0.1, -54, -9, 0.1, 54, -9, -0.1, 54)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_j8wci"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 0.1, -54, 18, 0, 108)
+local_verts = PackedVector3Array(9, 0.1, -54, 9, 0.1, 54, -9, 0.1, 54, -9, 0.1, -54)
+
+[sub_resource type="Resource" id="Resource_rvnkf"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -54, 18, 0, 108)
+local_verts = PackedVector3Array(9, -0.1, 54, 9, -0.1, -54, -9, -0.1, -54, -9, -0.1, 54)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_uhx6w"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, 54, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, 0.1, 54, 9, 0.1, 54, 9, -0.1, 54, -9, -0.1, 54)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_beph0"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -54, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, -0.1, -54, 9, -0.1, -54, 9, 0.1, -54, -9, 0.1, -54)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_nw02c"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -0.1, -63, 0, 0.2, 126)
+local_verts = PackedVector3Array(9, -0.1, 63, 9, 0.1, 63, 9, 0.1, -63, 9, -0.1, -63)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_aldqw"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -63, 0, 0.2, 126)
+local_verts = PackedVector3Array(-9, -0.1, -63, -9, 0.1, -63, -9, 0.1, 63, -9, -0.1, 63)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_gacal"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 0.1, -63, 18, 0, 126)
+local_verts = PackedVector3Array(9, 0.1, -63, 9, 0.1, 63, -9, 0.1, 63, -9, 0.1, -63)
+
+[sub_resource type="Resource" id="Resource_mrc7t"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -63, 18, 0, 126)
+local_verts = PackedVector3Array(9, -0.1, 63, 9, -0.1, -63, -9, -0.1, -63, -9, -0.1, 63)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_f7de2"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, 63, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, 0.1, 63, 9, 0.1, 63, 9, -0.1, 63, -9, -0.1, 63)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_mos0t"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -0.1, -63, 18, 0.2, 0)
+local_verts = PackedVector3Array(-9, -0.1, -63, 9, -0.1, -63, 9, 0.1, -63, -9, 0.1, -63)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_7gpu5"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(18, -0.1, -18, 0, 0.2, 36)
+local_verts = PackedVector3Array(18, -0.1, 18, 18, 0.1, 18, 18, 0.1, -18, 18, -0.1, -18)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_m3qxe"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, -18, 0, 0.2, 36)
+local_verts = PackedVector3Array(-18, -0.1, -18, -18, 0.1, -18, -18, 0.1, 18, -18, -0.1, 18)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_wrg3i"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, 0.1, -18, 36, 0, 36)
+local_verts = PackedVector3Array(18, 0.1, -18, 18, 0.1, 18, -18, 0.1, 18, -18, 0.1, -18)
+
+[sub_resource type="Resource" id="Resource_pmlyt"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, -18, 36, 0, 36)
+local_verts = PackedVector3Array(18, -0.1, 18, 18, -0.1, -18, -18, -0.1, -18, -18, -0.1, 18)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_twen8"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, 18, 36, 0.2, 0)
+local_verts = PackedVector3Array(-18, 0.1, 18, 18, 0.1, 18, 18, -0.1, 18, -18, -0.1, 18)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_c86su"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -0.1, -18, 36, 0.2, 0)
+local_verts = PackedVector3Array(-18, -0.1, -18, 18, -0.1, -18, 18, 0.1, -18, -18, 0.1, -18)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_aim7t"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, 1.5, 0.1, 9, 1.5, -0.1, 9, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_aleuk"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, -9, 1.5, -0.1, -9, 1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_a3de5"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, 1.5, -0.1, 9, 1.5, 0.1, -9, 1.5, 0.1, -9, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_26mo3"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, -1.5, -0.1, -9, -1.5, -0.1, -9, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_35do2"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, 0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, 1.5, 0.1, 9, 1.5, 0.1, 9, -1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_wyrkf"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, 9, -1.5, -0.1, 9, 1.5, -0.1, -9, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_fegbj"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -18, 0, 3, 36)
+local_verts = PackedVector3Array(0.1, -1.5, 18, 0.1, 1.5, 18, 0.1, 1.5, -18, 0.1, -1.5, -18)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_3t720"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0, 3, 36)
+local_verts = PackedVector3Array(-0.1, -1.5, -18, -0.1, 1.5, -18, -0.1, 1.5, 18, -0.1, -1.5, 18)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_cmpsb"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -18, 0.2, 0, 36)
+local_verts = PackedVector3Array(0.1, 1.5, -18, 0.1, 1.5, 18, -0.1, 1.5, 18, -0.1, 1.5, -18)
+
+[sub_resource type="Resource" id="Resource_cjv6r"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0.2, 0, 36)
+local_verts = PackedVector3Array(0.1, -1.5, 18, 0.1, -1.5, -18, -0.1, -1.5, -18, -0.1, -1.5, 18)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_7i6ef"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 18, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 18, 0.1, 1.5, 18, 0.1, -1.5, 18, -0.1, -1.5, 18)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_4m3jc"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -18, 0.1, -1.5, -18, 0.1, 1.5, -18, -0.1, 1.5, -18)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_20apk"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, 1.5, 0.1, 9, 1.5, -0.1, 9, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ubgmx"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, -9, 1.5, -0.1, -9, 1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_jxi66"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, 1.5, -0.1, 9, 1.5, 0.1, -9, 1.5, 0.1, -9, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_tareh"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, -1.5, -0.1, -9, -1.5, -0.1, -9, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_d5lbp"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, 0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, 1.5, 0.1, 9, 1.5, 0.1, 9, -1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_1mt0q"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, 9, -1.5, -0.1, 9, 1.5, -0.1, -9, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_e4tx7"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, 1.5, 9, 0.1, 1.5, -9, 0.1, -1.5, -9)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dsaxs"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, -0.1, 1.5, -9, -0.1, 1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ypbef"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, 1.5, -9, 0.1, 1.5, 9, -0.1, 1.5, 9, -0.1, 1.5, -9)
+
+[sub_resource type="Resource" id="Resource_jjqbd"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, -1.5, -9, -0.1, -1.5, -9, -0.1, -1.5, 9)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_38i7g"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 9, 0.1, 1.5, 9, 0.1, -1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_v0knx"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, 0.1, -1.5, -9, 0.1, 1.5, -9, -0.1, 1.5, -9)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_eteaq"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, 1.5, 0.1, 9, 1.5, -0.1, 9, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_w5stm"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, -9, 1.5, -0.1, -9, 1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1l3gw"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, 1.5, -0.1, 9, 1.5, 0.1, -9, 1.5, 0.1, -9, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_q5rrh"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, -1.5, -0.1, -9, -1.5, -0.1, -9, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_2lxro"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, 0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, 1.5, 0.1, 9, 1.5, 0.1, 9, -1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3dtxb"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, 9, -1.5, -0.1, 9, 1.5, -0.1, -9, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_68fs4"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, 1.5, 0.1, 9, 1.5, -0.1, 9, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_37i4s"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, -9, 1.5, -0.1, -9, 1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_jho7j"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, 1.5, -0.1, 9, 1.5, 0.1, -9, 1.5, 0.1, -9, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_uw05g"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, -1.5, -0.1, -9, -1.5, -0.1, -9, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_nxjsn"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, 0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, 1.5, 0.1, 9, 1.5, 0.1, 9, -1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_c0f2f"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, 9, -1.5, -0.1, 9, 1.5, -0.1, -9, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_ovwfd"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, 1.5, 9, 0.1, 1.5, -9, 0.1, -1.5, -9)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_owk5o"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, -0.1, 1.5, -9, -0.1, 1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_bklu8"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, 1.5, -9, 0.1, 1.5, 9, -0.1, 1.5, 9, -0.1, 1.5, -9)
+
+[sub_resource type="Resource" id="Resource_rq7ha"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, -1.5, -9, -0.1, -1.5, -9, -0.1, -1.5, 9)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_4sp4q"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 9, 0.1, 1.5, 9, 0.1, -1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3ob1t"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, 0.1, -1.5, -9, 0.1, 1.5, -9, -0.1, 1.5, -9)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_esyku"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, 1.5, 9, 0.1, 1.5, -9, 0.1, -1.5, -9)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_v5o3t"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, -0.1, 1.5, -9, -0.1, 1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_8es8g"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, 1.5, -9, 0.1, 1.5, 9, -0.1, 1.5, 9, -0.1, 1.5, -9)
+
+[sub_resource type="Resource" id="Resource_js3xd"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, -1.5, -9, -0.1, -1.5, -9, -0.1, -1.5, 9)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_ljvab"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 9, 0.1, 1.5, 9, 0.1, -1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ujw2l"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, 0.1, -1.5, -9, 0.1, 1.5, -9, -0.1, 1.5, -9)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_yfhep"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -36, 0, 3, 72)
+local_verts = PackedVector3Array(0.1, -1.5, 36, 0.1, 1.5, 36, 0.1, 1.5, -36, 0.1, -1.5, -36)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_qmwlt"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -36, 0, 3, 72)
+local_verts = PackedVector3Array(-0.1, -1.5, -36, -0.1, 1.5, -36, -0.1, 1.5, 36, -0.1, -1.5, 36)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_6bb8l"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -36, 0.2, 0, 72)
+local_verts = PackedVector3Array(0.1, 1.5, -36, 0.1, 1.5, 36, -0.1, 1.5, 36, -0.1, 1.5, -36)
+
+[sub_resource type="Resource" id="Resource_4sexm"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -36, 0.2, 0, 72)
+local_verts = PackedVector3Array(0.1, -1.5, 36, 0.1, -1.5, -36, -0.1, -1.5, -36, -0.1, -1.5, 36)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_x381o"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 36, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 36, 0.1, 1.5, 36, 0.1, -1.5, 36, -0.1, -1.5, 36)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_x6m48"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -36, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -36, 0.1, -1.5, -36, 0.1, 1.5, -36, -0.1, 1.5, -36)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_vmcpy"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(18, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(18, -1.5, 0.1, 18, 1.5, 0.1, 18, 1.5, -0.1, 18, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_n358q"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-18, -1.5, -0.1, -18, 1.5, -0.1, -18, 1.5, 0.1, -18, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dhp8g"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, 1.5, -0.1, 36, 0, 0.2)
+local_verts = PackedVector3Array(18, 1.5, -0.1, 18, 1.5, 0.1, -18, 1.5, 0.1, -18, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_y1byk"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 36, 0, 0.2)
+local_verts = PackedVector3Array(18, -1.5, 0.1, 18, -1.5, -0.1, -18, -1.5, -0.1, -18, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_eb3v2"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, 0.1, 36, 3, 0)
+local_verts = PackedVector3Array(-18, 1.5, 0.1, 18, 1.5, 0.1, 18, -1.5, 0.1, -18, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xlsk3"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 36, 3, 0)
+local_verts = PackedVector3Array(-18, -1.5, -0.1, 18, -1.5, -0.1, 18, 1.5, -0.1, -18, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_skieg"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, 1.5, 0.1, 9, 1.5, -0.1, 9, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_vraln"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, -9, 1.5, -0.1, -9, 1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_dcvjs"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, 1.5, -0.1, 9, 1.5, 0.1, -9, 1.5, 0.1, -9, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_wjwpe"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, -1.5, -0.1, -9, -1.5, -0.1, -9, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_tu6b4"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, 0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, 1.5, 0.1, 9, 1.5, 0.1, 9, -1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_waf4w"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, 9, -1.5, -0.1, 9, 1.5, -0.1, -9, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_qwrsx"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -45, 0, 3, 90)
+local_verts = PackedVector3Array(0.1, -1.5, 45, 0.1, 1.5, 45, 0.1, 1.5, -45, 0.1, -1.5, -45)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_bo2if"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -45, 0, 3, 90)
+local_verts = PackedVector3Array(-0.1, -1.5, -45, -0.1, 1.5, -45, -0.1, 1.5, 45, -0.1, -1.5, 45)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_lsm02"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -45, 0.2, 0, 90)
+local_verts = PackedVector3Array(0.1, 1.5, -45, 0.1, 1.5, 45, -0.1, 1.5, 45, -0.1, 1.5, -45)
+
+[sub_resource type="Resource" id="Resource_fas4c"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -45, 0.2, 0, 90)
+local_verts = PackedVector3Array(0.1, -1.5, 45, 0.1, -1.5, -45, -0.1, -1.5, -45, -0.1, -1.5, 45)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_30m56"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 45, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 45, 0.1, 1.5, 45, 0.1, -1.5, 45, -0.1, -1.5, 45)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_8ahyq"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -45, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -45, 0.1, -1.5, -45, 0.1, 1.5, -45, -0.1, 1.5, -45)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_5kp6e"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, 1.5, 9, 0.1, 1.5, -9, 0.1, -1.5, -9)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_lk4kv"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, -0.1, 1.5, -9, -0.1, 1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_e525k"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, 1.5, -9, 0.1, 1.5, 9, -0.1, 1.5, 9, -0.1, 1.5, -9)
+
+[sub_resource type="Resource" id="Resource_nvb5c"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, -1.5, -9, -0.1, -1.5, -9, -0.1, -1.5, 9)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_jjqek"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 9, 0.1, 1.5, 9, 0.1, -1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_jsx7b"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, 0.1, -1.5, -9, 0.1, 1.5, -9, -0.1, 1.5, -9)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_60tmm"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, 1.5, 0.1, 9, 1.5, -0.1, 9, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_l4jwp"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, -9, 1.5, -0.1, -9, 1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_6ad4k"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, 1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, 1.5, -0.1, 9, 1.5, 0.1, -9, 1.5, 0.1, -9, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_0ruwr"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 0, 0.2)
+local_verts = PackedVector3Array(9, -1.5, 0.1, 9, -1.5, -0.1, -9, -1.5, -0.1, -9, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_smwai"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, 0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, 1.5, 0.1, 9, 1.5, 0.1, 9, -1.5, 0.1, -9, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_s702m"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-9, -1.5, -0.1, 18, 3, 0)
+local_verts = PackedVector3Array(-9, -1.5, -0.1, 9, -1.5, -0.1, 9, 1.5, -0.1, -9, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_xipl4"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, 1.5, 9, 0.1, 1.5, -9, 0.1, -1.5, -9)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_4cw07"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0, 3, 18)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, -0.1, 1.5, -9, -0.1, 1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_1rmd0"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, 1.5, -9, 0.1, 1.5, 9, -0.1, 1.5, 9, -0.1, 1.5, -9)
+
+[sub_resource type="Resource" id="Resource_j38pi"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 0, 18)
+local_verts = PackedVector3Array(0.1, -1.5, 9, 0.1, -1.5, -9, -0.1, -1.5, -9, -0.1, -1.5, 9)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_vdlh1"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 9, 0.1, 1.5, 9, 0.1, -1.5, 9, -0.1, -1.5, 9)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_qdsil"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -9, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -9, 0.1, -1.5, -9, 0.1, 1.5, -9, -0.1, 1.5, -9)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_3ia87"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(18, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(18, -1.5, 0.1, 18, 1.5, 0.1, 18, 1.5, -0.1, 18, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_2djse"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-18, -1.5, -0.1, -18, 1.5, -0.1, -18, 1.5, 0.1, -18, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_mi60f"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, 1.5, -0.1, 36, 0, 0.2)
+local_verts = PackedVector3Array(18, 1.5, -0.1, 18, 1.5, 0.1, -18, 1.5, 0.1, -18, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_j3r45"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 36, 0, 0.2)
+local_verts = PackedVector3Array(18, -1.5, 0.1, 18, -1.5, -0.1, -18, -1.5, -0.1, -18, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_50is2"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, 0.1, 36, 3, 0)
+local_verts = PackedVector3Array(-18, 1.5, 0.1, 18, 1.5, 0.1, 18, -1.5, 0.1, -18, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_ecy0m"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 36, 3, 0)
+local_verts = PackedVector3Array(-18, -1.5, -0.1, 18, -1.5, -0.1, 18, 1.5, -0.1, -18, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_kh8xq"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -18, 0, 3, 36)
+local_verts = PackedVector3Array(0.1, -1.5, 18, 0.1, 1.5, 18, 0.1, 1.5, -18, 0.1, -1.5, -18)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_wmay8"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0, 3, 36)
+local_verts = PackedVector3Array(-0.1, -1.5, -18, -0.1, 1.5, -18, -0.1, 1.5, 18, -0.1, -1.5, 18)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_cy28u"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -18, 0.2, 0, 36)
+local_verts = PackedVector3Array(0.1, 1.5, -18, 0.1, 1.5, 18, -0.1, 1.5, 18, -0.1, 1.5, -18)
+
+[sub_resource type="Resource" id="Resource_htxwg"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0.2, 0, 36)
+local_verts = PackedVector3Array(0.1, -1.5, 18, 0.1, -1.5, -18, -0.1, -1.5, -18, -0.1, -1.5, 18)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_2pv6q"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 18, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 18, 0.1, 1.5, 18, 0.1, -1.5, 18, -0.1, -1.5, 18)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_gpb0i"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -18, 0.1, -1.5, -18, 0.1, 1.5, -18, -0.1, 1.5, -18)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_51vbg"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(18, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(18, -1.5, 0.1, 18, 1.5, 0.1, 18, 1.5, -0.1, 18, -1.5, -0.1)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_ci66d"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 0, 3, 0.2)
+local_verts = PackedVector3Array(-18, -1.5, -0.1, -18, 1.5, -0.1, -18, 1.5, 0.1, -18, -1.5, 0.1)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5ebp5"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, 1.5, -0.1, 36, 0, 0.2)
+local_verts = PackedVector3Array(18, 1.5, -0.1, 18, 1.5, 0.1, -18, 1.5, 0.1, -18, 1.5, -0.1)
+
+[sub_resource type="Resource" id="Resource_wmu8v"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 36, 0, 0.2)
+local_verts = PackedVector3Array(18, -1.5, 0.1, 18, -1.5, -0.1, -18, -1.5, -0.1, -18, -1.5, 0.1)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_25iyb"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, 0.1, 36, 3, 0)
+local_verts = PackedVector3Array(-18, 1.5, 0.1, 18, 1.5, 0.1, 18, -1.5, 0.1, -18, -1.5, 0.1)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_xnk5b"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-18, -1.5, -0.1, 36, 3, 0)
+local_verts = PackedVector3Array(-18, -1.5, -0.1, 18, -1.5, -0.1, 18, 1.5, -0.1, -18, 1.5, -0.1)
+normal = Vector3(0, 0, -1)
+
+[sub_resource type="Resource" id="Resource_w8n4e"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(0.1, -1.5, -18, 0, 3, 36)
+local_verts = PackedVector3Array(0.1, -1.5, 18, 0.1, 1.5, 18, 0.1, 1.5, -18, 0.1, -1.5, -18)
+normal = Vector3(1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_oocsv"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0, 3, 36)
+local_verts = PackedVector3Array(-0.1, -1.5, -18, -0.1, 1.5, -18, -0.1, 1.5, 18, -0.1, -1.5, 18)
+normal = Vector3(-1, 0, 0)
+
+[sub_resource type="Resource" id="Resource_bfc3o"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, 1.5, -18, 0.2, 0, 36)
+local_verts = PackedVector3Array(0.1, 1.5, -18, 0.1, 1.5, 18, -0.1, 1.5, 18, -0.1, 1.5, -18)
+
+[sub_resource type="Resource" id="Resource_mkqgg"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0.2, 0, 36)
+local_verts = PackedVector3Array(0.1, -1.5, 18, 0.1, -1.5, -18, -0.1, -1.5, -18, -0.1, -1.5, 18)
+normal = Vector3(0, -1, 0)
+
+[sub_resource type="Resource" id="Resource_qm5hw"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, 18, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, 1.5, 18, 0.1, 1.5, 18, 0.1, -1.5, 18, -0.1, -1.5, 18)
+normal = Vector3(0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_b4j8a"]
+script = ExtResource("158_a20yf")
+custom_uvs = PackedVector2Array()
+bounds = AABB(-0.1, -1.5, -18, 0.2, 3, 0)
+local_verts = PackedVector3Array(-0.1, -1.5, -18, 0.1, -1.5, -18, 0.1, 1.5, -18, -0.1, 1.5, -18)
+normal = Vector3(0, 0, -1)
+
+[node name="C1Geo" type="Node3D" unique_id=580480493]
+script = ExtResource("1_foexl")
+grid_snap = 18.0
+metadata/_custom_type_script = "uid://2jktco8h5i23"
+
+[node name="DraftBrushes" type="Node3D" parent="." unique_id=1040618110]
+
+[node name="PendingCuts" type="Node3D" parent="." unique_id=1708993843]
+
+[node name="CommittedCuts" type="Node3D" parent="." unique_id=619304880]
+visible = false
+
+[node name="Entities" type="Node3D" parent="." unique_id=2021093029]
+
+[node name="BrushManager" type="Node" parent="." unique_id=1127771097]
+script = ExtResource("2_28e6v")
+
+[node name="MaterialManager" type="Node" parent="." unique_id=749413700]
+script = ExtResource("3_23ko6")
+materials = Array[Material]([ExtResource("4_a20yf"), ExtResource("5_3sowq"), ExtResource("6_doynr"), ExtResource("7_7badi"), ExtResource("8_jf0bh"), ExtResource("9_xhidx"), ExtResource("10_ky445"), ExtResource("11_sigyu"), ExtResource("12_3ulsa"), ExtResource("13_qlyau"), ExtResource("14_is5jb"), ExtResource("15_evus0"), ExtResource("16_3ypv3"), ExtResource("17_dfckh"), ExtResource("18_v2liw"), ExtResource("19_ofnim"), ExtResource("20_v4qjs"), ExtResource("21_xnbov"), ExtResource("22_rfq23"), ExtResource("23_kcbox"), ExtResource("24_d5jyv"), ExtResource("25_v84lb"), ExtResource("26_5x71h"), ExtResource("27_is26m"), ExtResource("28_j17td"), ExtResource("29_430uu"), ExtResource("30_j8wci"), ExtResource("31_rvnkf"), ExtResource("32_uhx6w"), ExtResource("33_beph0"), ExtResource("34_nw02c"), ExtResource("35_aldqw"), ExtResource("36_gacal"), ExtResource("37_mrc7t"), ExtResource("38_f7de2"), ExtResource("39_mos0t"), ExtResource("40_7gpu5"), ExtResource("41_m3qxe"), ExtResource("42_wrg3i"), ExtResource("43_pmlyt"), ExtResource("44_twen8"), ExtResource("45_c86su"), ExtResource("46_aim7t"), ExtResource("47_aleuk"), ExtResource("48_a3de5"), ExtResource("49_26mo3"), ExtResource("50_35do2"), ExtResource("51_wyrkf"), ExtResource("52_fegbj"), ExtResource("53_3t720"), ExtResource("54_cmpsb"), ExtResource("55_cjv6r"), ExtResource("56_7i6ef"), ExtResource("57_4m3jc"), ExtResource("58_20apk"), ExtResource("59_ubgmx"), ExtResource("60_jxi66"), ExtResource("61_tareh"), ExtResource("62_d5lbp"), ExtResource("63_1mt0q"), ExtResource("64_e4tx7"), ExtResource("65_dsaxs"), ExtResource("66_ypbef"), ExtResource("67_jjqbd"), ExtResource("68_38i7g"), ExtResource("69_v0knx"), ExtResource("70_eteaq"), ExtResource("71_w5stm"), ExtResource("72_1l3gw"), ExtResource("73_q5rrh"), ExtResource("74_2lxro"), ExtResource("75_3dtxb"), ExtResource("76_68fs4"), ExtResource("77_37i4s"), ExtResource("78_jho7j"), ExtResource("79_uw05g"), ExtResource("80_nxjsn"), ExtResource("81_c0f2f"), ExtResource("82_ovwfd"), ExtResource("83_owk5o"), ExtResource("84_bklu8"), ExtResource("85_rq7ha"), ExtResource("86_4sp4q"), ExtResource("87_3ob1t"), ExtResource("88_esyku"), ExtResource("89_v5o3t"), ExtResource("90_8es8g"), ExtResource("91_js3xd"), ExtResource("92_ljvab"), ExtResource("93_ujw2l"), ExtResource("94_yfhep"), ExtResource("95_qmwlt"), ExtResource("96_6bb8l"), ExtResource("97_4sexm"), ExtResource("98_x381o"), ExtResource("99_x6m48"), ExtResource("100_vmcpy"), ExtResource("101_n358q"), ExtResource("102_dhp8g"), ExtResource("103_y1byk"), ExtResource("104_eb3v2"), ExtResource("105_xlsk3"), ExtResource("106_skieg"), ExtResource("107_vraln"), ExtResource("108_dcvjs"), ExtResource("109_wjwpe"), ExtResource("110_tu6b4"), ExtResource("111_waf4w"), ExtResource("112_qwrsx"), ExtResource("113_bo2if"), ExtResource("114_lsm02"), ExtResource("115_fas4c"), ExtResource("116_30m56"), ExtResource("117_8ahyq"), ExtResource("118_5kp6e"), ExtResource("119_lk4kv"), ExtResource("120_e525k"), ExtResource("121_nvb5c"), ExtResource("122_jjqek"), ExtResource("123_jsx7b"), ExtResource("124_60tmm"), ExtResource("125_l4jwp"), ExtResource("126_6ad4k"), ExtResource("127_0ruwr"), ExtResource("128_smwai"), ExtResource("129_s702m"), ExtResource("130_xipl4"), ExtResource("131_4cw07"), ExtResource("132_1rmd0"), ExtResource("133_j38pi"), ExtResource("134_vdlh1"), ExtResource("135_qdsil"), ExtResource("136_3ia87"), ExtResource("137_2djse"), ExtResource("138_mi60f"), ExtResource("139_j3r45"), ExtResource("140_50is2"), ExtResource("141_ecy0m"), ExtResource("142_kh8xq"), ExtResource("143_wmay8"), ExtResource("144_cy28u"), ExtResource("145_htxwg"), ExtResource("146_2pv6q"), ExtResource("147_gpb0i"), ExtResource("148_51vbg"), ExtResource("149_ci66d"), ExtResource("150_5ebp5"), ExtResource("151_wmu8v"), ExtResource("152_25iyb"), ExtResource("153_xnk5b")])
+
+[node name="Baker" type="Node" parent="." unique_id=1448478439]
+script = ExtResource("154_w8n4e")
+
+[node name="PaintLayers" type="Node" parent="." unique_id=1753251681]
+script = ExtResource("155_oocsv")
+base_grid = SubResource("Resource_foexl")
+
+[node name="Generated" type="Node3D" parent="." unique_id=1688705452]
+
+[node name="Floors" type="Node3D" parent="Generated" unique_id=808008219]
+
+[node name="Floor__hf_floor_v1_layer_0_0,-1_5,-5_1x4" type="Node3D" parent="Generated/Floors" unique_id=702957529]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99, 0.1, -54)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 0.2, 72)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_a20yf"), SubResource("Resource_3sowq"), SubResource("Resource_doynr"), SubResource("Resource_7badi"), SubResource("Resource_jf0bh"), SubResource("Resource_xhidx")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,-1:5,-5:1x4"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,-1"
+
+[node name="Floor__hf_floor_v1_layer_0_0,-1_2,-7_1x7" type="Node3D" parent="Generated/Floors" unique_id=568861981]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0.1, -63)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 0.2, 126)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_ky445"), SubResource("Resource_sigyu"), SubResource("Resource_3ulsa"), SubResource("Resource_qlyau"), SubResource("Resource_is5jb"), SubResource("Resource_evus0")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,-1:2,-7:1x7"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,-1"
+
+[node name="Floor__hf_floor_v1_layer_0_0,-1_0,-6_2x5" type="Node3D" parent="Generated/Floors" unique_id=1087980035]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.1, -63)
+script = ExtResource("157_23ko6")
+size = Vector3(36, 0.2, 90)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_3ypv3"), SubResource("Resource_dfckh"), SubResource("Resource_v2liw"), SubResource("Resource_ofnim"), SubResource("Resource_v4qjs"), SubResource("Resource_xnbov")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,-1:0,-6:2x5"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,-1"
+
+[node name="Floor__hf_floor_v1_layer_0_0,-1_1,-1_1x1" type="Node3D" parent="Generated/Floors" unique_id=23888633]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0.1, -9)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 0.2, 18)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_rfq23"), SubResource("Resource_kcbox"), SubResource("Resource_d5jyv"), SubResource("Resource_v84lb"), SubResource("Resource_5x71h"), SubResource("Resource_is26m")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,-1:1,-1:1x1"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,-1"
+
+[node name="Floor__hf_floor_v1_layer_0_0,-1_3,-6_1x6" type="Node3D" parent="Generated/Floors" unique_id=264910226]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 0.1, -54)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 0.2, 108)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_j17td"), SubResource("Resource_430uu"), SubResource("Resource_j8wci"), SubResource("Resource_rvnkf"), SubResource("Resource_uhx6w"), SubResource("Resource_beph0")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,-1:3,-6:1x6"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,-1"
+
+[node name="Floor__hf_floor_v1_layer_0_0,-1_4,-7_1x7" type="Node3D" parent="Generated/Floors" unique_id=636408678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 0.1, -63)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 0.2, 126)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_nw02c"), SubResource("Resource_aldqw"), SubResource("Resource_gacal"), SubResource("Resource_mrc7t"), SubResource("Resource_f7de2"), SubResource("Resource_mos0t")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,-1:4,-7:1x7"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,-1"
+
+[node name="Floor__hf_floor_v1_layer_0_0,0_3,0_2x2" type="Node3D" parent="Generated/Floors" unique_id=659630314]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0.1, 18)
+script = ExtResource("157_23ko6")
+size = Vector3(36, 0.2, 36)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_7gpu5"), SubResource("Resource_m3qxe"), SubResource("Resource_wrg3i"), SubResource("Resource_pmlyt"), SubResource("Resource_twen8"), SubResource("Resource_c86su")])
+metadata/hf_gid = &"hf:floor:v1:layer_0:0,0:3,0:2x2"
+metadata/hf_gen = true
+metadata/hf_kind = "floor"
+metadata/hf_chunk = "0,0"
+
+[node name="Walls" type="Node3D" parent="Generated" unique_id=458190482]
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_4,-7->5,-7_0,-1" type="Node3D" parent="Generated/Walls" unique_id=846716376]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 1.5, -126.1)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_aim7t"), SubResource("Resource_aleuk"), SubResource("Resource_a3de5"), SubResource("Resource_26mo3"), SubResource("Resource_35do2"), SubResource("Resource_wyrkf")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:4,-7->5,-7:0,-1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_5,-7->5,-5_1,0" type="Node3D" parent="Generated/Walls" unique_id=1371586583]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.1, 1.5, -108)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 36)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_fegbj"), SubResource("Resource_3t720"), SubResource("Resource_cmpsb"), SubResource("Resource_cjv6r"), SubResource("Resource_7i6ef"), SubResource("Resource_4m3jc")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:5,-7->5,-5:1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_3,-6->4,-6_0,-1" type="Node3D" parent="Generated/Walls" unique_id=938047412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63, 1.5, -108.1)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_20apk"), SubResource("Resource_ubgmx"), SubResource("Resource_jxi66"), SubResource("Resource_tareh"), SubResource("Resource_d5lbp"), SubResource("Resource_1mt0q")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:3,-6->4,-6:0,-1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_4,-7->4,-6_-1,0" type="Node3D" parent="Generated/Walls" unique_id=1794421265]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 71.9, 1.5, -117)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 18)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_e4tx7"), SubResource("Resource_dsaxs"), SubResource("Resource_ypbef"), SubResource("Resource_jjqbd"), SubResource("Resource_38i7g"), SubResource("Resource_v0knx")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:4,-7->4,-6:-1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_5,-5->6,-5_0,-1" type="Node3D" parent="Generated/Walls" unique_id=1798013216]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99, 1.5, -90.1)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_eteaq"), SubResource("Resource_w5stm"), SubResource("Resource_1l3gw"), SubResource("Resource_q5rrh"), SubResource("Resource_2lxro"), SubResource("Resource_3dtxb")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:5,-5->6,-5:0,-1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_2,-7->3,-7_0,-1" type="Node3D" parent="Generated/Walls" unique_id=1550487747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 1.5, -126.1)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_68fs4"), SubResource("Resource_37i4s"), SubResource("Resource_jho7j"), SubResource("Resource_uw05g"), SubResource("Resource_nxjsn"), SubResource("Resource_c0f2f")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:2,-7->3,-7:0,-1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_2,-7->2,-6_-1,0" type="Node3D" parent="Generated/Walls" unique_id=2028330689]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.9, 1.5, -117)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 18)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_ovwfd"), SubResource("Resource_owk5o"), SubResource("Resource_bklu8"), SubResource("Resource_rq7ha"), SubResource("Resource_4sp4q"), SubResource("Resource_3ob1t")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:2,-7->2,-6:-1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_3,-7->3,-6_1,0" type="Node3D" parent="Generated/Walls" unique_id=466010221]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.1, 1.5, -117)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 18)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_esyku"), SubResource("Resource_v5o3t"), SubResource("Resource_8es8g"), SubResource("Resource_js3xd"), SubResource("Resource_ljvab"), SubResource("Resource_ujw2l")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:3,-7->3,-6:1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_6,-5->6,-1_1,0" type="Node3D" parent="Generated/Walls" unique_id=1190096018]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.1, 1.5, -54)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 72)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_yfhep"), SubResource("Resource_qmwlt"), SubResource("Resource_6bb8l"), SubResource("Resource_4sexm"), SubResource("Resource_x381o"), SubResource("Resource_x6m48")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:6,-5->6,-1:1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_0,-6->2,-6_0,-1" type="Node3D" parent="Generated/Walls" unique_id=153780373]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1.5, -108.1)
+script = ExtResource("157_23ko6")
+size = Vector3(36, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_vmcpy"), SubResource("Resource_n358q"), SubResource("Resource_dhp8g"), SubResource("Resource_y1byk"), SubResource("Resource_eb3v2"), SubResource("Resource_xlsk3")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:0,-6->2,-6:0,-1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_0,-1->1,-1_0,1" type="Node3D" parent="Generated/Walls" unique_id=1060144524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.5, -17.9)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_skieg"), SubResource("Resource_vraln"), SubResource("Resource_dcvjs"), SubResource("Resource_wjwpe"), SubResource("Resource_tu6b4"), SubResource("Resource_waf4w")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:0,-1->1,-1:0,1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_0,-6->0,-1_-1,0" type="Node3D" parent="Generated/Walls" unique_id=1303525440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.5, -63)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 90)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_qwrsx"), SubResource("Resource_bo2if"), SubResource("Resource_lsm02"), SubResource("Resource_fas4c"), SubResource("Resource_30m56"), SubResource("Resource_8ahyq")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:0,-6->0,-1:-1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_1,-1->1,0_-1,0" type="Node3D" parent="Generated/Walls" unique_id=816193324]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.9, 1.5, -9)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 18)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_5kp6e"), SubResource("Resource_lk4kv"), SubResource("Resource_e525k"), SubResource("Resource_nvb5c"), SubResource("Resource_jjqek"), SubResource("Resource_jsx7b")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:1,-1->1,0:-1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_5,-1->6,-1_0,1" type="Node3D" parent="Generated/Walls" unique_id=361804436]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99, 1.5, -17.9)
+script = ExtResource("157_23ko6")
+size = Vector3(18, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_60tmm"), SubResource("Resource_l4jwp"), SubResource("Resource_6ad4k"), SubResource("Resource_0ruwr"), SubResource("Resource_smwai"), SubResource("Resource_s702m")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:5,-1->6,-1:0,1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_5,-1->5,0_1,0" type="Node3D" parent="Generated/Walls" unique_id=1244552258]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.1, 1.5, -9)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 18)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_xipl4"), SubResource("Resource_4cw07"), SubResource("Resource_1rmd0"), SubResource("Resource_j38pi"), SubResource("Resource_vdlh1"), SubResource("Resource_qdsil")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:5,-1->5,0:1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,-1_1,0->3,0_0,1" type="Node3D" parent="Generated/Walls" unique_id=1909613213]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 1.5, 0.1)
+script = ExtResource("157_23ko6")
+size = Vector3(36, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_3ia87"), SubResource("Resource_2djse"), SubResource("Resource_mi60f"), SubResource("Resource_j3r45"), SubResource("Resource_50is2"), SubResource("Resource_ecy0m")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,-1:1,0->3,0:0,1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,-1"
+
+[node name="Wall__hf_wall_v1_layer_0_0,0_5,0->5,2_1,0" type="Node3D" parent="Generated/Walls" unique_id=1398276950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.1, 1.5, 18)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 36)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_kh8xq"), SubResource("Resource_wmay8"), SubResource("Resource_cy28u"), SubResource("Resource_htxwg"), SubResource("Resource_2pv6q"), SubResource("Resource_gpb0i")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,0:5,0->5,2:1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,0"
+
+[node name="Wall__hf_wall_v1_layer_0_0,0_3,2->5,2_0,1" type="Node3D" parent="Generated/Walls" unique_id=5514120]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 1.5, 36.1)
+script = ExtResource("157_23ko6")
+size = Vector3(36, 3, 0.2)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_51vbg"), SubResource("Resource_ci66d"), SubResource("Resource_5ebp5"), SubResource("Resource_wmu8v"), SubResource("Resource_25iyb"), SubResource("Resource_xnk5b")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,0:3,2->5,2:0,1"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,0"
+
+[node name="Wall__hf_wall_v1_layer_0_0,0_3,0->3,2_-1,0" type="Node3D" parent="Generated/Walls" unique_id=1771404924]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53.9, 1.5, 18)
+script = ExtResource("157_23ko6")
+size = Vector3(0.2, 3, 36)
+faces = Array[ExtResource("158_a20yf")]([SubResource("Resource_w8n4e"), SubResource("Resource_oocsv"), SubResource("Resource_bfc3o"), SubResource("Resource_mkqgg"), SubResource("Resource_qm5hw"), SubResource("Resource_b4j8a")])
+metadata/hf_gid = &"hf:wall:v1:layer_0:0,0:3,0->3,2:-1,0"
+metadata/hf_gen = true
+metadata/hf_kind = "wall"
+metadata/hf_chunk = "0,0"
+
+[node name="HeightmapFloors" type="Node3D" parent="Generated" unique_id=457685421]
+
+[node name="RegionOverlay" type="MeshInstance3D" parent="Generated" unique_id=1339912589]
+cast_shadow = 0
+
+[node name="PaintTool" type="Node" parent="." unique_id=1927954178 node_paths=PackedStringArray("layer_manager")]
+script = ExtResource("157_mkqgg")
+layer_manager = NodePath("../PaintLayers")
+
+[node name="SurfacePaint" type="Node" parent="." unique_id=1302348653]
+script = ExtResource("158_qm5hw")
