@@ -51,4 +51,7 @@ Thumbs.db
 # Cache
 .cache/
 *.cache
+
+# AI / Agents
+AGENTS.md
 ```
