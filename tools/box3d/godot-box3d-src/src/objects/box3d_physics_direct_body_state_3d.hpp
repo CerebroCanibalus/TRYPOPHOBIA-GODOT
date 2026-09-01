@@ -1,0 +1,89 @@
+#pragma once
+
+#include <godot_cpp/classes/physics_direct_body_state3d_extension.hpp>
+#include <godot_cpp/classes/physics_direct_space_state3d.hpp>
+
+using namespace godot;
+
+class Box3DBodyImpl3D;
+
+// Per-body live-state accessor handed to scripts inside _integrate_forces() and to
+// Godot core's move_and_slide(). Thin passthrough to the Box3DBodyImpl3D/b3BodyId it wraps.
+class Box3DPhysicsDirectBodyState3D final : public PhysicsDirectBodyState3DExtension {
+	GDCLASS(Box3DPhysicsDirectBodyState3D, PhysicsDirectBodyState3DExtension)
+
+public:
+	void set_body(Box3DBodyImpl3D* p_body) { body = p_body; }
+
+	Box3DBodyImpl3D* get_body() const { return body; }
+
+	Vector3 _get_total_gravity() const override;
+	double _get_total_angular_damp() const override;
+	double _get_total_linear_damp() const override;
+
+	Vector3 _get_center_of_mass() const override;
+	Vector3 _get_center_of_mass_local() const override;
+	Basis _get_principal_inertia_axes() const override;
+
+	double _get_inverse_mass() const override;
+	Vector3 _get_inverse_inertia() const override;
+	Basis _get_inverse_inertia_tensor() const override;
+
+	void _set_linear_velocity(const Vector3& p_velocity) override;
+	Vector3 _get_linear_velocity() const override;
+
+	void _set_angular_velocity(const Vector3& p_velocity) override;
+	Vector3 _get_angular_velocity() const override;
+
+	void _set_transform(const Transform3D& p_transform) override;
+	Transform3D _get_transform() const override;
+
+	Vector3 _get_velocity_at_local_position(const Vector3& p_local_position) const override;
+
+	void _apply_central_impulse(const Vector3& p_impulse) override;
+	void _apply_impulse(const Vector3& p_impulse, const Vector3& p_position) override;
+	void _apply_torque_impulse(const Vector3& p_impulse) override;
+
+	void _apply_central_force(const Vector3& p_force) override;
+	void _apply_force(const Vector3& p_force, const Vector3& p_position) override;
+	void _apply_torque(const Vector3& p_torque) override;
+
+	void _add_constant_central_force(const Vector3& p_force) override;
+	void _add_constant_force(const Vector3& p_force, const Vector3& p_position) override;
+	void _add_constant_torque(const Vector3& p_torque) override;
+
+	void _set_constant_force(const Vector3& p_force) override;
+	Vector3 _get_constant_force() const override;
+
+	void _set_constant_torque(const Vector3& p_torque) override;
+	Vector3 _get_constant_torque() const override;
+
+	void _set_sleep_state(bool p_enabled) override;
+	bool _is_sleeping() const override;
+
+	int32_t _get_contact_count() const override;
+
+	Vector3 _get_contact_local_position(int32_t p_index) const override;
+	Vector3 _get_contact_local_normal(int32_t p_index) const override;
+	Vector3 _get_contact_impulse(int32_t p_index) const override;
+	int32_t _get_contact_local_shape(int32_t p_index) const override;
+	Vector3 _get_contact_local_velocity_at_position(int32_t p_index) const override;
+
+	RID _get_contact_collider(int32_t p_index) const override;
+	Vector3 _get_contact_collider_position(int32_t p_index) const override;
+	uint64_t _get_contact_collider_id(int32_t p_index) const override;
+	Object* _get_contact_collider_object(int32_t p_index) const override;
+	int32_t _get_contact_collider_shape(int32_t p_index) const override;
+	Vector3 _get_contact_collider_velocity_at_position(int32_t p_index) const override;
+
+	double _get_step() const override;
+	void _integrate_forces() override;
+
+	PhysicsDirectSpaceState3D* _get_space_state() override;
+
+protected:
+	static void _bind_methods() {}
+
+private:
+	Box3DBodyImpl3D* body = nullptr;
+};

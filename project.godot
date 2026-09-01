@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="extraction horror"
 run/main_scene="res://main_menu.tscn"
-config/features=PackedStringArray("4.6", "Forward Plus")
+config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -30,7 +30,7 @@ window/size/viewport_height=1080
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ArmatureEditor/plugin.cfg", "res://addons/hammerforge/plugin.cfg")
+enabled=PackedStringArray("res://addons/heren/plugin.cfg")
 
 [input]
 
@@ -96,6 +96,13 @@ push={
 "events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":2,"canceled":false,"pressed":false,"double_click":false,"script":null)
 ]
 }
+
+[physics]
+
+common/physics_ticks_per_second=30
+3d/physics_engine="Box3D Physics"
+box3d/worker_count=4
+box3d/sub_step_count=0.0
 
 [rendering]
 

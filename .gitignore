@@ -54,4 +54,11 @@ Thumbs.db
 
 # AI / Agents
 AGENTS.md
+
+# Box3D development (FASE 2 — plugin recompilation)
+# Source clone IS committed (snapshot for PR reproducibility)
+# But build artifacts and internal .git are excluded
+tools/box3d/build/
+tools/box3d/godot-box3d-src/.git/
+tools/box3d/godot-box3d-src/bin/
 ```

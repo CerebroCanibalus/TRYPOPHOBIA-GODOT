@@ -16,6 +16,8 @@
 
 Tripofobia es un juego de terror y comedia cooperativo-asimétrico para 6-8 jugadores. Los jugadores forman parte de **La Carabela**, una expedición militar enviada a destruir **Colmenas** de la **Niebla Roja** — una entidad colonial viva que ha infestado el Nuevo Continente. Uno de los jugadores está **infectado** por la Colmena y debe eliminar al resto sin ser descubierto. El juego es deliberadamente caótico, con pocas restricciones, fomentando la creatividad del jugador tanto para sobrevivir como para traicionar.
 
+El mundo visual de Tripofobia es **Barroco Futurismo**: la fusión del barroco ibérico con tecnología futurista, donde el mestizaje cultural es el principio rector del diseño. Cada estructura, cada objeto, cada personaje cuenta una historia de dos mundos fusionados.
+
 ### Tipo de Juego
 
 - **Género:** Horror cooperativo-asimétrico multijugador
@@ -195,12 +197,28 @@ Los personajes son tripulantes de La Carabela, cada uno con personalidad y habil
 
 ## 6. Arte y Audio
 
-### Dirección Artística
+### Dirección Artística — Barroco Futurismo
 
-- **Ambientación**: Ciudades acuáticas industriales de Gran Iberia — metal oxidado, neón apagado, niebla constante
-- **Paleta**: Rojos (Niebla Roja), grises metálicos (imperio), azules oscuros (océano)
-- **Referentes**: Estética soviética + brutalismo + ciencia ficción acuática
-- **Horror**: Orgánico vs mecánico — la Colmena corrompe estructuras industriales con crecimientos biológicos
+El estilo visual propio de Tripofobia se llama **Barroco Futurismo**: un análisis estético del contraste entre la modernidad temprana hispana y el futurismo. No es retrofuturismo soviético ni steampunk — es una identidad visual propia que nace del barroco ibérico, el mestizaje cultural y la ornamentalidad excesiva como lenguaje de poder.
+
+**Pilares del estilo:**
+- **Ornamento como identidad**: estructuras cubiertas de relieves, molduras, filigranas — el exceso decorativo del barroco aplicado a tecnología futurista. Cada edificio, cada arma, cada objeto cuenta una historia cultural
+- **Mestizaje visual**: fusiones de estilos artísticos hispanoamericanos con tecnología avanzada — azulejos sevillanos con circuitos, arquitectura virreinal con gravedad artificial, trajes ceremoniales con exoesqueletos
+- **Contraste barroco**: luz y oscuridad extrema (tenebrismo), decoración excesiva vs funcionalidad mínima, lo sagrado vs lo profano, lo antiguo vs lo ultramoderno
+- **Horror orgánico**: la Niebla Roja corrompe el ornamento — los crecimientos biológicos se entrelazan con las molduras, la filigrana se retuerce, lo hermoso se vuelve grotesco
+
+**Paleta:**
+- Dorados y bronce (ornamento imperial, poder)
+- Rojos profundos (Niebla Roja, sangre, pasión)
+- Azules oscuros (océano, distancia, misterio)
+- Negros y blancos extremos (tenebrismo barroco)
+
+**Referentes:**
+- Barroco hispanoamericano (iglesias de Oaxaca, Potosí, Cartagena)
+- Arquitectura virreinal adaptada a escala futurista
+- Filigrana andaluza y morisca fusionada con tecnología
+- Tenebrismo de Zurbarán y Ribera aplicado a iluminación de escenas
+- Mestizaje como principio de diseño: nunca un estilo puro, siempre una fusión
 
 ### Audio
 
@@ -248,9 +266,10 @@ Los personajes son tripulantes de La Carabela, cada uno con personalidad y habil
 |---------|----------------|----------|----------------|
 | Traidor oculto | No | Sí (estático) | **Sí (dinámico, transformación)** |
 | Jugadores muertos activos | No | Fantasma pasivo | **Director con agencia real** |
-| Identidad cultural | No | No | **Gran Iberia** |
+| Identidad cultural | No | No | **Gran Iberia — Barroco Futurismo** |
 | Multiplayer | 4 | 10 | **6-8** |
 | Setting | Corportativo genérico | Espacial genérico | **Imperio socialista acuático** |
+| Estilo visual | Realismo sucio | Minimalista | **Barroco futurista con mestizaje** |
 
 ---
 
