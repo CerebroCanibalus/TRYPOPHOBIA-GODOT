@@ -469,6 +469,32 @@ Los efectos de post-proceso de horror (viñeta, estática, scan lines, glitch) e
 - Civilizaciones humanas con estética **Barroco Futurismo**: ornamento ibérico + tecnología avanzada + mestizaje cultural.
 - La sociedad es **mayoritariamente femenina** tras una guerra devastadora (hombres murieron en combate).
 
+### Sistema político — Gran Iberia
+- **Gran Iberia NO es feudal ni capitalista.** Es un **Estado socialista** nacido de la revolución de los pueblos íberos que derrocó a las monarquías.
+- No hay nobleza feudal tradicional — las casas nobles de Mérita fueron abolidas tras la conquista.
+- El servicio militar es un deber cívico, no un privilegio de clase.
+- Los rangos en La Carabela reflejan entrega, no jerarquía de sangre.
+- La estética Barroco Futurismo existe A PESAR del sistema socialista — es un legado cultural, no una estructura de poder.
+- Los personajes vienen de familias trabajadoras, no de linajes nobles (salvo excepciones justificadas).
+
+### Geografía — Continentes
+Mapa del mundo con los continentes principales del planeta:
+
+| Continente/Región | Descripción |
+|-------------------|-------------|
+| **Efórobos** | Continente de donde vienen los íberos. Tierra de origen de Gran Iberia. |
+| **Nepoleés** | Continente norteño, separado del resto por aguas heladas. |
+| **Ostanía** | Continente sureño, clima más cálido. |
+| **Mérita** | **Continente conquistado** por Gran Iberia. Aquí se desarrolla la mayor parte del conflicto. Aquí se originó la Niebla Roja en la **Zona Muerta**. |
+| **Protosia** | Isla casi inexplorada al noreste. Poblada por civilizaciones menores o desconocida por completo. |
+| **Zona Muerta** | Zona del planeta casi inexplorada donde las condiciones de vida son inhabitables. Hay teorías de que la Niebla Roja podría venir de ahí, pero es completamente un misterio intencional. Nadie ha vuelto de explorarla. |
+
+**Reglas para el lore:**
+- La geografía es completamente inventada — NO usar paralelos directos con la Tierra (no decir "tipo México", "tipo Japón", etc.). En cambio, decir "parábola de" + inspiración cultural real.
+- Mérita es el continente principal del conflicto. Sus culturas indígenas son las que fueron conquistadas por Gran Iberia.
+- La Zona Muerta es el origen propuesto de la Niebla Roja, pero NO se confirma. Es un misterio Lovecraftiano — el miedo a lo desconocido.
+- Protosia puede ser hogar de civilizaciones menores o tener su propia cultura sin conquistar.
+
 ### Atmósfera — "Sentirse humano en Marte"
 - **Evitar el factor "hogar."** Este mundo NO se siente como casa. Es extraño, hostil, lejano. Como visitar Marte.
 - La irónia central: en un mundo que NO es el nuestro, los personajes se sienten **más humanos que nunca**. La alienación del entorno resalta la calidez de los vínculos.
