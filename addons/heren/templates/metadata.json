@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "description": "Indice de templates UI 2D. Cada template es un .tscn con nodos canonicos; el registry instancia y setea params (target/property). Target '.' = root del template. Targets multiples para aplicar el mismo valor a varios nodos.",
+  "templates": [
+    {
+      "name": "health_bar",
+      "category": "hud",
+      "description": "Barra de vida 2D: fondo oscuro + relleno de color + label centrado con outline. Nodos: Background (ColorRect), Fill (ColorRect), Label.",
+      "file": "hud/health_bar.tscn",
+      "params": [
+        {"name": "color", "target": "Fill", "property": "color", "description": "Color del relleno"},
+        {"name": "bg_color", "target": "Background", "property": "color", "description": "Color del fondo"},
+        {"name": "label", "target": "Label", "property": "text", "description": "Texto (ej: 'HP 100/100')"},
+        {"name": "size", "target": ".", "property": "custom_minimum_size", "description": "Tamano Vector2 {x,y} de la barra"}
+      ]
+    },
+    {
+      "name": "crosshair",
+      "category": "hud",
+      "description": "Mira de 4 lineas centrada en pantalla (mouse_filter ignora clics). Nodos: Top, Bottom, Left, Right (ColorRect).",
+      "file": "hud/crosshair.tscn",
+      "params": [
+        {"name": "color", "targets": ["Top", "Bottom", "Left", "Right"], "property": "color", "description": "Color de las 4 lineas"}
+      ]
+    },
+    {
+      "name": "dialogue_box",
+      "category": "hud",
+      "description": "Caja de dialogo anclada abajo (PanelContainer + borde + esquinas). Nodos: NameLabel, Text (RichTextLabel con bbcode).",
+      "file": "hud/dialogue_box.tscn",
+      "params": [
+        {"name": "name", "target": "NameLabel", "property": "text", "description": "Nombre del hablante"},
+        {"name": "text", "target": "Text", "property": "text", "description": "Texto del dialogo (soporta bbcode)"}
+      ]
+    },
+    {
+      "name": "score_label",
+      "category": "hud",
+      "description": "Label de puntuacion con outline y sombra. Root es el propio Label.",
+      "file": "hud/score_label.tscn",
+      "params": [
+        {"name": "text", "target": ".", "property": "text", "description": "Texto (ej: 'Score: 100')"},
+        {"name": "color", "target": ".", "property": "theme_override_colors/font_color", "description": "Color del texto"},
+        {"name": "font_size", "target": ".", "property": "theme_override_font_sizes/font_size", "description": "Tamano de fuente"}
+      ]
+    },
+    {
+      "name": "boss_bar",
+      "category": "hud",
+      "description": "Barra de jefe anclada arriba-centro: nombre centrado sobre fondo + relleno. Nodos: NameLabel, Background, Fill.",
+      "file": "hud/boss_bar.tscn",
+      "params": [
+        {"name": "name", "target": "NameLabel", "property": "text", "description": "Nombre del jefe"},
+        {"name": "color", "target": "Fill", "property": "color", "description": "Color del relleno"},
+        {"name": "bg_color", "target": "Background", "property": "color", "description": "Color del fondo"}
+      ]
+    },
+    {
+      "name": "inventory_slot",
+      "category": "hud",
+      "description": "Slot de inventario 64x64: fondo + icono (aspect centered) + contador abajo-derecha. Nodos: Background, Icon (TextureRect), Count.",
+      "file": "hud/inventory_slot.tscn",
+      "params": [
+        {"name": "texture", "target": "Icon", "property": "texture", "resource": true, "description": "Path del icono (res://...png)"},
+        {"name": "count", "target": "Count", "property": "text", "description": "Cantidad (ej: '5')"},
+        {"name": "slot_color", "target": "Background", "property": "color", "description": "Color de fondo del slot"}
+      ]
+    }
+  ]
+}

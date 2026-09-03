@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://box3d_benchmark_scene"]
+
+[ext_resource type="Script" path="res://tests/physics_benchmark/benchmark_scene.gd" id="1_benchmark"]
+[ext_resource type="Script" path="res://tests/physics_benchmark/camera_controller.gd" id="2_camera"]
+
+[node name="BenchmarkRoot" type="Node3D"]
+script = ExtResource("1_benchmark")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707, 0.707, 0, -0.707, 0.707, 0, 25, 30)
+current = true
+fov = 75.0
+script = ExtResource("2_camera")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.25, 0.433, 0, 0.866, 0.5, -0.5, -0.433, 0.75, 0, 10, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]

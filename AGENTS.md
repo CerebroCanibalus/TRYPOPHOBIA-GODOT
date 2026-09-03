@@ -458,3 +458,70 @@ Los efectos de post-proceso de horror (viñeta, estática, scan lines, glitch) e
 - `Menu_System_Guide.md` — Arquitectura del menú, sistema de traducción, cómo agregar menús
 - `Interactive_Background_System.md` — Efecto de paralaje/sacudida con MouseTracker
 - `README_MOVEMENT_SYSTEM.md` — Sistema de stamina y recursos CharacterStat
+
+---
+
+## 🌍 WORLDBUILDING — Reglas del universo
+
+### El Planeta
+- **NO es la Tierra.** Planeta acuoso distinto: ~70% agua, archipiélagos, ciudades flotantes, plataformas marítimas.
+- Continentes propios con nombres, historia y geografía independientes.
+- Civilizaciones humanas con estética **Barroco Futurismo**: ornamento ibérico + tecnología avanzada + mestizaje cultural.
+- La sociedad es **mayoritariamente femenina** tras una guerra devastadora (hombres murieron en combate).
+
+### Atmósfera — "Sentirse humano en Marte"
+- **Evitar el factor "hogar."** Este mundo NO se siente como casa. Es extraño, hostil, lejano. Como visitar Marte.
+- La irónia central: en un mundo que NO es el nuestro, los personajes se sienten **más humanos que nunca**. La alienación del entorno resalta la calidez de los vínculos.
+- El planeta no tiene por qué ser comprensible. Hay cosas que no se explican, que simplemente **son**. No todo necesita lore — lo desconocido genera terror y asombro.
+- Cada personaje carga con la sensación de "esto no es mi mundo, pero aquí es donde tengo que estar". Ninguno eligió estar aquí. Todos eligieron **quedarse**.
+
+### Identidad cultural del juego
+- **Mensaje central:** Esperanza en la crisis de la hispanidad. Los personajes luchan POR algo, no contra alguien.
+- **Contra el feminismo** como ideología, **sin desmeritar a la mujer**. La fuerza femenina se celebra como madre, guerrera, protectora — NO como víctima ni como antagonista de lo masculino.
+- Cada personaje es un arquetipo cultural hispano (no genérico), con lore personal que conecta con su especie animal.
+
+### Personajes — Reglas de creación
+- **10 personajes** (todos en `meta/docs/personajes/`)
+- **Especies:** Rata, Coneja, Shiba, Zorra, Zorrillo, Oveja, Tlacuache, Murciélago, Rana, Llama
+- **Todos:** Mujeres antropomórficas, menores de 40 años, each una representa una faceta del hispano caribeño/hispanoamericano.
+- **Edades:** Todas jóvenes (18-38) — fuerza, vitalidad, pero con experiencia suficiente para ser creíbles como combatientes.
+- **Lore:** Personal, irreverente, amoroso pero inusual. Cada una lucha por algo concreto (familia, pueblo, promesa, venganza justa, fe, etc.).
+- **Objeto exclusivo:** Define el rol en gameplay. Conexión cultural directa.
+- **Estilo visual:** Barroco Futurismo — ornamento excesivo + funcionalidad militar.
+- **Frase icónica:** Corta, memorable, que refleje personalidad.
+- **NO mascotas terrestres.** Todos los animales son antropomórficos (personajes). Si hay mascotas/compañeros, deben ser criaturas alienígenas del planeta — nada de perros, gatos, loros, etc.
+
+### Sistema de Rangos de La Carabela
+La Carabela es una **misión católica de exterminio**, no un ejército. Sus miembros son **voluntarias**. La misión tiene múltiples propósitos: destruir Colmenas, proteger sobrevivientes, entender la Niebla, mantener la fe.
+
+**Rangos jugables** (nuestros 10 personajes):
+| Rango | Función |
+|-------|---------|
+| **Madre** | Senior de misión. La que las demás acuden. Voz de experiencia. |
+| **Hermana** | Miembro de pleno derecho. Ha tomado sus votos. |
+| **Postulante** | En período de prueba. Acompañada siempre. |
+| **Conversa** | Estuvo expuesta a la Niebla y sobrevivió. Conoce al enemigo desde dentro. |
+
+**Rangos fuera del juego** (personajes off-screen que dan órdenes):
+| Rango | Función |
+|-------|---------|
+| **Superiora** | Autoridad máxima de La Carabela. Decide estrategia y asigna misiones. Nunca aparece — solo se intuye que existe. |
+
+**Reglas:**
+- No hay rangos de combate. Todas pueden pelear, pero el rango mide entrega, no capacidad letal.
+- Los rangos son por entrega, no por antigüedad.
+- La Conversa es el rango más inquietante — puede que todavía escuche la Niebla.
+- En otras naciones (población equilibrada), los rangos son mixtos y tradicionales.
+
+### Estructura de cada ficha de personaje
+```
+## Identidad → Nombre, especie, género, edad
+## Apariencia → Traje, rasgos, color
+## Objeto Exclusivo → Nombre, tipo, función
+## Stats Base → Tabla + bonificación de especie
+## Lore → Afiliación, rango, historia, relaciones, "por qué personal"
+## Personalidad → Rasgos, frase icónica, comportamiento
+## Gameplay → Estilo, sinergias, counters
+## Diseño Visual → Concepto, paleta, elementos barrocos
+## Notas de Diseño → Ideas sueltas
+```

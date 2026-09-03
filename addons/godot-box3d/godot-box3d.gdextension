@@ -1,0 +1,14 @@
+[configuration]
+
+entry_symbol = "godot_box3d_main"
+compatibility_minimum = "4.3"
+reloadable = true
+
+[libraries]
+
+linux.debug.x86_64 = "res://addons/godot-box3d/bin/libgodot-box3d.so"
+linux.release.x86_64 = "res://addons/godot-box3d/bin/libgodot-box3d.so"
+windows.debug.x86_64 = "res://addons/godot-box3d/bin/godot-box3d.dll"
+windows.release.x86_64 = "res://addons/godot-box3d/bin/godot-box3d.dll"
+macos.debug = "res://addons/godot-box3d/bin/libgodot-box3d.dylib"
+macos.release = "res://addons/godot-box3d/bin/libgodot-box3d.dylib"
