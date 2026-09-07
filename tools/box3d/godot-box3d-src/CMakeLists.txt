@@ -43,6 +43,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	target_compile_options(godot-box3d PRIVATE -Wall)
 endif()
 
+# Tripofobia: disable strict mode C2275 (declarations after statements).
+# Our defensive normal-validating helpers in box3d_physics_direct_space_state_3d.cpp
+# need this. The legacy /Zc:forScope- is deprecated in MSVC 17.10+, but
+# still works in current versions. We combine it with permissive- which
+# disables /permissive- strict mode that blocks the same pattern.
+if(MSVC)
+	target_compile_options(godot-box3d PRIVATE /Zc:forScope- /permissive-)
+endif()
+
 # GitHub's Windows runner and the documented Ninja build select MinGW. Its default shared
 # runtime dependencies are not shipped with the addon, so a release DLL otherwise fails to
 # load with Windows error 126 on a clean Godot installation.

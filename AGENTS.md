@@ -1,4 +1,4 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 Este archivo proporciona orientación a Claude Code (claude.ai/code) cuando trabaja con el código de este repositorio.
 
@@ -551,3 +551,441 @@ La Carabela es una **misión católica de exterminio**, no un ejército. Sus mie
 ## Diseño Visual → Concepto, paleta, elementos barrocos
 ## Notas de Diseño → Ideas sueltas
 ```
+
+
+---
+
+## ?? MARIONETA � Sistema de Personajes
+
+**MARIONETA = M�dulo de Articulaci�n Rob�tica con IK, Orquestaci�n y Navegaci�n Estructural con Trazado de Animaci�n.**
+
+*"Puppet que jala huesos como un titiritero."*
+
+### Filosof�a
+**Composici�n sobre configuraci�n.** Cada personaje es **DATA**; toda la l�gica es gen�rica y reutilizable. Las animaciones son **primitivas peque�as y mezclables**, no archivos .tres fr�giles.
+
+### Capas (5)
+
+```
+1. DATA (Resources)               CharacterData + BodyBlueprint + ItemData
+   ? usado por
+2. CONTROLLER (CharacterBody3D)   Input + move_and_slide + state machine
+   ?
+3. PHYSICS BODY                   Body kinematic (c�psula) + Piernas/Brazos f�sicos
+   ? targets IK
+4. POSE COMPOSER                  Mezcla N primitivas con pesos
+   ? aplica a
+5. IK SOLVERS                     Two-bone IK gen�rico + look-at
+```
+
+### Estructura de archivos
+
+```
+src/marioneta/
++-- character_data.gd              # Resource: stats por personaje
++-- body_blueprint.gd              # Resource: huesos + proporciones
++-- character_controller.gd        # CharacterBody3D: movimiento + f�sica
++-- character_state_machine.gd     # RefCounted: FSM event-driven
++-- pose_composer.gd               # (Fase 2) Mezcla primitivas
++-- ik_solvers.gd                  # (Fase 3) Two-bone IK gen�rico
++-- carry_system.gd                # (Fase 5) Pickup/drop/use
++-- primitives/                    # (Fase 2) Animaciones modulares
+�   +-- pose_primitive.gd
+�   +-- p_idle_breathing.gd
+�   +-- p_walk_leg_cycle.gd
+�   +-- p_walk_arm_cycle.gd
+�   +-- p_body_bob.gd
+�   +-- ...
++-- ragdoll_fallback.gd            # RENOMBRADO de active_ragdoll.gd
+                                     # Solo se activa en infecci�n/muerte
+```
+
+### Innovaciones clave
+
+| Innovaci�n | Qu� resuelve |
+|---|---|
+| **Body Blueprint indirection** | Nombres de huesos son DATA, no hardcode. Una Rata y una Llama pueden tener esqueletos con huesos distintos sin tocar c�digo |
+| **Mass-driven parameters** | mass auto-deriva stiffness, max_force, walk_speed, breathing_speed. Oveja (90kg) camina distinto a Rata (40kg) autom�ticamente |
+| **Pose Primitives componibles** | Cada animaci�n es una clase de 50 l�neas con weight y enabled. Apaga walk_arm_swing ? brazos quietos (Manos en los bolsillos) |
+| **Debug visual toggle** | @export var debug_visual: bool dibuja c�psulas, IK targets, velocity, state label |
+| **State machine RefCounted** | Liviano, event-driven, testeable aislado. WeaponStateMachine es el canon |
+
+### Anti-patrones evitados
+- ? Active ragdoll puro (gameplay laggy, jitter)
+- ? AnimationTree con .tres (fr�gil, dif�cil de versionar)
+- ? Script monol�tico (intimidante, no modular)
+- ? Hardcoded bone names (no portable entre personajes)
+- ? CharacterBody3D sin c�psula (raycasts imprecisos)
+
+### Fases de implementaci�n
+
+| Fase | Qu� | Estado |
+|---|---|---|
+| **F1** | Data + Controller + State Machine + Anim procedural b�sica | ?? EN PROGRESO |
+| F2 | Primitives componibles + PoseComposer | ? |
+| F3 | Foot IK (raycast al suelo) + Wall push | ? |
+| F4 | Hand IK (cuando carga objeto) | ? |
+| F5 | Carry System (pickup/drop/use) | ? |
+| F6 | 10 CharacterData + 10 BodyBlueprint resources | ? |
+| F7 | Multiplayer (authority split, state sync) | ? |
+
+### C�mo a�adir un nuevo personaje (Fase 6)
+
+1. Crear esources/marioneta/<nombre>.tres (CharacterData)
+2. Crear esources/marioneta/<nombre>_blueprint.tres (BodyBlueprint con nombres de huesos)
+3. Asignar visual_scene = path al .glb del personaje
+4. �Listo! El controller hace todo el resto autom�ticamente
+
+---
+
+## 🎬 SISTEMA ANIM_EDITOR — Editor de Animaciones Procedurales (2026-09-05)
+
+**Estado:** Pre-FASE 0 (validación de ragdoll de prueba)
+**Decisión General Beria:** Construir un editor visual de animaciones procedurales tipo el proyecto UE5 WalkAnimSelector (ContinueBreak, 2023), inspirado en su UI always-on + sistema de presets + Control Rig. Adaptado a Godot 4.4 y al sistema MARIONETA existente.
+
+### Inspiración
+
+El proyecto UE5 WalkAnimSelector (de ContinueBreak / Arthur Ontuzhan) usa:
+- Sliders runtime que modifican parámetros de animación en vivo
+- Botón Randomize para generar variantes
+- Sistema de brackets (8→4→2→1) para elegir favorito
+- Copy/Paste de presets como string al clipboard
+- Control Rig para manipular la pose en el editor
+
+**Adaptación a Tripofobia:** En vez de un Control Rig (no existe en Godot nativo), usamos SubViewport + overlay custom + gizmos. En vez de brackets (era obsesión del autor UE5), usamos load/save con gestión de archivos .tres.
+
+### Pre-requisito BLOQUEANTE — Ragdoll Funcional
+
+Antes de tocar el editor, hay que **validar que el ragdoll de prueba funciona de verdad** con humanoid.tscn. El plan NO puede proceder si esto falla.
+
+**Inventario actual de humanoid.tscn (mapeado 2026-09-05):**
+- ✅ 10 PhysicalBone3D: Body, Head, LArm1, LArm2, RArm1, RArm2, LLeg1, LLeg2, RLeg1, RLeg2
+- ✅ 9 CollisionShape3D (uno por PhysicalBone)
+- ✅ 2 ShapeCast3D: OnFloorLeft, OnFloorRight (raycast suelo)
+- ✅ 2 Area3D: LGrabArea, RGrabArea (pickup detection)
+- ✅ 2 PinJoint3D: GrabJointLeft, GrabJointRight
+- ✅ 1 JumpTimer
+- ✅ AnimationPlayer con utoplay = &"idle" ⚠️ (PUEDE CONFLICTUAR con procedural)
+- ✅ Skeleton3D con nimate_physical_bones = false ⚠️
+- ✅ MarionetaControl + 5 SpringHandles + BarMarker
+- ✅ BonePivot + PlayerCamera + ThirdPersonCamera
+
+**Checklist de validación pre-FASE 0:**
+- [ ] Abrir humanoid.tscn en el editor, F5
+- [ ] Verificar que el personaje carga y se ve
+- [ ] WASD mueve al personaje sin errores
+- [ ] Procedural camina (sin necesidad de AnimationTree)
+- [ ] agdoll toggle (F11 o tecla asignada) activa modo ragdoll
+- [ ] En ragdoll mode, los PhysicalBone3D responden a gravedad
+- [ ] PhysicalBone3D chocan con el suelo correctamente
+- [ ] Procedural anim NO interfiere cuando ragdoll_mode = true
+- [ ] Springs de MarionetaControl dibujan hilos
+- [ ] No hay errores en consola
+
+Si algún item falla → **arreglar ANTES de FASE 0**, no seguir adelante.
+
+### FASE 0 — nim_editor.tscn (Editor Standalone)
+
+**Decisión General:** El visualizador es FASE 0, antes que el refactor de primitivas. Renombrado de walk_visualizer a nim_editor porque editaremos TODAS las animaciones, no solo caminata.
+
+**Naming final:** ❌ walk_visualizer → ✅ **nim_editor**
+**Carpeta presets:** ❌ esources/marioneta/presets/ → ✅ **esources/marioneta/anims/**
+
+**Multi-personaje (arquitectura agnóstica):**
+- Hoy usa humanoid.tscn (placeholder)
+- Listo para 10 personajes: rata, coneja, shiba, zorra, zorrillo, oveja, tlacuache, murciélago, rana, llama
+- Cada uno tendrá su propio body_blueprint.tres con nombres de huesos específicos
+- El anim_editor carga el personaje vía NodePath configurable
+
+**Estructura de archivos:**
+```
+tools/anim_editor/
+├── anim_editor.tscn              # Escena principal (F5 desde editor)
+├── anim_editor.gd                # Orquestador: carga humanoid, presets, UI
+├── preset_manager.gd             # CRUD sobre resources/marioneta/anims/
+├── preset_serializer.gd          # Resource <-> .tres de puros @exports
+├── detail_level_controller.gd    # Capas de detalle: MIN..MAX
+├── overlay_ragdoll.gd            # Visualización detallada del ragdoll
+├── overlay_springs.gd            # Líneas + vectores de fuerza de springs
+├── overlay_procedural.gd         # Estado activo, walk_phase, etc
+├── overlay_ik.gd                 # ShapeCasts + Areas + Joints
+├── overlay_state.gd              # State machine + input virtual
+└── ui/
+    ├── ui_main.tscn
+    ├── ui_anim_selector.tscn     # Dropdown con TODAS las animaciones
+    ├── ui_preset_browser.tscn    # Lista .tres con rename/delete/duplicate
+    ├── ui_detail_toggles.tscn    # Capas visibles (5 toggles mínimo)
+    ├── ui_sliders.tscn           # Auto-generados desde @export
+    └── ui_state_dashboard.tscn   # Readouts (vel, phase, is_on_floor, F...)
+```
+
+### Catálogo de animaciones (confirmado por General)
+
+**Estados procedurale (5):**
+- IDLE (respiración + head idle)
+- WALK (leg_cycle + arm_cycle + body_bob + lean)
+- RUN (WALK con run_intensity)
+- JUMP (sub-fase del estado JUMP)
+- FALL (sub-fase del estado FALL)
+
+**Especiales (1):**
+- RAGDOLL (ragdoll_mode=true, sin procedural)
+
+**Sistemas/overlays (no son estados puros, sino capas):**
+- GRAB_LEFT (PinJoint + l_grab_area)
+- GRAB_RIGHT (PinJoint + r_grab_area)
+- FOOT_IK (ShapeCast suelo)
+- HAND_IK (IK manos a targets)
+- SPRINGS (MarionetaControl)
+- BREATHING (respiración idle)
+- FOOT_DRAG (fuerza pies en caminar)
+- BALANCE (tobillos virtuales idle)
+
+El usuario selecciona UN estado a la vez. Los sistemas/overlays son toggles adicionales que se encienden sobre cualquier estado.
+
+### Capas de detalle (MIN..MAX, escogible)
+
+| Nivel | Qué muestra |
+|---|---|
+| **MIN (0)** | Skeleton animado + readouts en texto plano |
+| **LOW (1)** | + Nombres de huesos + mass en cada PhysicalBone + flechas de dirección |
+| **MED (2)** | + Capsules de PhysicalBone visibles + líneas de springs con color + vectores de fuerza de springs + PinJoint3D pivotes |
+| **HIGH (3)** | + ShapeCast3D rayos visibles + Area3D shapes + foot drag vectors + balance controller vectors + readouts numéricos flotantes |
+| **MAX (4)** | + Trayectorias de últimos N frames + heatmap de fuerza + timeline de cambios + recording buffer 5s |
+
+### Persistencia de animaciones (decisión: Opción C)
+
+**Comportamiento:**
+- **Save (💾):** Escribe al .tres en disco, persistente
+- **Load (▶):** Override runtime, NO escribe al disco
+- **Apply to Blueprint:** Promueve el override runtime a persistente (modifica el .tres del personaje)
+- **Rename (✏):** Renombra el archivo .tres en disco
+- **Delete (🗑):** Mueve a papelera (confirmación)
+- **Duplicate:** Save As con nuevo nombre
+
+**Naming de archivos:**
+- Las animaciones se guardan como esources/marioneta/anims/<nombre>.tres
+- Ejemplos: walk_civil.tres, walk_borracho.tres, idle_relajado.tres, un_perseguido.tres
+- Snake_case lowercase, sin espacios
+
+### Input en el visualizador
+
+**Decisión:** NO input de teclado. UI pura con selector de animaciones dropdown.
+
+Razón: evita conflicto con el editor de Godot cuando el anim_editor se corre dentro del contexto del editor (F5).
+
+### Plan de sub-fases FASE 0
+
+| Sub | Tarea | Tiempo |
+|---|---|---|
+| 0.a | Inventario completo de @exports a tunear | 0.5d |
+| 0.b | Escena standalone anim_editor.tscn + loop runtime | 1d |
+| 0.c | UI dropdown con TODAS las animaciones del catálogo | 0.5d |
+| 0.d | Auto-generación de sliders desde @exports (UI inspector) | 1d |
+| 0.e | Sistema de anims (.tres) con save/load/rename/delete | 1d |
+| 0.f | Capas de detalle MIN..MAX con toggles | 1d |
+| 0.g | Overlay ragdoll detallado (capsules, springs, fuerzas) | 1d |
+| 0.h | Overlays restantes (ShapeCasts, Areas, Joints, readouts) | 1d |
+| 0.i | Polish: recording buffer (MAX), estelas, heatmap | 1d |
+| **Total FASE 0** | | **~7 días** |
+
+### Roadmap completo
+
+```
+PRE-FASE 0  → Validar que humanoid.tscn funciona (ragdoll + procedural)
+FASE 0      → anim_editor.tscn standalone (visualizador + presets)
+FASE 1      → Refactor a PoseComposer + primitivas componibles (validable en FASE 0)
+FASE 2      → Sistema de anims compartibles (.tres de puro @exports)  [Fase 0.e ya lo hace]
+FASE 3      → Dock del editor de Godot (EditorPlugin) — embebido en el editor
+FASE 4      → Multi-personaje: blueprint para rata, coneja, etc. (10 personajes)
+FASE 5      → Multiplayer sync de anims (presets por jugador)
+```
+
+### Estado actual (2026-09-05)
+
+- ✅ Sistema MARIONETA base implementado (F1)
+- ❌ Ragdoll de prueba NO validado como funcional (pre-FASE 0)
+- ❌ anim_editor no iniciado
+- ❌ Primitivas componibles pendientes (F2 planeado)
+- ❌ Presets/anims no iniciados
+- ❌ Dock del editor no iniciado
+
+### Decisiones registradas
+
+| # | Decisión | Fecha | Por |
+|---|---|---|---|
+| D1 | Renombrar walk_visualizer a nim_editor | 2026-09-05 | General |
+| D2 | Carpeta nims/ no presets/ | 2026-09-05 | General |
+| D3 | Editor standalone (F5) no dock embebido inicialmente | 2026-09-05 | General |
+| D4 | Detalle MIN..MAX escogible por usuario | 2026-09-05 | General |
+| D5 | Estado inicial WALK pero escogible | 2026-09-05 | General |
+| D6 | NO input de teclado, solo UI selector | 2026-09-05 | General |
+| D7 | Persistencia con rename/delete/duplicate | 2026-09-05 | General |
+| D8 | Load = override runtime, Save = persistente | 2026-09-05 | General |
+| D9 | Multi-personaje: humanoid.tscn hoy, 10 personajes mañana | 2026-09-05 | General |
+| D10 | Pre-FASE 0: validar ragdoll funciona ANTES de tocar editor | 2026-09-05 | General |
+| D11 | Box3D es NUESTRO motor — modificarlo a nuestra necesidad, no "parches temporales" | 2026-09-05 | General |
+| D12 | Quitado `autoplay = &"idle"` del AnimationPlayer — sistema 100% procedural | 2026-09-05 | General |
+
+---
+
+## 🔧 FIX M3 — Box3D Defensive Normal Validator (2026-09-05)
+
+**Contexto:** El plugin godot-box3d es nuestro motor de físicas (D11). Es código nuestro, lo editamos a necesidad.
+
+**Bug raíz encontrado:**
+- Box3D puede retornar normales `(0,0,0)` en casos edge (cast que empieza dentro de un shape, formas degeneradas)
+- Godot's `CharacterBody3D.move_and_slide()` → `slide()` requiere Vector3 normalizado
+- Crash: `ERROR: The normal Vector3 (0.0, 0.0, 0.0) must be normalized.`
+
+**Fix aplicado** (este es código nuestro, no upstream patch):
+
+**Archivo:** `tools/box3d/godot-box3d-src/src/spaces/box3d_physics_direct_space_state_3d.cpp`
+
+**Cambios:**
+1. Helper `safe_normal(b3Vec3)` añadido en namespace anónimo:
+   ```cpp
+   inline Vector3 safe_normal(const b3Vec3& p_raw) {
+       const float len_sq = p_raw.x*p_raw.x + p_raw.y*p_raw.y + p_raw.z*p_raw.z;
+       if (len_sq < 1e-6f) {
+           return Vector3(0.0f, 1.0f, 0.0f);  // Vector3.UP fallback
+       }
+       const float inv_len = 1.0f / sqrtf(len_sq);
+       return Vector3(p_raw.x*inv_len, p_raw.y*inv_len, p_raw.z*inv_len);
+   }
+   ```
+
+2. Aplicado en 4 lugares (defense in depth):
+   - `cast_result_fcn()` callback — normaliza ANTES de pasar a Godot
+   - `_intersect_ray()` → `p_result->normal`
+   - `_rest_info()` → `p_info->normal`
+   - `test_body_motion()` → `collision.normal`
+
+**Archivo:** `tools/box3d/godot-box3d-src/CMakeLists.txt`
+
+Añadido flag MSVC para permitir declaraciones después de statements (defensive guards):
+```cmake
+if(MSVC)
+    target_compile_options(godot-box3d PRIVATE /Zc:forScope- /permissive-)
+endif()
+```
+
+**Build:** Recompilado con MSVC + cmake + ninja. DLL actualizado en `addons/godot-box3d/bin/godot-box3d.dll` (hash SHA256: 40D477F6...).
+
+**Resultado:** ✅ NO MÁS crashes de `normal Vector3 must be normalized`. Bug arreglado.
+
+---
+
+## ⚠️ BUG RESTANTE — Body no se mueve con Box3D en humanoid.tscn (2026-09-05)
+
+**Síntoma:**
+- Log del test con Box3D: `delta=(0,0,0)`, `pos=(0.0, 2.0, 0.0)` NO cambia, pero `vel=(0,0,0)` después de `move_and_slide()`
+- Con JOLT funciona perfecto (test pasaba 5/6)
+- El test minimal (`minimal_test.tscn` con CharacterBody3D directo) SÍ movía body con Box3D
+- Con `humanoid.tscn` instanciado, NO se mueve
+
+**Causa probable:** Discrepancia entre cómo Box3D y el CharacterBody3D wrapper de Godot procesan las colisiones en escenas con jerarquías complejas. Requiere investigación adicional.
+
+**Workaround actual:** Si necesitamos validar el sistema YA, usar Jolt temporalmente. Box3D M3 fix es crítico (sin él, nada funciona), pero hay otro bug más sutil.
+
+**Estado:**
+- ✅ Crash de normal arreglado
+- ❌ Body no se mueve con humanoid.tscn + Box3D
+- ❌ Tests T02-T05 del ragdoll_test fallan con Box3D, pasan con Jolt
+
+**Próximo paso:** Investigar por qué el body no se mueve — quizás es un issue con el capsule interpenetrando, o con la forma en que CharacterBody3D wrapper procesa el move_and_slide cuando hay múltiples PhysicalBones en la escena.
+
+---
+
+## ✅ FIX M4 — `_external_input` para tests/AI (2026-09-05)
+
+**Causa raíz:**
+El bug NO era del motor de físicas. Era un **bug de orden de ejecución de `_physics_process`**.
+
+- `RagdollTest` (padre) corría `_physics_process` PRIMERO y seteaba `input_dir = Vector2(0, -1)`
+- `Humanoid` (hijo) corría `_physics_process` DESPUÉS, llamando `_read_input()` que **reseteaba `input_dir = Vector2.ZERO`**
+- Resultado: la velocidad horizontal nunca se acumulaba porque el input se perdía cada frame
+- Con el teclado REAL (no test), el input se leía de `Input.is_action_pressed()` y funcionaba — eso era lo que enmascaraba el bug
+
+**Fix:** Variable `_external_input: bool` en `character_controller.gd`. Cuando es `true`, `_read_input()` hace early-return y respeta el input_dir seteado externamente.
+
+```gdscript
+func _read_input() -> void:
+    if _external_input:
+        return  # AI o test setea input_dir directamente
+    input_dir = Vector2.ZERO
+    # ... leer teclado ...
+```
+
+**Aplicaciones:**
+- **Tests**: `humanoid_controller._external_input = true` antes de setear `input_dir`
+- **AI/NPCs**: El pathfinding AI calcula `input_dir` y setea `_external_input = true`
+- **Players**: Default `_external_input = false`, usa teclado
+
+**Cambios:**
+- `src/marioneta/character_controller.gd`: var `_external_input` + early-return en `_read_input`
+- `tools/ragdoll_test/ragdoll_test.gd`: setea `_external_input = true` en `_phase_walk_input`, false en `_phase_settle`
+
+**Resultado:**
+- ✅ Box3D: **6/6 PASSED**, `char_pos=(0, 0.99, -4.9)` después de 1.5s con input
+- ✅ Jolt: **6/6 PASSED**, `char_pos=(0, 0.99, -4.9)` después de 1.5s con input
+- ✅ Movimiento horizontal funciona correctamente con AMBOS motores
+
+**Bonus — `is_on_floor_stable()` con raycast manual:**
+- Reemplaza 5 llamadas a `is_on_floor()` en character_controller
+- Raycast desde la BASE de la capsule hacia abajo (longitud = capsule_half_height + FLOOR_RAY_LENGTH)
+- Funciona tanto con Box3D como con Jolt (Godot nativo `is_on_floor()` solo se actualiza en frame de impacto)
+
+---
+
+## 🔧 FIX M5 — `bone_pivot_path` vacío en humanoid.tscn (2026-09-05)
+
+**Síntoma:** WARNING `[Marioneta] BonePivot no encontrado en ''` en cada startup.
+
+**Causa:** Cuando se editó el .tscn (probablemente quitando `autoplay = &"idle"`), el editor guardó los paths vacíos.
+
+**Fix:** Restaurados los paths reales:
+- `bone_pivot_path = NodePath("Physical/Armature/Skeleton3D/Physical Bone Head/BonePivot")`
+- `player_camera_path = NodePath("Physical/Armature/Skeleton3D/Physical Bone Head/BonePivot/PlayerCamera")`
+
+**Archivo:** `src/marioneta/scenes/humanoid.tscn` líneas 77-78
+
+---
+
+## 🦴 PRÓXIMO — Opción B: Ragdoll mode real (2026-09-05)
+
+**Decisión:** Integrar `ragdoll_fallback.gd` (ya existe, 507 líneas, completo) en `humanoid.tscn` para validar ragdoll físico real.
+
+**Estructura actual de humanoid.tscn:**
+- `Character` (CharacterBody3D, character_controller.gd)
+  - `CollisionShape3D` (capsule)
+  - `Physical` (instancia Character.glb con PhysicalBones + PinJoints + Areas + ShapeCasts)
+  - `MarionetaControl` (debug handles)
+  - `BonePivot`, `PlayerCamera`, `ThirdPersonCamera`
+
+**Estructura esperada por ragdoll_fallback.gd:**
+- Root con ragdoll_fallback.gd
+  - `Physical/Armature/Skeleton3D` ← YA EXISTE
+  - `Animated/Armature/Skeleton3D` ← FALTA
+  - `Animated/AnimationTree` ← FALTA (se desactiva en _ready, null-safe)
+  - `CameraPivot` ← FALTA (separado del BonePivot del character_controller)
+  - `Physical/GrabJointLeft/Right` ← YA EXISTE
+  - `Physical/JumpTimer` ← YA EXISTE
+
+**Plan de integración mínimo viable:**
+1. Añadir `Animated` (instancia Character.glb) como sibling de `Physical`
+2. Añadir `Animated/AnimationTree` (placeholder null-safe)
+3. Añadir `CameraPivot` (separado)
+4. Añadir tecla `ragdoll` (F11) al character_controller que llama `toggle_ragdoll_mode()`
+5. Conectar character_controller ↔ ragdoll_fallback vía método público
+6. Test T06: ragdoll_mode=true → PhysicalBone3D responde a gravedad
+## 📊 Estado actual de motores de física (2026-09-05)
+
+| Aspecto | Box3D v2 + M3 (nuestro) | Jolt (referencia) |
+|---|---|---|
+| Crashes por normal (0,0,0) | ✅ Arreglado con M3 | N/A |
+| Body se mueve con cápsula simple | ✅ Sí (minimal_test) | ✅ Sí |
+| Body se mueve con humanoid.tscn | ❌ NO (delta=0) | ✅ Sí |
+| Procedural anim funciona | ❌ Bloqueado por body inmóvil | ✅ Sí |
+| Multithread solver | ✅ Estable | ❌ Single thread |
+| Determinismo | ✅ Sí | ❌ No |

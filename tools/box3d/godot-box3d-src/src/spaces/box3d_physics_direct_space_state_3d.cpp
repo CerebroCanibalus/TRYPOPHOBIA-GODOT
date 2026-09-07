@@ -14,6 +14,19 @@
 
 namespace {
 
+// Tripofobia M3: defensive normalizer. Box3D can return degenerate normals
+// (e.g. (0,0,0)) in edge cases. Without this guard, Godot's CharacterBody3D
+// .move_and_slide() crashes inside slide() with "Vector3 must be normalized".
+// We fall back to Vector3.UP which is the safest default for ground physics.
+inline Vector3 safe_normal(const b3Vec3& p_raw) {
+	const float len_sq = p_raw.x * p_raw.x + p_raw.y * p_raw.y + p_raw.z * p_raw.z;
+	if (len_sq < 1e-6f) {
+		return Vector3(0.0f, 1.0f, 0.0f);
+	}
+	const float inv_len = 1.0f / sqrtf(len_sq);
+	return Vector3(p_raw.x * inv_len, p_raw.y * inv_len, p_raw.z * inv_len);
+}
+
 struct OverlapContext {
 	const Box3DQueryFilter3D* filter = nullptr;
 	PhysicsServer3DExtensionShapeResult* results = nullptr;
@@ -135,7 +148,9 @@ float cast_result_fcn(b3ShapeId p_shape_id, b3Pos p_point, b3Vec3 p_normal, floa
 	ctx->has_hit = true;
 	ctx->shape_id = p_shape_id;
 	ctx->point = p_point;
-	ctx->normal = p_normal;
+	// Tripofobia M3: normalize defensively. Box3D's raw normal can be
+	// (0,0,0) in edge cases. Use our helper for consistency.
+	ctx->normal = { safe_normal(p_normal).x, safe_normal(p_normal).y, safe_normal(p_normal).z };
 	ctx->fraction = p_fraction;
 	return p_fraction;
 }
@@ -177,7 +192,8 @@ bool Box3DPhysicsDirectSpaceState3D::_intersect_ray(
 	}
 
 	p_result->position = b3_to_godot(context.point);
-	p_result->normal = b3_to_godot(context.normal);
+	// M3: defensive normal validation via helper.
+	p_result->normal = safe_normal(context.normal);
 	p_result->rid = object->get_rid();
 	p_result->collider_id = object->get_instance_id();
 	p_result->shape = 0;
@@ -366,7 +382,8 @@ bool Box3DPhysicsDirectSpaceState3D::_rest_info(
 	}
 
 	p_info->point = b3_to_godot(context.point);
-	p_info->normal = b3_to_godot(context.normal);
+	// M3: defensive normal validation via helper.
+	p_info->normal = safe_normal(context.normal);
 	p_info->rid = object->get_rid();
 	p_info->collider_id = object->get_instance_id();
 	p_info->shape = 0;
@@ -403,6 +420,7 @@ bool Box3DPhysicsDirectSpaceState3D::test_body_motion(
 		PhysicsServer3DExtensionMotionResult* p_result) const {
 	ERR_FAIL_NULL_V(space, false);
 
+	// M3: safe normal computed below via safe_normal() helper.
 	p_result->travel = Vector3();
 	p_result->remainder = p_motion;
 	p_result->collision_depth = 0.0f;
@@ -455,7 +473,8 @@ bool Box3DPhysicsDirectSpaceState3D::test_body_motion(
 	if (other != nullptr && p_max_collisions > 0) {
 		PhysicsServer3DExtensionMotionCollision& collision = p_result->collisions[0];
 		collision.position = b3_to_godot(context.point);
-		collision.normal = b3_to_godot(context.normal);
+		// M3: defensive normal validation via safe_normal() helper.
+		collision.normal = safe_normal(context.normal);
 		collision.collider = other->get_rid();
 		collision.collider_id = other->get_instance_id();
 		collision.collider_shape = 0;

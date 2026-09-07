@@ -1,0 +1,34 @@
+[gd_scene load_steps=4 format=3 uid="uid://b1directmt0001"]
+
+[ext_resource type="Script" path="res://tools/ragdoll_test/direct_test_motion.gd" id="1_test"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(20, 1, 20)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.3
+height = 1.7
+
+[node name="DirectTest" type="Node3D"]
+script = ExtResource("1_test")
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="TestBody" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TestBody"]
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Status" type="Label" parent="HUD"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 800.0
+offset_bottom = 100.0
+text = "Direct test_motion test"

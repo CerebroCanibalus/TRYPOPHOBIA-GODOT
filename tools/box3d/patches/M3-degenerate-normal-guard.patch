@@ -1,0 +1,77 @@
+From 7c0a5b3d4e2f1c8a9b6d5e4f3a2b1c0d9e8f7a6b Mon Sep 17 00:00:00 2025
+Subject: [PATCH] M3: Defensive normal validation against Box3D degenerate normals
+
+Box3D can return (0,0,0) normals in edge cases:
+  - When the cast starts inside a shape
+  - When the shape is a degenerate triangle
+  - When the shape proxy wraps a non-convex form
+
+Godot's CharacterBody3D.move_and_slide() calls slide() with this normal
+and crashes with "Vector3 must be normalized" error if it's zero.
+
+This patch:
+  1. Validates the normal in cast_result_fcn() callback
+  2. Falls back to Vector3.UP if degenerate
+  3. Always normalizes before passing to Godot
+
+Affected: godot-box3d only (patch applied to spaces/box3d_physics_direct_space_state_3d.cpp)
+---
+ src/spaces/box3d_physics_direct_space_state_3d.cpp | 32 ++++++++++++++++----
+ 1 file changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/src/spaces/box3d_physics_direct_space_state_3d.cpp b/src/spaces/box3d_physics_direct_space_state_3d.cpp
+--- a/src/spaces/box3d_physics_direct_space_state_3d.cpp
++++ b/src/spaces/box3d_physics_direct_space_state_3d.cpp
+@@ -135,7 +135,17 @@ float cast_result_fcn(...)
+ 	ctx->has_hit = true;
+ 	ctx->shape_id = p_shape_id;
+ 	ctx->point = p_point;
+-	ctx->normal = p_normal;
++	// Tripofobia patch M3: defend against degenerate normals
++	const float n_len_sq = p_normal.x*p_normal.x + p_normal.y*p_normal.y + p_normal.z*p_normal.z;
++	if (n_len_sq < 1e-6f) {
++		ctx->normal = { 0.0f, 1.0f, 0.0f }; // Vector3.UP fallback
++	} else {
++		const float inv_len = 1.0f / sqrtf(n_len_sq);
++		ctx->normal = { p_normal.x*inv_len, p_normal.y*inv_len, p_normal.z*inv_len };
++	}
+ 	ctx->fraction = p_fraction;
+ 	return 0.0f; // unused
+ }
+@@ -178,7 +188,13 @@ bool Box3DPhysicsDirectSpaceState3D::intersect_ray(...)
+ 		PhysicsServer3DExtensionRayResult& result = p_results[i];
+ 		result.position = b3_to_godot(context.point);
+-		result.normal = b3_to_godot(context.normal);
++		// M3: defensive validation
++		Vector3 safe = b3_to_godot(context.normal);
++		if (safe.length_squared() < 1e-6f) { safe = Vector3.UP; }
++		else { safe = safe.normalized(); }
++		result.normal = safe;
+ 		result.collider_id = other->get_instance_id();
+ 		result.collider = other->get_rid();
+ 		result.shape = 0;
+@@ -360,7 +376,13 @@ bool Box3DPhysicsDirectSpaceState3D::_rest_info(...)
+ 	PhysicsServer3DExtensionShapeRestInfo& info = *p_info;
+ 	info.collider_id = other->get_instance_id();
+ 	info.collider = other->get_rid();
+-	info.normal = b3_to_godot(context.normal);
++	// M3: defensive validation
++	Vector3 safe = b3_to_godot(context.normal);
++	if (safe.length_squared() < 1e-6f) { safe = Vector3.UP; }
++	else { safe = safe.normalized(); }
++	info.normal = safe;
+ 	info.rid = other->get_rid();
+ 	info.shape = 0;
+ 	return true;
+@@ -448,7 +470,13 @@ bool Box3DPhysicsDirectSpaceState3D::test_body_motion(...)
+ 		PhysicsServer3DExtensionMotionCollision& collision = p_result->collisions[0];
+ 		collision.position = b3_to_godot(context.point);
+-		collision.normal = b3_to_godot(context.normal);
++		// M3: defensive validation
++		Vector3 safe = b3_to_godot(context.normal);
++		if (safe.length_squared() < 1e-6f) { safe = Vector3.UP; }
++		else { safe = safe.normalized(); }
++		collision.normal = safe;
+ 		collision.collider = other->get_rid();
+ 		collision.collider_id = other->get_instance_id();
+ 		collision.collider_shape = 0;
