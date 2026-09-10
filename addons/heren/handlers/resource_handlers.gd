@@ -1,8 +1,8 @@
 @tool
 extends "res://addons/heren/handlers/heren_handler.gd"
 # Heren MCP v4 - Resource handlers (Fase 2).
-# Recursos .tres y scripts .gd vía EditorFileSystem + ResourceSaver (ADR-002):
-# el editor vivo importa, valida y da tipos. Sin session_id: la operación se
+# Recursos .tres y scripts .gd vÃ­a EditorFileSystem + ResourceSaver (ADR-002):
+# el editor vivo importa, valida y da tipos. Sin session_id: la operaciÃ³n se
 # hace contra el proyecto del editor abierto.
 #
 # Actions (heredadas de v3 resource_tool.py, adaptadas a editor vivo):
@@ -10,7 +10,7 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 #   read            -> ResourceLoader.load + serializar propiedades
 #   update          -> load + props + save
 #   delete          -> DirAccess.remove
-#   list            -> DirAccess walk (filtro por extensión, recursivo)
+#   list            -> DirAccess walk (filtro por extensiÃ³n, recursivo)
 #   create_script   -> FileAccess escribir .gd con template
 #   read_script     -> FileAccess leer .gd
 #   edit_script     -> FileAccess reescribir/append .gd
@@ -39,6 +39,19 @@ func _ensure_parent_dir(path: String) -> void:
 	var dir_path := path.get_base_dir()
 	if dir_path != "" and not DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(dir_path)):
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir_path))
+
+
+# W0 (§0.12): protección de paths + snapshot/restore viven como STATICS en
+# heren_handler.gd (protected_reason / snapshot_file / restore_snapshot) —
+# heredados aquí y reutilizados por scene_script.gd sin duplicación.
+
+
+## W1 (§0.12) → W4-c (§0.13): diagnósticos inline validados ahora viven
+## como static `script_diagnostics` en heren_handler.gd (DRY). Esta capa ya
+## no duplica lógica — load + analyze + reload están centralizados.
+## Fixture: el `resource_handlers.gd` que vivía aquí pre-W4-c se eliminó
+## al refactor; cualquier handler que valide scripts debe llamar
+## `script_diagnostics(path)` (static heredado).
 
 
 ## Accepts a Dictionary directly, or a JSON string (clients may send either).
@@ -163,8 +176,8 @@ func handle_read(args: Dictionary) -> Dictionary:
 		return {"ok": false, "error": "not_found: " + resource_path}
 
 	# P0.7 (2026-09-03): forzar re-scan del EFS antes de load(). Si el archivo
-	# es nuevo (recién creado por handle_create) o modificado a mano, el EFS
-	# cache puede no haber reconocido el tipo → load() retorna Resource base
+	# es nuevo (reciÃ©n creado por handle_create) o modificado a mano, el EFS
+	# cache puede no haber reconocido el tipo â†’ load() retorna Resource base
 	# en lugar de PackedScene. update_file() refresca el cache.
 	var ei := _editor_interface()
 	if ei:
@@ -179,10 +192,10 @@ func handle_read(args: Dictionary) -> Dictionary:
 	if res == null:
 		return {
 			"ok": false,
-			"error": "load_returned_null: %s existe pero load() falló (re-scan no ayudó)" % resource_path,
-			"hint": "revisa que el class_name del recurso esté disponible (script compilado)",
+			"error": "load_returned_null: %s existe pero load() fallÃ³ (re-scan no ayudÃ³)" % resource_path,
+			"hint": "revisa que el class_name del recurso estÃ© disponible (script compilado)",
 		}
-	# Fallback explícito para PackedScene: si load() devolvió Resource base
+	# Fallback explÃ­cito para PackedScene: si load() devolviÃ³ Resource base
 	# (raro pero posible tras crear .tscn sin scan completo), forzar el tipo.
 	if res.get_class() == "Resource" and resource_path.ends_with(".tscn"):
 		var typed: Resource = ResourceLoader.load(resource_path, "PackedScene", ResourceLoader.CACHE_MODE_REUSE)
@@ -205,6 +218,12 @@ func handle_update(args: Dictionary) -> Dictionary:
 	if not ResourceLoader.exists(resource_path):
 		return {"ok": false, "error": "not_found: " + resource_path}
 
+	# W0: protecciÃ³n + snapshot antes de sobrescribir.
+	var protected_err := protected_reason(resource_path)
+	if protected_err != "":
+		return {"ok": false, "error": protected_err}
+	var snapshot := snapshot_file(resource_path)
+
 	var res: Resource = load(resource_path)
 	var properties := _args_dict(args, "properties")
 	var applied: Array = []
@@ -212,7 +231,7 @@ func handle_update(args: Dictionary) -> Dictionary:
 		if key in res:
 			var prop_value: Variant = properties[key]
 			# Curve._data: expandir posiciones [[x,y],...] al formato interno
-			# (5 elementos/punto) — sin esto el setter de Curve los descarta.
+			# (5 elementos/punto) â€” sin esto el setter de Curve los descarta.
 			if res is Curve and key == "_data":
 				prop_value = HerenCoordsScript.expand_curve_data(prop_value)
 			else:
@@ -229,18 +248,29 @@ func handle_update(args: Dictionary) -> Dictionary:
 	var err := ResourceSaver.save(res, resource_path)
 	if err != OK:
 		return {"ok": false, "error": "save_failed: " + error_string(err)}
-	return {
+	var result := {
 		"ok": true,
 		"resource_path": resource_path,
 		"applied": applied,
 		"props": _serialize_resource_props(res),
 	}
+	if snapshot != "":
+		result["snapshot"] = snapshot
+	return result
 
 
 func handle_delete(args: Dictionary) -> Dictionary:
 	var resource_path: String = str(args.get("resource_path", ""))
 	if resource_path == "":
 		return {"ok": false, "error": "resource_path required"}
+
+	# W0: infraestructura protegida â€” el agente no puede borrarse a sÃ­ mismo.
+	var protected_err := protected_reason(resource_path)
+	if protected_err != "":
+		return {"ok": false, "error": protected_err}
+
+	# W0: snapshot antes de borrar (recuperable vÃ­a resource/create + read del .bak).
+	var snapshot := snapshot_file(resource_path)
 
 	var dir := DirAccess.open(resource_path.get_base_dir())
 	if dir == null:
@@ -254,7 +284,10 @@ func handle_delete(args: Dictionary) -> Dictionary:
 	if efs:
 		efs.update_file(resource_path)
 
-	return {"ok": true, "removed": resource_path}
+	var result := {"ok": true, "removed": resource_path}
+	if snapshot != "":
+		result["snapshot"] = snapshot
+	return result
 
 
 func handle_list(args: Dictionary) -> Dictionary:
@@ -274,6 +307,12 @@ func handle_create_script(args: Dictionary) -> Dictionary:
 	if script_path == "":
 		return {"ok": false, "error": "script_path required"}
 
+	# W0: create_script SOBRESCRIBE si el archivo existe â€” proteger + snapshot.
+	var protected_err := protected_reason(script_path)
+	if protected_err != "":
+		return {"ok": false, "error": protected_err}
+	var snapshot := snapshot_file(script_path)
+
 	var content: String = str(args.get("content", ""))
 	if content == "":
 		var template: String = str(args.get("template", "Node"))
@@ -290,7 +329,12 @@ func handle_create_script(args: Dictionary) -> Dictionary:
 	if efs:
 		efs.update_file(script_path)
 
-	return {"ok": true, "script_path": script_path, "content": content}
+	var result := {"ok": true, "script_path": script_path, "content": content}
+	if snapshot != "":
+		result["snapshot"] = snapshot
+	# W1: diagnósticos inline en la MISMA respuesta.
+	result["diagnostics"] = script_diagnostics(script_path)
+	return result
 
 
 func handle_read_script(args: Dictionary) -> Dictionary:
@@ -316,6 +360,12 @@ func handle_edit_script(args: Dictionary) -> Dictionary:
 	if not FileAccess.file_exists(script_path):
 		return {"ok": false, "error": "not_found: " + script_path}
 
+	# W0: protecciÃ³n + snapshot antes de reescribir.
+	var protected_err := protected_reason(script_path)
+	if protected_err != "":
+		return {"ok": false, "error": protected_err}
+	var snapshot := snapshot_file(script_path)
+
 	var content: String = str(args.get("content", ""))
 	var append: bool = bool(args.get("append", false))
 
@@ -333,12 +383,18 @@ func handle_edit_script(args: Dictionary) -> Dictionary:
 	if efs:
 		efs.update_file(script_path)
 
-	return {"ok": true, "script_path": script_path, "appended": append}
+	var result := {"ok": true, "script_path": script_path, "appended": append}
+	if snapshot != "":
+		result["snapshot"] = snapshot
+	# W1: diagnósticos inline en la MISMA respuesta.
+	if not append:
+		result["diagnostics"] = script_diagnostics(script_path)
+	return result
 
 
-## v4.9: set_script también funciona desde resource (fallback redirect).
-## El agente suele llamar resource/set_script pensando que es operación de
-## recurso. Implementamos directamente — es load() + node.set_script().
+## v4.9: set_script tambiÃ©n funciona desde resource (fallback redirect).
+## El agente suele llamar resource/set_script pensando que es operaciÃ³n de
+## recurso. Implementamos directamente â€” es load() + node.set_script().
 func handle_set_script(args: Dictionary) -> Dictionary:
 	var ei := _editor_interface()
 	if ei == null:
@@ -352,12 +408,12 @@ func handle_set_script(args: Dictionary) -> Dictionary:
 	if not ResourceLoader.exists(script_path):
 		return {"ok": false, "error": "script_not_found: " + script_path}
 
-	# Resolver root: registry → pestaña → disco.
+	# Resolver root: registry â†’ pestaÃ±a â†’ disco.
 	var root: Node = HerenSceneRegistryScript.resolve_root(ei, scene_path)
 	if root == null:
 		return {"ok": false, "error": "no scene open in editor"}
 
-	# Copiar la resolución de node_handlers: normalize + get_node + fallback por nombre.
+	# Copiar la resoluciÃ³n de node_handlers: normalize + get_node + fallback por nombre.
 	var normalized := HerenCoordsScript.normalize_node_path(node_path, root)
 	var node: Node = null
 	if normalized == ".":
@@ -365,7 +421,7 @@ func handle_set_script(args: Dictionary) -> Dictionary:
 	elif normalized != "":
 		node = root.get_node_or_null(NodePath(normalized))
 		if node == null and not normalized.contains("/"):
-			# Fallback: búsqueda recursiva por nombre (mismo patrón que node_handlers).
+			# Fallback: bÃºsqueda recursiva por nombre (mismo patrÃ³n que node_handlers).
 			node = _find_by_name(root, str(node_path))
 	if node == null:
 		return {"ok": false, "error": "node_not_found: " + str(node_path)}

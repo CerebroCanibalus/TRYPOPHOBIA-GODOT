@@ -19,10 +19,10 @@ const DebugHandlersScript := preload("handlers/debug_handlers.gd")
 const HerenDebuggerPluginScript := preload("heren_debugger_plugin.gd")
 const ShaderHandlersScript := preload("handlers/shader_handlers.gd")
 const AnimationHandlersScript := preload("handlers/animation_handlers.gd")
-const SkeletonHandlersScript := preload("handlers/skeleton_handlers.gd")
-const TileMapHandlersScript := preload("handlers/tilemap_handlers.gd")
 const VisualHandlersScript := preload("handlers/visual_handlers.gd")
 const UiHandlersScript := preload("handlers/ui_handlers.gd")
+const SceneScriptHandlersScript := preload("handlers/scene_script.gd")
+const FilesystemHandlersScript := preload("handlers/filesystem_handlers.gd")
 
 var _ws_client: Node
 var _dispatcher: Node
@@ -37,10 +37,10 @@ var _debug_handlers: Node
 var _dbg_plugin: EditorDebuggerPlugin
 var _shader_handlers: Node
 var _animation_handlers: Node
-var _skeleton_handlers: Node
-var _tilemap_handlers: Node
 var _visual_handlers: Node
 var _ui_handlers: Node
+var _scene_script_handlers: Node
+var _filesystem_handlers: Node
 
 var _status_label: Label
 
@@ -119,17 +119,6 @@ func _enter_tree() -> void:
 	_animation_handlers.set_editor_plugin(self)
 	add_child(_animation_handlers)
 
-	_skeleton_handlers = SkeletonHandlersScript.new()
-	_skeleton_handlers.name = "HerenSkeletonHandlers"
-	_skeleton_handlers.set_editor_plugin(self)
-	add_child(_skeleton_handlers)
-
-	# TileMap handlers.
-	_tilemap_handlers = TileMapHandlersScript.new()
-	_tilemap_handlers.name = "HerenTileMapHandlers"
-	_tilemap_handlers.set_editor_plugin(self)
-	add_child(_tilemap_handlers)
-
 	# Visual handlers (Fase 3 - visión).
 	_visual_handlers = VisualHandlersScript.new()
 	_visual_handlers.name = "HerenVisualHandlers"
@@ -141,6 +130,18 @@ func _enter_tree() -> void:
 	_ui_handlers.name = "HerenUiHandlers"
 	_ui_handlers.set_editor_plugin(self)
 	add_child(_ui_handlers)
+
+	# Scene script handlers (W4 Worker-First — workers GDScript del agente).
+	_scene_script_handlers = SceneScriptHandlersScript.new()
+	_scene_script_handlers.name = "HerenSceneScriptHandlers"
+	_scene_script_handlers.set_editor_plugin(self)
+	add_child(_scene_script_handlers)
+
+	# Filesystem handlers (W4b — scan/status/import_errors/exists/import).
+	_filesystem_handlers = FilesystemHandlersScript.new()
+	_filesystem_handlers.name = "HerenFilesystemHandlers"
+	_filesystem_handlers.set_editor_plugin(self)
+	add_child(_filesystem_handlers)
 
 	# Dispatcher routes tool_invoke -> handler.
 	_dispatcher = DispatcherScript.new()
@@ -155,10 +156,10 @@ func _enter_tree() -> void:
 	_dispatcher.register_handler("debug", _debug_handlers)
 	_dispatcher.register_handler("shader", _shader_handlers)
 	_dispatcher.register_handler("animation", _animation_handlers)
-	_dispatcher.register_handler("skeleton", _skeleton_handlers)
-	_dispatcher.register_handler("tilemap", _tilemap_handlers)
 	_dispatcher.register_handler("visual", _visual_handlers)
 	_dispatcher.register_handler("ui", _ui_handlers)
+	_dispatcher.register_handler("scene_script", _scene_script_handlers)
+	_dispatcher.register_handler("filesystem", _filesystem_handlers)
 
 	# WS client connects to the FlojoMCP server.
 	_ws_client = WsClientScript.new()
@@ -197,15 +198,15 @@ func _exit_tree() -> void:
 	if _ui_handlers:
 		_ui_handlers.queue_free()
 		_ui_handlers = null
-	if _tilemap_handlers:
-		_tilemap_handlers.queue_free()
-		_tilemap_handlers = null
+	if _scene_script_handlers:
+		_scene_script_handlers.queue_free()
+		_scene_script_handlers = null
+	if _filesystem_handlers:
+		_filesystem_handlers.queue_free()
+		_filesystem_handlers = null
 	if _animation_handlers:
 		_animation_handlers.queue_free()
 		_animation_handlers = null
-	if _skeleton_handlers:
-		_skeleton_handlers.queue_free()
-		_skeleton_handlers = null
 	if _shader_handlers:
 		_shader_handlers.queue_free()
 		_shader_handlers = null

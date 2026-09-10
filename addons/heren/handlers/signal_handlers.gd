@@ -8,7 +8,7 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 #   connect      -> node.connect(signal, target, method, CONNECT_PERSIST)
 #   disconnect   -> node.disconnect(...)
 #   list         -> señales del nodo + conexiones activas
-#   set_script   -> node.set_script(load(path))
+#   set_script   -> ELIMINADO 2026-09-09 (duplicaba node/set_script, v4.9)
 
 const HerenCoordsScript := preload("coords.gd")
 const HerenSceneRegistryScript := preload("../scene_registry.gd")
@@ -175,25 +175,3 @@ func handle_list(args: Dictionary) -> Dictionary:
 	}
 
 
-func handle_set_script(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
-
-	var node_path: Variant = args.get("node_path", "")
-	var script_path: String = str(args.get("script_path", ""))
-	if node_path == "" or script_path == "":
-		return {"ok": false, "error": "node_path and script_path required"}
-	if not ResourceLoader.exists(script_path):
-		return {"ok": false, "error": "script_not_found: " + script_path}
-
-	var node: Node = _resolve_node(root, node_path)
-	if node == null:
-		return {"ok": false, "error": "node_not_found: " + str(node_path)}
-
-	node.set_script(load(script_path))
-	return {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"script": script_path,
-	}

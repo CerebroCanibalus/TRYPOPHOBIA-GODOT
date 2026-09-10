@@ -45,17 +45,17 @@ const ROUTES := {
 	"node/remove": "handle_remove",
 	"node/duplicate": "handle_duplicate",
 	"node/rename": "handle_rename",
-	"node/move": "handle_move",
-	"node/set_owner": "handle_set_owner",
-	"node/reorder": "handle_reorder",
 	"node/instantiate": "handle_instantiate",
 	"node/array_append": "handle_array_append",
 	"node/array_remove": "handle_array_remove",
 	"node/set_script": "handle_set_script",
+	# NOTE 2026-09-09: node/reorder + node/move + node/set_owner archivados.
 	"node/get_prop": "handle_get_prop",
 	"node/get_info": "handle_get_info",
 	"node/get_children": "handle_get_children",
 	"node/find": "handle_find",
+	"node/class_info": "handle_class_info",
+	"node/props_diff": "handle_props_diff",
 	"node/set_prop": "handle_set_prop",
 	"node/set_props": "handle_set_props",
 
@@ -83,9 +83,8 @@ const ROUTES := {
 	"shader/get": "handle_get",
 	"shader/inspect": "handle_inspect",
 	"shader/validate": "handle_validate",
-	"shader/apply": "handle_apply",
-	"shader/material": "handle_material",
-	"shader/uniform": "handle_uniform",
+	# NOTE 2026-09-09: shader/material + shader/uniform + shader/apply archivados.
+	# Reemplazados por scene_script.
 
 	# Animation
 	"animation/create_player": "handle_create_player",
@@ -116,38 +115,10 @@ const ROUTES := {
 	"animation/delete": "handle_delete",
 	"animation/rename": "handle_rename",
 	"animation/reverse": "handle_reverse",
-	"animation/blend_pose": "handle_blend_pose",
-	"animation/retarget": "handle_retarget",
-	# AnimationTree
-	"animation/tree_activate": "handle_tree_activate",
-	"animation/tree_travel": "handle_tree_travel",
-	"animation/tree_set_param": "handle_tree_set_param",
-	"animation/tree_get_param": "handle_tree_get_param",
-	"animation/tree_add_blend_node": "handle_tree_add_blend_node",
-	"animation/tree_connect_blend_nodes": "handle_tree_connect_blend_nodes",
-	"animation/tree_set_anim_player": "handle_tree_set_anim_player",
+	# NOTE 2026-09-09: animation/tree_* (7) + capture_pose + blend_pose + retarget
+	# archivados a addons/heren/archive/handlers/. Reemplazados por scene_script.
 
-	# Skeleton
-	"skeleton/skeleton_create": "handle_skeleton_create",
-	"skeleton/skeleton_add_bone": "handle_skeleton_add_bone",
-	"skeleton/skeleton_set_rest": "handle_skeleton_set_rest",
-	"skeleton/skeleton_skin": "handle_skeleton_skin",
-	"skeleton/skeleton_attachment": "handle_skeleton_attachment",
-	"skeleton/skeleton_get_bones": "handle_skeleton_get_bones",
-	"skeleton/skeleton_get_pose": "handle_skeleton_get_pose",
-	"skeleton/skeleton_set_pose": "handle_skeleton_set_pose",
-	"skeleton/skeleton_ik": "handle_skeleton_ik",
-	"skeleton/skeleton_fabrik": "handle_skeleton_fabrik",
-	"skeleton/capture_pose": "handle_capture_pose",
-
-	# Tilemap
-	"tilemap/inspect_set": "handle_inspect_set",
-	"tilemap/inspect_map": "handle_inspect_map",
-	"tilemap/set_cell": "handle_set_cell",
-	"tilemap/terrain": "handle_terrain",
-	"tilemap/pattern": "handle_pattern",
-
-	# Debug
+	# Signal
 	"debug/summary": "handle_summary",
 	"debug/breakpoint": "handle_breakpoint",
 	"debug/control": "handle_control",
@@ -167,7 +138,7 @@ const ROUTES := {
 	"signal/connect": "handle_connect",
 	"signal/disconnect": "handle_disconnect",
 	"signal/list": "handle_list",
-	"signal/set_script": "handle_set_script",
+	# NOTE 2026-09-09: signal/set_script eliminado — duplica node/set_script (v4.9).
 
 	# Visual (server side `visual` tool, 4 actions)
 	"visual/coords": "handle_coords",
@@ -176,13 +147,23 @@ const ROUTES := {
 	"visual/spatial": "handle_scene_spatial",
 	"visual/scene_summary": "handle_summary",  # alias interno usado por validator
 
+	# Scene script (W4 Worker-First §0.12)
+	"scene_script/run": "handle_run",
+	"scene_script/list": "handle_list",
+
+	# Filesystem (W4b §0.12 — scan/status/import_errors/exists/import).
+	"filesystem/scan": "handle_scan",
+	"filesystem/status": "handle_status",
+	"filesystem/import_errors": "handle_import_errors",
+	"filesystem/exists": "handle_exists",
+	"filesystem/import": "handle_import",
+
 	# UI
 	"ui/create": "handle_ui_create",
-	"ui/layout": "handle_ui_layout",
 	"ui/canvas_layer": "handle_ui_canvas_layer",
 	"ui/templates": "handle_ui_templates",
 	"ui/get_info": "handle_ui_get_info",
-	"ui/theme": "handle_ui_theme",
+	# NOTE 2026-09-09: ui/layout + ui/theme archivados a addons/heren/archive/handlers/.
 }
 
 

@@ -3,13 +3,16 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 # Heren MCP v4 - Shader handlers (Fase 2).
 # Shaders .gdshader y ShaderMaterial sobre la escena viva (ADR-002).
 #
-# Actions (heredadas de v3 shader_tool.py + daemon shader_ops, adaptadas):
+# Actions:
 #   create   -> escribir .gdshader (dedup de shader_type, heredado de v3)
 #   edit     -> append/reemplazar código
 #   validate -> ResourceLoader.load + verificar es Shader
-#   material -> crear ShaderMaterial en nodo (CanvasItem material,
-#               GeometryInstance3D override/overlay, MeshInstance3D surface)
-#   uniform  -> set_shader_parameter en el material del nodo
+#   get      -> lee el código del shader (.gdshader) por path
+#   inspect  -> lista uniforms + tipos del shader compilado
+#
+# 2026-09-09 (§0.12 W4 cleanup):
+#   - material, uniform, apply: archivados a addons/heren/archive/handlers/shader_ops_handlers.gd
+#   Reemplazados por scene_script workers.
 
 const HerenCoordsScript := preload("coords.gd")
 const HerenSceneRegistryScript := preload("../scene_registry.gd")
@@ -270,182 +273,23 @@ func handle_inspect(args: Dictionary) -> Dictionary:
 	}
 
 
-## One-shot: crea shader (si code) + material + asigna al nodo + uniforms en UNA
-## llamada. Devuelve también la lista de uniforms disponibles para iterar.
-func handle_apply(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
-
-	var node_path: Variant = args.get("node_path", "")
-	if node_path == "":
-		return {"ok": false, "error": "node_path required"}
-	var node: Node = _resolve_node(root, node_path)
-	if node == null:
-		return {"ok": false, "error": "node_not_found: " + str(node_path)}
-
-	# 1) Shader: o path existente, o crear desde code/template.
-	var shader_path: String = str(args.get("shader_path", ""))
-	var shader: Shader = null
-	if shader_path != "":
-		shader_path = _ensure_gdshader_ext(shader_path)
-		if ResourceLoader.exists(shader_path):
-			shader = load(shader_path) as Shader
-		elif str(args.get("code", "")) != "" or true:
-			# crear: shader_path + code (con template si code vacío)
-			var code: String = str(args.get("code", ""))
-			var st: String = str(args.get("shader_type", "canvas_item"))
-			_ensure_parent_dir(shader_path)
-			var full_code := code
-			if not code.strip_edges().begins_with("shader_type"):
-				full_code = "shader_type " + st + ";\n\n" + _shader_template_body(st, code)
-			var f := FileAccess.open(shader_path, FileAccess.WRITE)
-			if f == null:
-				return {"ok": false, "error": "write_failed: " + shader_path}
-			f.store_string(full_code)
-			f = null
-			var efs: EditorFileSystem = _editor_interface().get_resource_filesystem()
-			if efs:
-				efs.update_file(shader_path)
-			shader = load(shader_path) as Shader
-	if shader == null:
-		return {"ok": false, "error": "shader_load_failed", "shader_path": shader_path}
-
-	# 2) Material + asignación al nodo (misma cascada que handle_material).
-	var material := ShaderMaterial.new()
-	var material_name: String = str(args.get("material_name", ""))
-	if material_name != "":
-		material.resource_name = material_name
-	material.shader = shader
-
-	var uniforms := _args_dict(args, "uniforms")
-	for uniform_name in uniforms.keys():
-		material.set_shader_parameter(uniform_name, HerenCoordsScript.deserialize_value(uniforms[uniform_name]))
-
-	var assigned := _assign_material(node, material)
-	if not assigned:
-		material.free()
-		return {
-			"ok": false,
-			"error": "material_assignment_failed",
-			"node_type": node.get_class(),
-		}
-
-	return {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"shader_path": shader_path,
-		"applied_uniforms": uniforms.keys(),
-		"available_uniforms": _shader_uniforms_to_json(shader),
-	}
+## ¿El código declara uniforms? (señal indirecta de compilación fallida:
+## si declara uniforms pero get_shader_uniform_list() sale vacío → error).
+func _shader_declares_uniforms(code: String) -> bool:
+	return code.contains("uniform")
 
 
-func handle_material(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
+# ---------------------------------------------------------------- helpers
+# Restaurados 2026-09-10 desde commit 0728708 — el W4 cleanup (2026-09-09)
+# archivó el shader_ops_handlers.gd pero dejó los CALLERS en validate/inspect/
+# get_actions → 5 funciones llamadas que NO existían en ningún archivo.
+# Resultado: shader_handlers.gd crasheaba al compilar y las acciones
+# `shader/validate`, `shader/inspect`, `shader/get` estaban rotas desde W4.
+# Detectado por el headless compile check (godot --headless --editor).
+# Tests: §0.13 — agregar `_test_shader_handlers_compile` para regresión.
 
-	var node_path: Variant = args.get("node_path", "")
-	if node_path == "":
-		return {"ok": false, "error": "node_path required"}
-	var node: Node = _resolve_node(root, node_path)
-	if node == null:
-		return {"ok": false, "error": "node_not_found: " + str(node_path)}
-
-	var shader_path: String = str(args.get("shader_path", ""))
-	var material_name: String = str(args.get("material_name", ""))
-
-	var material := ShaderMaterial.new()
-	# Fix H2: a ShaderMaterial is a Resource, so it has `resource_name`, NOT
-	# `name`. Assigning `material.name` threw a runtime error (→ "Unknown error").
-	if material_name != "":
-		material.resource_name = material_name
-	if shader_path != "" and ResourceLoader.exists(shader_path):
-		material.shader = load(shader_path)
-
-	var uniforms := _args_dict(args, "uniforms")
-	for uniform_name in uniforms.keys():
-		material.set_shader_parameter(uniform_name, HerenCoordsScript.deserialize_value(uniforms[uniform_name]))
-
-	# B9 fix heredado de v3: asignar a TODOS los tipos de nodos.
-	var assigned := _assign_material(node, material)
-
-	if not assigned:
-		material.free()
-		return {
-			"ok": false,
-			"error": "material_assignment_failed",
-			"node_type": node.get_class(),
-		}
-
-	return {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"has_shader": shader_path != "",
-		"material_assigned": true,
-	}
-
-
-func handle_uniform(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
-
-	var node_path: Variant = args.get("node_path", "")
-	var uniform_name: String = str(args.get("uniform_name", ""))
-	if node_path == "" or uniform_name == "":
-		return {"ok": false, "error": "node_path and uniform_name required"}
-	var node: Node = _resolve_node(root, node_path)
-	if node == null:
-		return {"ok": false, "error": "node_not_found: " + str(node_path)}
-
-	var material: ShaderMaterial = _find_shader_material(node)
-	if material == null:
-		return {"ok": false, "error": "no_shader_material", "message": "no ShaderMaterial found on node"}
-
-	# FAIL-FAST (2026-09-03): set_shader_parameter SILENCIOSAMENTE descarta
-	# el valor si el shader no declara ese uniform. Verificar leyendo de
-	# vuelta Y listando los uniforms reales del shader para hint diagnóstico.
-	var value: Variant = HerenCoordsScript.deserialize_value(args.get("value"))
-	material.set_shader_parameter(uniform_name, value)
-	var readback: Variant = material.get_shader_parameter(uniform_name)
-	var shader := material.shader
-	var declared: Array = []
-	if shader != null:
-		for u in shader.get_shader_uniform_list():
-			declared.append(u.get("name", ""))
-	if not _shader_value_match(readback, value):
-		return {
-			"ok": false,
-			"error": "uniform_not_set: el shader no acepta '%s'" % uniform_name,
-			"hint": "uniforms declarados en el shader: %s" % str(declared),
-		}
-	return {
-		"ok": true,
-		"uniform": uniform_name,
-		"node_path": _node_path_relative(node, root),
-		"verified": true,
-	}
-
-
-## Comparador laxo para set/get_shader_parameter (tolera float→int, etc).
-func _shader_value_match(a: Variant, b: Variant) -> bool:
-	if typeof(a) != typeof(b):
-		# Tolerar float↔int si numéricamente iguales.
-		if (a is float or a is int) and (b is float or b is int):
-			return float(a) == float(b)
-		return false
-	if a is Vector2 and b is Vector2:
-		return a.is_equal_approx(b)
-	if a is Vector3 and b is Vector3:
-		return a.is_equal_approx(b)
-	if a is Color and b is Color:
-		return a.is_equal_approx(b)
-	return a == b
-
-
-## Busca el primer ShaderMaterial en el nodo (material / override / overlay /
-## superficie). Compartido por uniform, inspect y apply.
+## Busca el ShaderMaterial asignado al nodo (cascada B9):
+## material → material_override → material_overlay → surface override (Mesh).
 func _find_shader_material(node: Node) -> ShaderMaterial:
 	if "material" in node and node.material is ShaderMaterial:
 		return node.material
@@ -461,35 +305,7 @@ func _find_shader_material(node: Node) -> ShaderMaterial:
 	return null
 
 
-## Cascada de asignación de material a nodo (B9): cubre CanvasItem,
-## GeometryInstance3D (override/overlay) y MeshInstance3D (superficie).
-func _assign_material(node: Node, material: ShaderMaterial) -> bool:
-	if node.has_method("set_material"):
-		node.set_material(material)
-		return true
-	elif "material" in node:
-		node.material = material
-		return true
-	if node is MeshInstance3D:
-		node.set_surface_override_material(0, material)
-		return true
-	if node.has_method("set_material_override"):
-		node.set_material_override(material)
-		return true
-	elif "material_override" in node:
-		node.material_override = material
-		return true
-	if node.has_method("set_material_overlay"):
-		node.set_material_overlay(material)
-		return true
-	elif "material_overlay" in node:
-		node.material_overlay = material
-		return true
-	return false
-
-
-## Convierte get_shader_uniform_list() a JSON serializable con nombres
-## legibles. Cada dict: {name, type, default, hint, range}.
+## Lee los uniforms declarados en un Shader y los devuelve como Array de Dict.
 func _shader_uniforms_to_json(shader: Shader) -> Array:
 	var out: Array = []
 	for u in shader.get_shader_uniform_list():
@@ -536,11 +352,13 @@ func _hint_str(h: int) -> String:
 	return str(names.get(h, "none"))
 
 
+## RenderingDevice.ShaderMode (int) → string legible.
 func _mode_to_str(mode: int) -> String:
 	var names := {0: "spatial", 1: "canvas_item", 2: "particles", 3: "sky", 4: "fog", 5: "texture_blit"}
 	return str(names.get(mode, "mode_%d" % mode))
 
 
+## Extrae el shader_type declarado en el código del shader.
 func _parse_shader_type(content: String) -> String:
 	var m := RegEx.create_from_string("shader_type\\s+([a-z_0-9]+)")
 	var res := m.search(content)
@@ -579,9 +397,3 @@ func _shader_structural_issues(sh: Shader, code: String) -> Array:
 	if open > 0:
 		issues.append("unbalanced braces: missing }")
 	return issues
-
-
-## ¿El código declara uniforms? (señal indirecta de compilación fallida:
-## si declara uniforms pero get_shader_uniform_list() sale vacío → error).
-func _shader_declares_uniforms(code: String) -> bool:
-	return code.contains("uniform")

@@ -1,11 +1,12 @@
 @tool
 extends "res://addons/heren/handlers/animation_handlers.gd"
 
-# Heren MCP v4 - Skeleton handlers (extraídos de animation_handlers.gd, Fase C2).
-# Hereda de animation_handlers para reutilizar helpers base (set_editor_plugin,
-# _editor_interface, _scene_root, _resolve_node, _node_path_relative, _args_dict,
-# _resolve_skeleton, _player_or_error, _find_first_animation_player, _get_library).
-# Registrado en editor_plugin.gd con el prefix "skeleton".
+# Heren MCP v4 - ARCHIVADO 2026-09-09 (§0.12 W4 cleanup).
+# Skeleton handlers completos (incluye skeleton/* + capture_pose + blend_pose +
+# retarget). Reemplazados por scene_script workers — el agente habla directo
+# con la API de Godot para tree manipulation, IK, FABRIK, skin, attachment, etc.
+#
+# Para restaurar, ver addons/heren/archive/handlers/README.md.
 
 func handle_skeleton_get_bones(args: Dictionary) -> Dictionary:
 	var root := _scene_root(args)

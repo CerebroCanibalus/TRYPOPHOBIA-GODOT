@@ -21,6 +21,13 @@ const ErrorScript := preload("res://addons/heren/handlers/heren_error.gd")
 const TemplateRegistryScript := preload("res://addons/heren/template_registry.gd")
 const UiHandlersScript := preload("res://addons/heren/handlers/ui_handlers.gd")
 const SpatialToolScript := preload("res://addons/heren/handlers/visual_tool/spatial_tool.gd")
+const SceneScriptScript := preload("res://addons/heren/handlers/scene_script.gd")
+const NodeHandlersScript := preload("res://addons/heren/handlers/node_handlers.gd")
+const ResourceHandlersScript := preload("res://addons/heren/handlers/resource_handlers.gd")
+const FilesystemHandlersScript := preload("res://addons/heren/handlers/filesystem_handlers.gd")
+const DispatcherScript := preload("res://addons/heren/dispatcher.gd")
+const HerenHandlerScript := preload("res://addons/heren/handlers/heren_handler.gd")
+const ValidateHandlersScript := preload("res://addons/heren/handlers/validate_handlers.gd")
 
 var _passed := 0
 var _failed := 0
@@ -74,6 +81,46 @@ func _init() -> void:
 	_run("coords tier3 AudioStreamPlayer3D playing+volume+pitch", _test_coords_audio_tier3)
 	_run("coords tier3 Camera3D fov+current", _test_coords_camera_tier3)
 	_run("coords tier3 Node3D sin dynamic (pureza)", _test_coords_node3d_tier3_empty_dynamic)
+	# W0: protección de paths + snapshot/restore (§0.12).
+	_run("W0 protected_reason bloquea infraestructura", _test_w0_protected_reason)
+	_run("W0 snapshot_file + restore_snapshot round-trip", _test_w0_snapshot_roundtrip)
+	# W4: WorkerCtx — contrato de ownership y relpath detached.
+	_run("W4 WorkerCtx own acepta nodo raw", _test_w4_ctx_own_raw)
+	_run("W4 WorkerCtx own RECHAZA internals PackedScene", _test_w4_ctx_own_rejects_instance)
+	_run("W4 WorkerCtx relpath manual detached", _test_w4_ctx_relpath)
+	_run("W4 WorkerCtx read-only rechaza mutaciones", _test_w4_ctx_readonly)
+	# W2: class_info (ClassDB real — previene APIs adivinadas).
+	_run("W2 class_info Skeleton3D filter=bone", _test_w2_class_info)
+	# W1: diagnósticos inline en create/edit_script.
+	_run("W1 _script_diagnostics detecta roto y válido", _test_w1_diagnostics_inline)
+	# Bug-fix 2026-09-10: NodePath == String crashea en GDScript 4.5+ —
+	# _values_match debe coerce ANTES de comparar.
+	_run("Bug NodePath == String coerce en _values_match", _test_nodepath_string_coerce)
+	# W4-c: static analyzer — fix-loop 2 calls en vez de 3 (13 reglas + unified).
+	_run("W4c static_analyze tabs_and_spaces_mixed", _test_w4c_mixed_indent)
+	_run("W4c static_analyze unbalanced_parens", _test_w4c_unbalanced_parens)
+	_run("W4c static_analyze unbalanced_brackets", _test_w4c_unbalanced_brackets)
+	_run("W4c static_analyze unbalanced_braces", _test_w4c_unbalanced_braces)
+	_run("W4c static_analyze unterminated_string", _test_w4c_unterminated_string)
+	_run("W4c static_analyze missing_colon_after_func", _test_w4c_missing_colon_func)
+	_run("W4c static_analyze missing_colon_after_keyword", _test_w4c_missing_colon_kw)
+	_run("W4c static_analyze export_on_const", _test_w4c_export_const)
+	_run("W4c static_analyze await_stuck_to_identifier", _test_w4c_await_stuck)
+	_run("W4c static_analyze shadow_builtin_var", _test_w4c_shadow_builtin)
+	_run("W4c static_analyze class_name_duplicate", _test_w4c_class_name_dup)
+	_run("W4c static_analyze no false positive en código válido", _test_w4c_clean_script)
+	_run("W4c static_analyze ignora brackets dentro de strings", _test_w4c_brackets_in_string)
+	_run("W4c static_analyze ignora # comentario", _test_w4c_hash_in_string)
+	_run("W4c script_diagnostics unified shape (roto→parse_hints, válido→warnings)", _test_w4c_unified_shape)
+	_run("W4c validate handle_script usa unified diagnostics", _test_w4c_validate_uses_static)
+	# Bug-fix 2026-09-10: dispatcher "no handler for prefix" sin diagnóstico →
+	# usuario no sabe si reinstalar plugin o reportar upstream. Test regresión.
+	_run("Dispatcher unknown prefix devuelve hint accionable", _test_dispatcher_unknown_prefix)
+	# W4b: filesystem handlers (editor-only EFS se testea en E2E; aquí solo lo
+	# que funciona en SceneTree puro).
+	_run("filesystem _count_files_recursive(null) = 0", _test_w4b_count_null_safe)
+	_run("filesystem _walk_import_errors(null) safe", _test_w4b_walk_null_safe)
+	_run("filesystem handle_exists res:// + user://", _test_w4b_exists)
 
 	print("RESULT: %d passed, %d failed" % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
@@ -1252,4 +1299,656 @@ func _test_coords_node3d_tier3_empty_dynamic() -> bool:
 		parent.queue_free()
 		return false
 	parent.queue_free()
+	return true
+
+
+# ============================================================
+# W0: protección de paths + snapshot/restore (§0.12)
+# ============================================================
+
+func _test_w0_protected_reason() -> bool:
+	var blocked := [
+		"res://addons/heren/plugin.cfg",
+		"res://addons/heren/handlers/coords.gd",
+		"res://project.godot",
+		"res://.git/config",
+		"res://.godot/editor/script_editor_cache.cfg",
+		"res://export_presets.cfg",
+		"res://PROJECT.GODOT",  # case-insensitive
+		"res://addons\\heren\\plugin.cfg",  # backslashes normalizados
+	]
+	for p in blocked:
+		# protected_reason es static de heren_handler — llamar vía scene_script (hereda).
+		var reason: String = SceneScriptScript.protected_reason(p)
+		if reason == "":
+			push_error("protected_reason NO bloqueó: %s" % p)
+			return false
+	var allowed := ["res://scenes/foo.tscn", "res://scripts/player.gd", "res://addons/other/plugin.cfg"]
+	for p in allowed:
+		if SceneScriptScript.protected_reason(p) != "":
+			push_error("protected_reason bloqueó path legítimo: %s" % p)
+			return false
+	return true
+
+
+func _test_w0_snapshot_roundtrip() -> bool:
+	var test_path := "res://.heren/tmp/test_snapshot.txt"
+	SceneScriptScript.ensure_dir(test_path)
+	var f := FileAccess.open(test_path, FileAccess.WRITE)
+	if f == null:
+		push_error("no se pudo crear archivo de test")
+		return false
+	f.store_string("contenido-original")
+	f = null
+	# Snapshot.
+	var snap: String = SceneScriptScript.snapshot_file(test_path)
+	if snap == "":
+		push_error("snapshot_file devolvió vacío para archivo existente")
+		return false
+	if not FileAccess.file_exists(snap):
+		push_error("snapshot no existe en disco: %s" % snap)
+		return false
+	# Sobrescribir el original.
+	var f2 := FileAccess.open(test_path, FileAccess.WRITE)
+	f2.store_string("contenido-destruido")
+	f2 = null
+	# Restaurar.
+	var ok: bool = SceneScriptScript.restore_snapshot(null, snap, test_path)
+	if not ok:
+		push_error("restore_snapshot falló")
+		return false
+	var content := FileAccess.get_file_as_string(test_path)
+	if content != "contenido-original":
+		push_error("contenido restaurado incorrecto: %s" % content)
+		return false
+	# Snapshot de archivo inexistente → "".
+	if SceneScriptScript.snapshot_file("res://.heren/tmp/no_existe_xyz.txt") != "":
+		push_error("snapshot_file de inexistente debe ser vacío")
+		return false
+	# Limpieza.
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(test_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(snap))
+	return true
+
+
+# ============================================================
+# W4: WorkerCtx (contrato de ownership, relpath, read-only)
+# ============================================================
+
+func _make_ctx(root: Node, read_only: bool) -> RefCounted:
+	var ctx: RefCounted = SceneScriptScript.WorkerCtx.new()
+	ctx.setup(null, root, "res://test.tscn", read_only)
+	return ctx
+
+
+func _test_w4_ctx_own_raw() -> bool:
+	var root := Node3D.new()
+	root.name = "Root"
+	var raw := Node3D.new()
+	raw.name = "Raw"
+	root.add_child(raw)
+	var ctx := _make_ctx(root, false)
+	if not ctx.own(raw):
+		push_error("own() rechazó nodo raw legítimo")
+		return false
+	if raw.owner != root:
+		push_error("own() no asignó owner al root")
+		return false
+	var changes: Dictionary = ctx._changes
+	if (changes.get("added", []) as Array).size() != 1:
+		push_error("changes.added debería tener 1 entrada: %s" % changes)
+		return false
+	root.free()
+	return true
+
+
+func _test_w4_ctx_own_rejects_instance() -> bool:
+	# Instancia PackedScene dentro del root: own() en su root Y en sus
+	# internals debe RECHAZAR (aplanarían la instancia).
+	# 🚨 La escena debe venir de DISCO: scene_file_path solo se setea en
+	# instancias de PackedScene con path (pack en memoria deja "" — caso
+	# irreal en workers; en producción las instancias vienen de res://).
+	var root := Node3D.new()
+	root.name = "Root"
+	var inner := Node3D.new()
+	inner.name = "Inner"
+	var inner_child := Node3D.new()
+	inner_child.name = "InnerChild"
+	inner.add_child(inner_child)
+	var tmp_scene := "res://.heren/tmp/test_inner_scene.tscn"
+	SceneScriptScript.ensure_dir(tmp_scene)
+	var packed := PackedScene.new()
+	packed.pack(inner)
+	var save_err := ResourceSaver.save(packed, tmp_scene)
+	if save_err != OK:
+		push_error("no se pudo guardar escena de test: %s" % error_string(save_err))
+		root.free()
+		return false
+	var disk_packed: PackedScene = load(tmp_scene)
+	var inst: Node = disk_packed.instantiate()
+	inst.name = "Inst"
+	root.add_child(inst)
+	var ctx := _make_ctx(root, false)
+	if ctx.own(inst):
+		push_error("own() aceptó el ROOT de una instancia PackedScene")
+		root.free()
+		return false
+	var inst_child: Node = inst.get_child(0)
+	if ctx.own(inst_child):
+		push_error("own() aceptó un INTERNAL de instancia PackedScene")
+		root.free()
+		return false
+	if ctx._error == "":
+		push_error("own() rechazó pero no dejó error explicativo")
+		root.free()
+		return false
+	# El raw del root sigue siendo own-able después de los rechazos.
+	var raw := Node3D.new()
+	raw.name = "Raw"
+	root.add_child(raw)
+	if not ctx.own(raw):
+		push_error("own() dejó de funcionar tras rechazos")
+		root.free()
+		return false
+	root.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp_scene))
+	return true
+
+
+func _test_w4_ctx_relpath() -> bool:
+	# relpath manual (get_path() requiere SceneTree — NUNCA en detached).
+	var root := Node3D.new()
+	root.name = "Root"
+	var mid := Node3D.new()
+	mid.name = "Mid"
+	var leaf := Node3D.new()
+	leaf.name = "Leaf"
+	root.add_child(mid)
+	mid.add_child(leaf)
+	var ctx := _make_ctx(root, false)
+	var rp: String = ctx._relpath(leaf)
+	if rp != "/Mid/Leaf":
+		push_error("relpath esperado /Mid/Leaf, got %s" % rp)
+		root.free()
+		return false
+	if ctx._relpath(root) != "/":
+		push_error("relpath del root debe ser /")
+		root.free()
+		return false
+	root.free()
+	return true
+
+
+func _test_w4_ctx_readonly() -> bool:
+	var root := Node3D.new()
+	root.name = "Root"
+	var ctx := _make_ctx(root, true)
+	if not ctx.is_read_only():
+		push_error("is_read_only() debe ser true")
+		root.free()
+		return false
+	if ctx.own(root):
+		push_error("own() permitido en read-only")
+		root.free()
+		return false
+	ctx.mark_modified()
+	if ctx._modified:
+		push_error("mark_modified aplicado en read-only")
+		root.free()
+		return false
+	if ctx._error == "":
+		push_error("read-only debe dejar error explicativo")
+		root.free()
+		return false
+	root.free()
+	return true
+
+
+# ============================================================
+# W2: class_info (ClassDB real — previene APIs adivinadas)
+# ============================================================
+
+func _test_w2_class_info() -> bool:
+	var nh: Node = NodeHandlersScript.new()
+	var res: Dictionary = nh.handle_class_info({"class_name": "Skeleton3D", "filter": "bone"})
+	if not res.get("ok", false):
+		push_error("class_info Skeleton3D falló: %s" % str(res.get("error", "")))
+		nh.free()
+		return false
+	if str(res.get("inherits", "")) != "Node3D":
+		push_error("Skeleton3D.inherits != Node3D: %s" % str(res.get("inherits")))
+		nh.free()
+		return false
+	var has_add_bone := false
+	var has_add_bones := false
+	for m in res.get("methods", []):
+		var mname := str(m.get("name", ""))
+		if mname == "add_bone":
+			has_add_bone = true
+		if mname == "add_bones":
+			has_add_bones = true
+	if not has_add_bone:
+		push_error("add_bone debería existir en Skeleton3D (4.7)")
+		nh.free()
+		return false
+	if has_add_bones:
+		push_error("add_bones NO debe existir en 4.7 — el bug del E2E Omega")
+		nh.free()
+		return false
+	# Clase desconocida → error claro.
+	var res2: Dictionary = nh.handle_class_info({"class_name": "NoExisteXYZ"})
+	if res2.get("ok", false):
+		push_error("class_info de clase inexistente debe fallar")
+		nh.free()
+		return false
+	# Sin filter: debe traer properties y herencia.
+	var res3: Dictionary = nh.handle_class_info({"class_name": "Camera3D"})
+	if not res3.get("ok", false) or int(res3.get("property_count", 0)) <= 0:
+		push_error("class_info Camera3D sin properties")
+		nh.free()
+		return false
+	nh.free()
+	return true
+
+
+# ============================================================
+# W1 → W4-c: diagnósticos inline (ahora static `script_diagnostics`)
+# ============================================================
+
+func _test_w1_diagnostics_inline() -> bool:
+	var rh: Node = ResourceHandlersScript.new()
+	var p := "res://.heren/tmp/test_w1_diag.gd"
+	SceneScriptScript.ensure_dir(p)
+	# Script ROTO (parse error garantizado: func def sin ':' dispara
+	# `missing_colon_after_func_def` + reload_err=43).
+	var f := FileAccess.open(p, FileAccess.WRITE)
+	f.store_string("extends RefCounted\nfunc broken(x: int)\n\tpass\n")
+	f = null
+	# W4-c: ahora es `script_diagnostics` (no `_script_diagnostics`).
+	var d: Dictionary = rh.script_diagnostics(p)
+	if d.get("valid", true):
+		push_error("script roto debe dar valid:false: %s" % str(d))
+		rh.free()
+		return false
+	# W4-c: además, debe traer parse_hints (regression: si vuelve a no traerlos,
+	# el fix-loop regresa a 3 calls).
+	var hints: Array = d.get("parse_hints", [])
+	if hints.is_empty():
+		push_error("script roto debe traer parse_hints (W4-c): %s" % str(d))
+		rh.free()
+		return false
+	# Debe detectar la falta de ':' después de func broken.
+	var found_colon := false
+	for h in hints:
+		if h.get("rule", "") == "missing_colon_after_func_def":
+			found_colon = true
+			break
+	if not found_colon:
+		push_error("esperaba hint missing_colon_after_func_def, dio: %s" % str(hints))
+		rh.free()
+		return false
+	# Script válido.
+	var f2 := FileAccess.open(p, FileAccess.WRITE)
+	f2.store_string("extends RefCounted\nfunc hello() -> String:\n\treturn \"hi\"\n")
+	f2 = null
+	var d2: Dictionary = rh.script_diagnostics(p)
+	if not d2.get("valid", false):
+		push_error("script válido debe dar valid:true: %s" % str(d2))
+		rh.free()
+		return false
+	# W4-c: válido → warnings (no parse_hints).
+	if d2.has("parse_hints"):
+		push_error("script válido NO debe traer parse_hints: %s" % str(d2))
+		rh.free()
+		return false
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+	rh.free()
+	return true
+
+
+# ============================================================
+# W4-c: static analyzer — una test por regla (high confidence + sanity)
+# ============================================================
+
+func _test_nodepath_string_coerce() -> bool:
+	# Regresión para el bug "Invalid operands 'NodePath' and 'String' in '=='"
+	# (GDScript 4.5+). El agente mandaba `skeleton_path: "PhysicalBone3D/..."`
+	# como String desde JSON; el nodo lo guardaba como NodePath. La comparación
+	# crasheaba el handler. _values_match debe coerce ANTES de ==.
+	# 🚨 NO usar `:=` aquí: _values_match retorna Variant → "Cannot infer"
+	# (mismo bug que ahora detecta static_analyze_gdscript — W4-c).
+	var nh: Node = NodeHandlersScript.new()
+	# Caso 1: NodePath vs String equivalente → debe dar true.
+	var match: bool = nh._values_match(NodePath("Foo/Bar"), "Foo/Bar")
+	if not match:
+		push_error("NodePath vs String equivalente debe matchear, dio false")
+		nh.free()
+		return false
+	# Caso 2: NodePath vs String diferente → debe dar false (sin crashear).
+	var no_match: bool = nh._values_match(NodePath("Foo/Bar"), "Baz/Qux")
+	if no_match:
+		push_error("NodePath vs String diferente NO debe matchear, dio true")
+		nh.free()
+		return false
+	# Caso 3: String vs NodePath (orden inverso).
+	var match2: bool = nh._values_match("Foo/Bar", NodePath("Foo/Bar"))
+	if not match2:
+		push_error("String vs NodePath equivalente debe matchear, dio false")
+		nh.free()
+		return false
+	# Caso 4: tipos compatibles (ambos int) → comportamiento normal.
+	var match3: bool = nh._values_match(42, 42)
+	if not match3:
+		push_error("int == int debe matchear")
+		nh.free()
+		return false
+	nh.free()
+	return true
+
+func _has_hint(hints: Array, rule: String) -> bool:
+	for h in hints:
+		if h.get("rule", "") == rule:
+			return true
+	return false
+
+
+func _test_w4c_mixed_indent() -> bool:
+	var src := "extends RefCounted\nfunc a():\n\tpass\n func b():\n  pass\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "tabs_and_spaces_mixed"):
+		push_error("tabs_and_spaces_mixed no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_unbalanced_parens() -> bool:
+	var src := "extends RefCounted\nfunc bad((:\n\tpass\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "unbalanced_parens"):
+		push_error("unbalanced_parens no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_unbalanced_brackets() -> bool:
+	var src := "extends RefCounted\nvar arr := [1, 2, 3\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "unbalanced_brackets"):
+		push_error("unbalanced_brackets no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_unbalanced_braces() -> bool:
+	var src := "extends RefCounted\nvar d := {\"a\": 1\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "unbalanced_braces"):
+		push_error("unbalanced_braces no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_unterminated_string() -> bool:
+	var src := "extends RefCounted\nfunc bad():\n\tvar x := \"unterminated\n\tpass\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "unterminated_string"):
+		push_error("unterminated_string no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_missing_colon_func() -> bool:
+	var src := "extends RefCounted\nfunc broken(x: int)\n\tpass\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "missing_colon_after_func_def"):
+		push_error("missing_colon_after_func_def no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_missing_colon_kw() -> bool:
+	# `if x > 0` sin `:` al final.
+	var src := "extends RefCounted\nfunc a(x: int):\n\tif x > 0\n\t\treturn\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "missing_colon_after_keyword"):
+		push_error("missing_colon_after_keyword no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_export_const() -> bool:
+	var src := "extends RefCounted\n@export const FOO := 1\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "export_on_const"):
+		push_error("export_on_const no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_await_stuck() -> bool:
+	var src := "extends RefCounted\nfunc a():\n\tvar x = awaitfunc(b())\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "await_stuck_to_identifier"):
+		push_error("await_stuck_to_identifier no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_shadow_builtin() -> bool:
+	var src := "extends RefCounted\nfunc a():\n\tvar int := 5\n\tprint(int)\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "shadow_builtin_var"):
+		push_error("shadow_builtin_var no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_class_name_dup() -> bool:
+	var src := "class_name Foo\nextends RefCounted\nclass_name Foo\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not _has_hint(hints, "class_name_duplicate_in_file"):
+		push_error("class_name_duplicate_in_file no detectado: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_clean_script() -> bool:
+	# Código válido NO debe disparar hints (excepto warnings opcionales).
+	var src := "extends RefCounted\nfunc hello() -> String:\n\treturn \"hi\"\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not hints.is_empty():
+		push_error("código válido no debe dar hints, dio: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_brackets_in_string() -> bool:
+	# Parens dentro de string NO deben contar como desbalanceados.
+	var src := "extends RefCounted\nvar s := \"(un paren dentro)\"\nvar x := 1\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if _has_hint(hints, "unbalanced_parens"):
+		push_error("string con paren no debe disparar unbalanced_parens: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_hash_in_string() -> bool:
+	# Código con string que contiene `#` (que NO es comentario) debe estar OK.
+	var src := "extends RefCounted\nvar s := \"color #ff0000\"\n"
+	var hints := HerenHandlerScript.static_analyze_gdscript(src)
+	if not hints.is_empty():
+		push_error("string con # no debe dar hints, dio: %s" % str(hints))
+		return false
+	return true
+
+
+func _test_w4c_unified_shape() -> bool:
+	# Roto → parse_hints. Válido → warnings.
+	var p := "res://.heren/tmp/test_w4c_unified.gd"
+	SceneScriptScript.ensure_dir(p)
+	# Roto.
+	var f := FileAccess.open(p, FileAccess.WRITE)
+	f.store_string("extends RefCounted\nfunc broken(\n\tpass\n")
+	f = null
+	var d: Dictionary = HerenHandlerScript.script_diagnostics(p)
+	if d.get("valid", true):
+		push_error("roto: esperaba valid:false, dio: %s" % str(d))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	if not d.has("parse_hints") or d.get("parse_hints", []).is_empty():
+		push_error("roto: esperaba parse_hints no vacío, dio: %s" % str(d))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	# Válido.
+	var f2 := FileAccess.open(p, FileAccess.WRITE)
+	f2.store_string("extends RefCounted\nfunc hello() -> String:\n\treturn \"hi\"\n")
+	f2 = null
+	var d2: Dictionary = HerenHandlerScript.script_diagnostics(p)
+	if not d2.get("valid", false):
+		push_error("válido: esperaba valid:true, dio: %s" % str(d2))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	if d2.has("parse_hints"):
+		push_error("válido: NO debe traer parse_hints, dio: %s" % str(d2))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	# Warnings es una Array (puede estar vacía).
+	if not (d2.get("warnings", []) is Array):
+		push_error("válido: warnings debe ser Array, dio: %s" % str(d2))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+	return true
+
+
+func _test_w4c_validate_uses_static() -> bool:
+	# Verifica que validate_handlers.handle_script devuelve el shape unificado
+	# con parse_hints (DRY — no debe duplicar lógica).
+	var vh: Node = ValidateHandlersScript.new()
+	var p := "res://.heren/tmp/test_w4c_validate.gd"
+	SceneScriptScript.ensure_dir(p)
+	var f := FileAccess.open(p, FileAccess.WRITE)
+	f.store_string("extends RefCounted\nfunc broken(:\n\tpass\n")
+	f = null
+	var r: Dictionary = vh.handle_script({"script_path": p})
+	if r.get("ok", true):
+		push_error("validate handle_script: ok:true en roto, dio: %s" % str(r))
+		vh.free()
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	# REGRESIÓN: validate debe incluir parse_hints (esto era el bug original).
+	if not r.has("parse_hints") or r.get("parse_hints", []).is_empty():
+		push_error("validate handle_script: debe traer parse_hints, dio: %s" % str(r))
+		vh.free()
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+		return false
+	vh.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+	return true
+
+
+# Bug-fix 2026-09-10: cuando el plugin está desactualizado, `scene_script`
+# (u otra tool registrada en server.rs pero no en plugin._handlers) falla
+# con "no handler for prefix". El agente no sabe si es bug MCP o plugin
+# viejo. El dispatcher debe devolver lista de registered + hint accionable.
+func _test_dispatcher_unknown_prefix() -> bool:
+	var d: Node = DispatcherScript.new()
+	# Sin register_handler → todo debe fallar con diagnóstico.
+	var r: Dictionary = d.execute("scene_script/run", {})
+	if r.get("ok", true):
+		push_error("dispatcher con handler vacío debería devolver ok:false, dio: %s" % str(r))
+		d.free()
+		return false
+	var err: String = str(r.get("error", ""))
+	if not err.contains("no handler for prefix: scene_script"):
+		push_error("error debe mencionar el prefix, dio: %s" % err)
+		d.free()
+		return false
+	# REGRESIÓN: el error debe incluir la lista de handlers registrados
+	# (vacía en este caso → []) para que el agente diagnostique.
+	if not err.contains("registered: []"):
+		push_error("error debe listar registered: [], dio: %s" % err)
+		d.free()
+		return false
+	# REGRESIÓN: el hint debe mencionar install_plugin --force + reinicio Godot.
+	var hint: String = str(r.get("hint", ""))
+	if not hint.contains("install_plugin.py --force") or not hint.contains("reinicia Godot"):
+		push_error("hint debe guiar al fix (install_plugin --force + reiniciar Godot), dio: %s" % hint)
+		d.free()
+		return false
+	# Caso positivo: registrar handler y verificar que el error desaparece.
+	d.register_handler("scene_script", Node.new())
+	var r2: Dictionary = d.execute("scene_script/unknown_action", {})
+	if r2.get("ok", true):
+		# No esperamos ok:true (action no existe), pero el prefix SÍ está.
+		# El error debe ser de método, no de prefix.
+		var err2: String = str(r2.get("error", ""))
+		if err2.contains("no handler for prefix"):
+			push_error("tras registrar scene_script, el error NO debe ser de prefix, dio: %s" % err2)
+			d.free()
+			return false
+	d.free()
+	return true
+
+
+# ---------- W4b filesystem handlers (los EFS-dependent se cubren en E2E) ----------
+
+func _test_w4b_count_null_safe() -> bool:
+	var fs: Node = FilesystemHandlersScript.new()
+	# _count_files_recursive(null) debe devolver 0 sin crashear.
+	var n: int = fs._count_files_recursive(null)
+	if n != 0:
+		push_error("_count_files_recursive(null) esperaba 0, dio %d" % n)
+		fs.free()
+		return false
+	fs.free()
+	return true
+
+
+func _test_w4b_walk_null_safe() -> bool:
+	var fs: Node = FilesystemHandlersScript.new()
+	var items: Array = []
+	# _walk_import_errors(null, ...) no debe crashear con dir null.
+	fs._walk_import_errors(null, "", items, 100)
+	if items.size() != 0:
+		push_error("_walk_import_errors(null) esperaba [], dio %s" % str(items))
+		fs.free()
+		return false
+	fs.free()
+	return true
+
+
+func _test_w4b_exists() -> bool:
+	var fs: Node = FilesystemHandlersScript.new()
+	# Sin editor, handle_exists debe responder correctamente.
+	# - res://addons/heren/plugin.cfg existe (estamos en su propio proyecto test).
+	# - res://nope/no.tscn NO existe.
+	# - user://nope NO existe.
+	var r: Dictionary = fs.handle_exists({
+		"paths": [
+			"res://addons/heren/plugin.cfg",
+			"res://nope/no.tscn",
+			"user://nope.tmp",
+		],
+	})
+	if not r.get("ok", false):
+		push_error("handle_exists ok=false: %s" % str(r))
+		fs.free()
+		return false
+	var results: Array = r.get("results", [])
+	if results.size() != 3:
+		push_error("esperaba 3 results, dio %d" % results.size())
+		fs.free()
+		return false
+	# plugin.cfg existe.
+	if not results[0].get("exists", false):
+		push_error("plugin.cfg debía existir: %s" % str(results[0]))
+		fs.free()
+		return false
+	# nope.tscn NO existe.
+	if results[1].get("exists", true):
+		push_error("nope.tscn NO debía existir: %s" % str(results[1]))
+		fs.free()
+		return false
+	fs.free()
 	return true

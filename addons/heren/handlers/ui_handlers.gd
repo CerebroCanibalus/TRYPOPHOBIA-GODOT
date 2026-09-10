@@ -8,11 +8,13 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 # Actions:
 #   create        — Control desde template (template) o desde cero (node_type
 #                   obligatorio si no viene template) + layout preset opcional
-#   layout        — presets de anchors a cualquier Control
 #   canvas_layer  — CanvasLayer (layer, follow_viewport) para HUD overlay
 #   templates     — lista templates con params (del registry transversal)
 #   get_info      — anchors/offsets/size_flags/min_size de un Control
-#   theme         — AL FINAL de UI-2 (tras validar las otras 5)
+#
+# 2026-09-09 (§0.12 W4 cleanup):
+#   - layout, theme: archivados a addons/heren/archive/handlers/ui_layout_theme_handlers.gd
+#   Reemplazados por scene_script workers.
 
 const HerenCoordsScript := preload("coords.gd")
 const HerenSceneRegistryScript := preload("../scene_registry.gd")
@@ -169,56 +171,6 @@ func handle_ui_create(args: Dictionary) -> Dictionary:
 	}
 
 
-## ui/layout — aplica un preset de anchors a un Control existente.
-func handle_ui_layout(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return _err("no scene open in editor")
-	var node_path: Variant = args.get("node_path", "")
-	var layout: String = str(args.get("layout", ""))
-	if node_path == "" or layout == "":
-		return _err("node_path and layout required")
-
-	var node := _resolve_node(root, node_path)
-	if node == null:
-		return _not_found_hint(root, node_path)
-	if not node is Control:
-		return _err("not_a_control: " + str(node_path))
-	var preset: int = LAYOUT_PRESETS.get(layout, -1)
-	if preset == -1:
-		return _err("invalid_layout: " + layout)
-
-	var ctl := node as Control
-	var warning := ""
-	if ctl.get_parent() is Container:
-		warning = "parent_is_container: los anchors los controla el container; usa size_flags_* en su lugar"
-
-	var old_anchors := [ctl.anchor_left, ctl.anchor_top, ctl.anchor_right, ctl.anchor_bottom]
-	var old_offsets := [ctl.offset_left, ctl.offset_top, ctl.offset_right, ctl.offset_bottom]
-	_undo_redo.begin_action("Heren Layout %s" % node.name)
-	_undo_redo.add_do_method(ctl, &"set_anchors_and_offsets_preset", [preset])
-	_undo_redo.add_undo_property(ctl, &"anchor_left", old_anchors[0])
-	_undo_redo.add_undo_property(ctl, &"anchor_top", old_anchors[1])
-	_undo_redo.add_undo_property(ctl, &"anchor_right", old_anchors[2])
-	_undo_redo.add_undo_property(ctl, &"anchor_bottom", old_anchors[3])
-	_undo_redo.add_undo_property(ctl, &"offset_left", old_offsets[0])
-	_undo_redo.add_undo_property(ctl, &"offset_top", old_offsets[1])
-	_undo_redo.add_undo_property(ctl, &"offset_right", old_offsets[2])
-	_undo_redo.add_undo_property(ctl, &"offset_bottom", old_offsets[3])
-	_undo_redo.commit_action()
-
-	var result := {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"layout": layout,
-		"anchors": _control_anchors(ctl),
-		"offsets": _control_offsets(ctl),
-	}
-	if warning != "":
-		result["warning"] = warning
-	return result
-
-
 ## ui/canvas_layer — CanvasLayer para HUD overlay.
 func handle_ui_canvas_layer(args: Dictionary) -> Dictionary:
 	var root := _scene_root(args)
@@ -302,98 +254,23 @@ func handle_ui_get_info(args: Dictionary) -> Dictionary:
 	}
 
 
-## ui/theme — AL FINAL de UI-2 (tras validar las otras 5).
-## Crea/modifica un Theme .tres y opcionalmente lo aplica a un Control.
-## properties: {"colors": {"Label/font_color": {r,g,b,a}},
-##              "styleboxes": {"Panel/panel": {StyleBoxFlat dict}},
-##              "font_sizes": {"Label/font_size": 16},
-##              "constants": {"Button/separation": 8}}
-## Formato de clave: "<ThemeType>/<item_name>".
-func handle_ui_theme(args: Dictionary) -> Dictionary:
-	var theme_path: String = str(args.get("theme_path", ""))
-	if theme_path == "":
-		return _err("theme_path required (res://...tres)")
+# ------------------- helpers internos (necesarios para ui/get_info) -------------------
 
-	var theme: Theme = null
-	if ResourceLoader.exists(theme_path):
-		var loaded: Resource = load(theme_path)
-		if loaded is Theme:
-			theme = loaded
-	if theme == null:
-		theme = Theme.new()
-
-	var properties := _args_dict(args, "properties")
-	var applied: Array = []
-
-	if properties.has("colors") and properties["colors"] is Dictionary:
-		for key in properties["colors"].keys():
-			var parts: Array = str(key).split("/")
-			if parts.size() == 2:
-				theme.set_color(parts[1], parts[0], HerenCoordsScript.deserialize_value(properties["colors"][key]))
-				applied.append("color:" + str(key))
-
-	if properties.has("styleboxes") and properties["styleboxes"] is Dictionary:
-		for key in properties["styleboxes"].keys():
-			var parts: Array = str(key).split("/")
-			if parts.size() == 2:
-				var sb: Resource = HerenCoordsScript.deserialize_value(properties["styleboxes"][key])
-				if sb is StyleBox:
-					theme.set_stylebox(parts[1], parts[0], sb)
-					applied.append("stylebox:" + str(key))
-
-	if properties.has("font_sizes") and properties["font_sizes"] is Dictionary:
-		for key in properties["font_sizes"].keys():
-			var parts: Array = str(key).split("/")
-			if parts.size() == 2:
-				theme.set_font_size(parts[1], parts[0], int(properties["font_sizes"][key]))
-				applied.append("font_size:" + str(key))
-
-	if properties.has("constants") and properties["constants"] is Dictionary:
-		for key in properties["constants"].keys():
-			var parts: Array = str(key).split("/")
-			if parts.size() == 2:
-				theme.set_constant(parts[1], parts[0], int(properties["constants"][key]))
-				applied.append("constant:" + str(key))
-
-	var save_err := ResourceSaver.save(theme, theme_path)
-	if save_err != OK:
-		return _err("theme_save_failed: " + error_string(save_err))
-
-	# Aplicar a un Control si viene node_path (theme property).
-	var applied_to := ""
-	if args.has("node_path") and str(args.get("node_path", "")) != "":
-		var root := _scene_root(args)
-		if root != null:
-			var node := _resolve_node(root, args.get("node_path"))
-			if node != null and node is Control:
-				(node as Control).theme = theme
-				applied_to = _node_path_relative(node, root)
-
+static func _control_anchors(c: Control) -> Dictionary:
 	return {
-		"ok": true,
-		"theme_path": theme_path,
-		"created": not ResourceLoader.exists(theme_path),
-		"applied_items": applied,
-		"count": applied.size(),
-		"applied_to": applied_to,
+		"left": c.anchor_left,
+		"top": c.anchor_top,
+		"right": c.anchor_right,
+		"bottom": c.anchor_bottom,
 	}
 
 
-# ---------------------------------------------------------------- helpers UI
-
-static func _control_anchors(ctl: Control) -> Dictionary:
+static func _control_offsets(c: Control) -> Dictionary:
 	return {
-		"left": ctl.anchor_left,
-		"top": ctl.anchor_top,
-		"right": ctl.anchor_right,
-		"bottom": ctl.anchor_bottom,
+		"left": c.offset_left,
+		"top": c.offset_top,
+		"right": c.offset_right,
+		"bottom": c.offset_bottom,
 	}
 
 
-static func _control_offsets(ctl: Control) -> Dictionary:
-	return {
-		"left": ctl.offset_left,
-		"top": ctl.offset_top,
-		"right": ctl.offset_right,
-		"bottom": ctl.offset_bottom,
-	}

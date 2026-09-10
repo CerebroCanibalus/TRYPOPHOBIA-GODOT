@@ -33,7 +33,17 @@ func execute(tool_name: String, args: Dictionary) -> Dictionary:
 		sub_action = tool_name.substr(slash_idx + 1)
 	var handler: Node = _handlers.get(prefix, null)
 	if handler == null:
-		return {"ok": false, "error": "no handler for prefix: " + prefix}
+		# 🚨 Diagnóstico: este error típico = plugin desactualizado. El agente
+		# ve la tool `scene_script` en su schema (registrada en server.rs) pero
+		# el plugin del proyecto no tiene scene_script_handlers en _handlers.
+		# Causa: install_plugin.py sin --force, o Godot sin reiniciar tras
+		# sync del plugin (no hay hot-reload — Godot issue #11612).
+		var registered := ", ".join(PackedStringArray(_handlers.keys()))
+		return {
+			"ok": false,
+			"error": "no handler for prefix: " + prefix + " — registered: [" + registered + "]",
+			"hint": "plugin desactualizado: corre install_plugin.py --force y reinicia Godot (no hot-reload de plugins)",
+		}
 
 	# Resolver método en 3 niveles (con tabla declarativa primero):
 	#   1. Tabla explícita: "{prefix}/{action}" → method (si está registrado).

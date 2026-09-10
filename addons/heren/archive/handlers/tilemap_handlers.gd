@@ -1,8 +1,10 @@
 @tool
 extends "res://addons/heren/handlers/heren_handler.gd"
-# Heren MCP v4 - TileMap handlers (Fase 2).
-# TileMap/TileSet sobre la escena viva + recursos (ADR-002).
+# Heren MCP v4 - ARCHIVADO 2026-09-09 (§0.12 W4 cleanup).
+# TileMap handlers completos. Reemplazados por scene_script workers.
 #
+# Para restaurar, ver addons/heren/archive/handlers/README.md.
+
 # Actions (heredadas de v3 tilemap_tool.py + daemon project_ops, adaptadas):
 #   inspect_set -> fuentes del TileSet (atlas: textura, grid, márgenes)
 #   inspect_map -> capas + celdas usadas del TileMap

@@ -368,7 +368,15 @@ func handle_set_prop(args: Dictionary) -> Dictionary:
 ## Compara dos valores para verificar que un set_prop se aplicó.
 ## Godot puede normalizar el valor (int→float, Vector2→Vector3, NodePath
 ## absoluto vs relativo), así que comparamos de forma tolerante.
+## 🚨 GDScript 4.5+: `NodePath == String` y pares no-unificables (Array vs
+## PackedByteArray) crashean con "Invalid operands". Cuando el agente setea
+## un NodePath (skeleton_path, etc.), el JSON lo trae como String pero
+## node.get() lo devuelve como NodePath — tenemos que coerce ANTES de ==.
 static func _values_match(a: Variant, b: Variant) -> bool:
+	if a is NodePath and b is String:
+		a = String(a)
+	elif a is String and b is NodePath:
+		b = String(b)
 	if a == b:
 		return true
 	# Comparar por serialización compacta (tolera normalización de tipos).
@@ -524,6 +532,154 @@ func handle_get_info(args: Dictionary) -> Dictionary:
 			},
 			"parent_is_container": ctl.get_parent() is Container,
 		}
+	return result
+
+
+# ============================================================
+# W2 (§0.12): class_info + props_diff — el agente verifica la API REAL
+# de Godot (ClassDB) antes de usarla. Previene bugs de API adivinada
+# (add_bones no existe en 4.7, AnimationNodeBlendSpace3D no existe, etc.).
+# ============================================================
+
+## node_query/class_info — API surface real de una clase Godot vía ClassDB.
+## filter=substring acota métodos/props (ej: filter=bone en Skeleton3D).
+func handle_class_info(args: Dictionary) -> Dictionary:
+	var cls := str(args.get("class_name", ""))
+	if cls == "":
+		return {"ok": false, "error": "class_name required"}
+	if not ClassDB.class_exists(cls):
+		return {"ok": false, "error": "unknown_class: " + cls + " — verifica el nombre (case-sensitive)"}
+	var filter := str(args.get("filter", "")).to_lower()
+	var no_inherit: bool = not bool(args.get("include_inherited", false))
+
+	var out := {
+		"ok": true,
+		"class": cls,
+		"inherits": ClassDB.get_parent_class(cls),
+		"can_instantiate": ClassDB.can_instantiate(cls),
+	}
+
+	# Métodos (compactos: name + args + return).
+	var methods: Array = []
+	for m in ClassDB.class_get_method_list(cls, no_inherit):
+		var mname := str(m.get("name", ""))
+		if filter != "" and mname.to_lower().find(filter) < 0:
+			continue
+		var margs: Array = []
+		for a in m.get("args", []):
+			margs.append({
+				"name": str(a.get("name", "")),
+				"type": type_string(int(a.get("type", 0))),
+			})
+		var ret: Dictionary = m.get("return", {})
+		var sig := {
+			"name": mname,
+			"args": margs,
+			"returns": type_string(int(ret.get("type", 0))),
+		}
+		if bool(m.get("const", false)):
+			sig["const"] = true
+		if bool(m.get("vararg", false)):
+			sig["vararg"] = true
+		methods.append(sig)
+	out["methods"] = methods
+	out["method_count"] = methods.size()
+
+	# Propiedades (filtradas: solo STORAGE, sin categorías/grupos).
+	var props: Array = []
+	for p in ClassDB.class_get_property_list(cls, no_inherit):
+		var pname := str(p.get("name", ""))
+		var usage: int = int(p.get("usage", 0))
+		if pname == "" or pname.begins_with("_"):
+			continue
+		if usage & (PROPERTY_USAGE_CATEGORY | PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
+			continue
+		if filter != "" and pname.to_lower().find(filter) < 0:
+			continue
+		props.append({
+			"name": pname,
+			"type": type_string(int(p.get("type", 0))),
+		})
+	out["properties"] = props
+	out["property_count"] = props.size()
+
+	# Señales.
+	var signals: Array = []
+	for s in ClassDB.class_get_signal_list(cls, no_inherit):
+		var sname := str(s.get("name", ""))
+		if filter != "" and sname.to_lower().find(filter) < 0:
+			continue
+		signals.append(sname)
+	if signals.size() > 0:
+		out["signals"] = signals
+
+	# Enums + constantes.
+	var enums: Dictionary = {}
+	for e in ClassDB.class_get_enum_list(cls, no_inherit):
+		var constants: PackedStringArray = ClassDB.class_get_enum_constants(cls, e, no_inherit)
+		enums[str(e)] = Array(constants)
+	if enums.size() > 0:
+		out["enums"] = enums
+
+	return out
+
+
+## node_query/props_diff — props del nodo que DIFIEREN del default de su clase
+## (patrón Fennara "get_node_properties": solo lo no-default = tokens mínimos).
+func handle_props_diff(args: Dictionary) -> Dictionary:
+	var root := _scene_root(args)
+	if root == null:
+		return {"ok": false, "error": "no scene open in editor"}
+	var node_path: Variant = args.get("node_path", "")
+	if node_path == "":
+		return {"ok": false, "error": "node_path required"}
+	var node := _resolve_node(root, node_path)
+	if node == null:
+		return _not_found_hint(root, node_path)
+
+	var cls := node.get_class()
+	var default_obj: Object = ClassDB.instantiate(cls)
+	if default_obj == null:
+		return {"ok": false, "error": "cannot_instantiate_default: " + cls}
+
+	var diff: Array = []
+	var max_out: int = 64
+	for p in node.get_property_list():
+		var pname := str(p.get("name", ""))
+		var usage: int = int(p.get("usage", 0))
+		if pname == "" or pname.begins_with("_"):
+			continue
+		if usage & (PROPERTY_USAGE_CATEGORY | PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
+			continue
+		if not (usage & PROPERTY_USAGE_STORAGE):
+			continue
+		var current: Variant = node.get(pname)
+		var baseline: Variant = default_obj.get(pname)
+		var differs: bool = false
+		if current is Object or baseline is Object:
+			differs = current != baseline
+		else:
+			differs = current != baseline
+		if differs:
+			if diff.size() < max_out:
+				diff.append({
+					"name": pname,
+					"type": type_string(int(p.get("type", 0))),
+					"value": HerenCoordsScript.serialize_value(current, true),
+				})
+			else:
+				break
+	default_obj.free()
+
+	var result := {
+		"ok": true,
+		"node_path": _node_path_relative(node, root),
+		"class": cls,
+		"diff_count": diff.size(),
+		"props": diff,
+	}
+	if diff.size() >= max_out:
+		result["truncated"] = true
 	return result
 
 
@@ -752,124 +908,6 @@ func handle_rename(args: Dictionary) -> Dictionary:
 		"scene_node_count": _count_scene_nodes(root),
 	}
 
-
-func handle_move(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
-	var node_path: Variant = args.get("node_path", "")
-	var new_parent_path: Variant = args.get("new_parent", "")
-	if node_path == "" or new_parent_path == "":
-		return {"ok": false, "error": "node_path and new_parent required"}
-
-	var node := _resolve_node(root, node_path)
-	if node == null:
-		return _not_found_hint(root, node_path)
-	if node == root:
-		return {"ok": false, "error": "cannot_move_root"}
-
-	var new_parent := _resolve_node(root, new_parent_path)
-	if new_parent == null:
-		return {"ok": false, "error": "parent_not_found: " + str(new_parent_path)}
-
-	var old_parent := node.get_parent()
-	if old_parent == null:
-		return {"ok": false, "error": "no_parent"}
-	var old_index := node.get_index()
-
-	_undo_redo.begin_action("Heren Move %s" % node.name)
-	_undo_redo.add_do_method(old_parent, &"remove_child", [node])
-	_undo_redo.add_do_method(new_parent, &"add_child", [node])
-	_undo_redo.add_do_property(node, &"owner", root)
-	_undo_redo.add_undo_method(new_parent, &"remove_child", [node])
-	_undo_redo.add_undo_method(old_parent, &"add_child", [node])
-	_undo_redo.add_undo_method(old_parent, &"move_child", [node, old_index])
-	_undo_redo.commit_action()
-
-	# Registrar op para commit inteligente (dirty flag).
-	var scene_path := str(root.scene_file_path)
-	if scene_path != "":
-		HerenSceneRegistryScript.record_op(scene_path, {
-			"kind": "move",
-			"node_path": _node_path_relative(node, root),
-			"old_parent": _node_path_relative(old_parent, root),
-			"new_parent": _node_path_relative(new_parent, root),
-		})
-
-	return {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"previous_path": str(node_path),
-		"new_parent": _node_path_relative(new_parent, root),
-		"old_parent": _node_path_relative(old_parent, root),
-		"coords": _node_coords(node, root),
-		"scene_node_count": _count_scene_nodes(root),
-	}
-
-
-func handle_set_owner(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
-	var node_path: Variant = args.get("node_path", "")
-	var owner_path: Variant = args.get("owner_path", ".")
-	if node_path == "":
-		return {"ok": false, "error": "node_path required"}
-
-	var node := _resolve_node(root, node_path)
-	if node == null:
-		return _not_found_hint(root, node_path)
-	var owner := _resolve_node(root, owner_path)
-	if owner == null:
-		return {"ok": false, "error": "owner_not_found: " + str(owner_path)}
-	var old_owner: Node = node.owner
-
-	_undo_redo.begin_action("Heren Set Owner %s" % node.name)
-	_undo_redo.add_do_property(node, &"owner", owner)
-	_undo_redo.add_undo_property(node, &"owner", old_owner)
-	_undo_redo.commit_action()
-
-	return {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"owner_path": _node_path_relative(owner, root),
-		"coords": _node_coords(node, root),
-		"scene_node_count": _count_scene_nodes(root),
-	}
-
-
-func handle_reorder(args: Dictionary) -> Dictionary:
-	var root := _scene_root(args)
-	if root == null:
-		return {"ok": false, "error": "no scene open in editor"}
-	var node_path: Variant = args.get("node_path", "")
-	var new_index: int = int(args.get("index", args.get("new_index", -1)))
-	if node_path == "":
-		return {"ok": false, "error": "node_path required"}
-	if new_index < 0:
-		return {"ok": false, "error": "index >= 0 required"}
-
-	var node := _resolve_node(root, node_path)
-	if node == null:
-		return _not_found_hint(root, node_path)
-	var parent := node.get_parent()
-	if parent == null:
-		return {"ok": false, "error": "no_parent"}
-	var old_index := node.get_index()
-
-	_undo_redo.begin_action("Heren Reorder %s" % node.name)
-	_undo_redo.add_do_method(parent, &"move_child", [node, new_index])
-	_undo_redo.add_undo_method(parent, &"move_child", [node, old_index])
-	_undo_redo.commit_action()
-
-	return {
-		"ok": true,
-		"node_path": _node_path_relative(node, root),
-		"new_index": new_index,
-		"old_index": old_index,
-		"coords": _node_coords(node, root),
-		"scene_node_count": _count_scene_nodes(root),
-	}
 
 
 func handle_array_append(args: Dictionary) -> Dictionary:

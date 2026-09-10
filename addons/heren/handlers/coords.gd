@@ -292,6 +292,12 @@ static func deserialize_typed(value: Variant, target_type: int, target_value: Va
 		var dim := _packed_dim(value)
 		if dim != 0:
 			t = dim
+	# 🚨 R1 (codec audit 2026-09-09): si el target es String y el valor es
+	# String, devolverlo TAL CUAL — deserialize_value parsea strings que
+	# "parecen JSON" y corrompe valores legítimos (ej: text con JSON dentro
+	# cambia 1→1.0 y re-escapa comillas; el round-trip NO es intacto).
+	if t == TYPE_STRING and value is String:
+		return value
 	if not value is Array:
 		return deserialize_value(value)
 	match t:

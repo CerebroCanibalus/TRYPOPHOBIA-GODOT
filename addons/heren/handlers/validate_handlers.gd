@@ -75,61 +75,53 @@ func handle_scene(args: Dictionary) -> Dictionary:
 
 func handle_script(args: Dictionary) -> Dictionary:
 	var script_path: String = str(args.get("script_path", ""))
-	if script_path == "":
-		return {"ok": false, "error": "script_path required"}
-	if not ResourceLoader.exists(script_path):
-		return {"ok": false, "error": "not_found: " + script_path}
-
-	var script: Resource = load(script_path)
-	if script == null or not script is Script:
-		return {"ok": false, "error": "invalid_script: " + script_path}
-
-	var gdscript := script as Script
-	# load() de un .gd con errores NO retorna null: devuelve el GDScript en
-	# estado de error (verificado en Godot 4.5 — fue la causa del bug
-	# "Nonexistent function 'new' in base 'GDScript'"). reload() fuerza
-	# recompilación y devuelve ERR_PARSE_ERROR (43) si el análisis falla.
-	var reload_err: int = gdscript.reload()
-	if reload_err != OK:
-		return {
-			"ok": false,
-			"valid": false,
-			"script_path": script_path,
-			"reload_err": reload_err,
-			"error": "script_has_errors reload_err=%d — ver debug/output filter=error para el mensaje" % reload_err,
-		}
+	# W4-c: el shape unificado vive en el static `script_diagnostics` del
+	# heren_handler base (DRY con resource/create_script/edit_script).
+	# Wrappeamos el resultado en {ok: bool} para el contrato JSON-RPC.
+	var d := script_diagnostics(script_path)
+	if not d.get("valid", false):
+		# d ya trae reload_err + parse_hints inline; el fix-loop baja
+		# de 3 calls (validate→debug/output→fix) a 2.
+		var r: Dictionary = {"ok": false, "valid": false}
+		r.merge(d)
+		# Si el diagnóstico vino sin parse_hints (p.ej. file vacío), deja
+		# pista explícita de adónde mirar el mensaje crudo del parser.
+		if not d.has("parse_hints") and d.has("reload_err"):
+			r["hint"] = "sin parse_hints — el parser no expuso línea; abre debug/output filter=error para el mensaje exacto"
+		return r
 	return {
 		"ok": true,
 		"valid": true,
-		"script_path": script_path,
-		"can_instance": gdscript.can_instantiate(),
-		"base": gdscript.get_instance_base_type() if gdscript.get_instance_base_type() != "" else "",
+		"script_path": d.get("script_path", script_path),
+		"can_instance": d.get("can_instance", false),
+		"warnings": d.get("warnings", []),
 	}
 
 
 # Validación BULK con el compilador del editor: recorre *.gd bajo dir_path
-# y fuerza recompilación con GDScript.reload() (el analyzer del editor).
-# Devuelve la lista de scripts rotos con su error code. Los mensajes
-# humanos ("Cannot infer...", "Parse Error...") caen al EditorLog →
-# leerlos con debug/output filter=error.
+# y reutiliza script_diagnostics (load + analyze + reload). Cada script roto
+# adjunta parse_hints, así el fix-loop es de 1 llamada vs 3.
 # NOTA: salta res://addons/heren/ (auto-reload del plugin vivo en ejecución
 # es riesgoso); los handlers del plugin se validan con el grafo headless
 # (session/diagnose) + run_tests.gd.
 func handle_scripts(args: Dictionary) -> Dictionary:
 	var dir_path: String = str(args.get("dir", "res://"))
 	var broken: Array = []
-	var checked: int = _check_scripts_dir(dir_path, broken)
+	var with_warnings: Array = []
+	var checked: int = _check_scripts_dir(dir_path, broken, with_warnings)
 	return {
 		"ok": broken.is_empty(),
 		"dir": dir_path,
 		"checked": checked,
 		"broken_count": broken.size(),
 		"broken": broken,
-		"hint": "mensajes completos en debug/output filter=error" if not broken.is_empty() else "",
+		"warnings_count": with_warnings.size(),
+		"warnings": with_warnings,
+		"hint": "los parse_hints de cada entry apuntan al problema; corrige con resource/edit_script o resource/update_script" if not broken.is_empty() else "",
 	}
 
 
-func _check_scripts_dir(dir_path: String, broken: Array) -> int:
+func _check_scripts_dir(dir_path: String, broken: Array, with_warnings: Array) -> int:
 	if dir_path.begins_with("res://addons/heren"):
 		return 0
 	var da := DirAccess.open(dir_path)
@@ -141,16 +133,26 @@ func _check_scripts_dir(dir_path: String, broken: Array) -> int:
 	while f != "":
 		if da.current_is_dir():
 			if not f.begins_with("."):
-				count += _check_scripts_dir(dir_path.path_join(f), broken)
+				count += _check_scripts_dir(dir_path.path_join(f), broken, with_warnings)
 		elif f.ends_with(".gd"):
 			count += 1
 			var path := dir_path.path_join(f)
-			var script: Resource = load(path)
-			if script is GDScript:
-				if (script as GDScript).reload() != OK:
-					broken.append({"path": path, "reload_err": 43})
-			elif script == null:
-				broken.append({"path": path, "reload_err": -1, "error": "load_failed"})
+			# script_diagnostics es estático y puro: load + analyze + reload.
+			# No tocamos el GDScript cacheado de antes; el helper refresca source.
+			var d: Dictionary = script_diagnostics(path)
+			if not d.get("valid", false):
+				var entry: Dictionary = {
+					"path": path,
+					"reload_err": d.get("reload_err", -1),
+					"error": d.get("error", ""),
+					"parse_hints": d.get("parse_hints", []),
+				}
+				broken.append(entry)
+			elif d.get("warnings", []).size() > 0:
+				with_warnings.append({
+					"path": path,
+					"warnings": d.get("warnings", []),
+				})
 		f = da.get_next()
 	return count
 
