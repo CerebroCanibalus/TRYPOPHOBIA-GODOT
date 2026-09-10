@@ -942,6 +942,14 @@ void Box3DPhysicsServer3D::_joint_clear(const RID& p_joint) {
 void Box3DPhysicsServer3D::_joint_make_pin(const RID& p_joint, const RID& p_body_a, const Vector3& p_local_a, const RID& p_body_b, const Vector3& p_local_b) {
 	_joint_clear(p_joint);
 
+	// PinJoint3D / PhysicalBone3D set node_a and node_b one property at a time, so a make_pin
+	// where one end is still unset arrives with an INVALID body RID. That is expected: bail out
+	// silently and let the caller re-invoke make_pin once both ends are known (the node
+	// implementations call _update_joint again on every NodePath change).
+	if (!p_body_a.is_valid() || !p_body_b.is_valid()) {
+		return;
+	}
+
 	Box3DBodyImpl3D* body_a = body_owner.get_or_null(p_body_a);
 	Box3DBodyImpl3D* body_b = body_owner.get_or_null(p_body_b);
 	ERR_FAIL_NULL(body_a);
@@ -955,7 +963,11 @@ void Box3DPhysicsServer3D::_joint_make_pin(const RID& p_joint, const RID& p_body
 
 void Box3DPhysicsServer3D::_pin_joint_set_param(const RID& p_joint, PhysicsServer3D::PinJointParam p_param, double p_value) {
 	auto* joint = dynamic_cast<Box3DPinJointImpl3D*>(joint_owner.get_or_null(p_joint));
-	ERR_FAIL_NULL(joint);
+	// See _joint_make_pin: parameters are pushed right after make_pin, which may have been
+	// skipped while the joint was not fully wired yet. The caller re-applies them later.
+	if (joint == nullptr) {
+		return;
+	}
 	joint->set_param(p_param, p_value);
 }
 

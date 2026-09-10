@@ -323,11 +323,35 @@ pos_y 1.0-1.67, angvel 4-13 rad/s, sin crashes). Build: `tools/box3d/build-and-i
 **Nota:** el `softness` de Bullet tambien adelanta el umbral del twist; NO implementado
 (se usa solo como stiffness) para no cambiar el rango efectivo por defecto.
 
-**PENDIENTE (teardown, no bloqueante):** al usar grab, el server spamea
-`ERROR: Parameter "body_b" is null.` + 4x `Parameter "joint" is null.`
-(origen: `ERR_FAIL_NULL` en `box3d_physics_server_3d.cpp` — `_joint_make_cone_twist`
-llamado por `PhysicalBone3D::_reload_joint` con un RID aun no registrado; PREEXISTENTE,
-no de H2). Fix sugerido: retorno silencioso en vez de `ERR_FAIL_NULL`.
+## FIX BOX3D — PinJoint3D sin resorte angular (2026-09-10)
+
+**Bug:** `Box3DPinJointImpl3D::_create_joint_id` creaba el spherical con
+`enableSpring = true; hertz = bias*30; dampingRatio = damping`. Ese spring es ROTACIONAL
+(un PD que lleva la rotacion relativa a identity) — pero Godot's `PinJoint3D` es
+**punto-a-punto puro con rotacion LIBRE**:
+`impulse = depth * bias / h * jacInv - damping * rel_vel * jacInv` (sin termino angular).
+Resultado: todo par "pineado" quedaba rigido en orientacion.
+
+**Afectaba directamente al ragdoll:** sus `Physical/GrabJointLeft/Right` SON `PinJoint3D`
+(el script cablea `node_a`/`node_b` a `Physical Bone LArm2/RArm2` + el body agarrado). Con
+el spring, lo agarrado quedaba soldado; en Jolt ya rotaba libre.
+
+**Fix:**
+- `enableSpring = false` (el spherical ya da el punto-a-punto).
+- `BIAS`/`DAMPING` se mapean a `b3Joint_SetConstraintTuning`:
+  `hertz = tau / (pi * h * (1 - tau))` (tau = fraccion del error corregida por step;
+  reproduce la formula de Godot a 60 Hz) y `dampingRatio = damping`.
+- `IMPULSE_CLAMP` sigue sin equivalente (warning, una vez).
+
+**De paso (mismo code path):** `_joint_make_pin` / `_pin_joint_set_param` ya NO usan
+`ERR_FAIL_NULL`. Godot cablea `node_a`/`node_b` de a uno -> un `make_pin` con un RID
+invalido es ESPERADO (el autor ya lo contemplaba en `set_local_a`, faltaba en
+make/set_param). Ahora retornan en silencio y el joint se materializa cuando ambos
+extremos estan cableados. Elimina el spam `ERROR: Parameter "body_b"/"joint" is null`
+al usar grab.
+
+**Validado:** playground con grab forzado, 6 s -> 0 errores, 0 warnings; camina y
+sostiene la caja (la velocidad cae a ~0.5 m/s al agarrarla).
 
 ---
 
