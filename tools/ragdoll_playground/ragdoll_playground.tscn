@@ -1,6 +1,6 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://by0j2xnat0m5a"]
 
-[ext_resource type="Script" path="res://tools/ragdoll_playground/ragdoll_playground.gd" id="1_pg"]
+[ext_resource type="Script" uid="uid://bn7byu7wi4vsg" path="res://tools/ragdoll_playground/ragdoll_playground.gd" id="1_pg"]
 [ext_resource type="PackedScene" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="2_ch"]
 [ext_resource type="PackedScene" path="res://tools/ragdoll_playground/physics_box.tscn" id="3_box"]
 
@@ -13,11 +13,9 @@ size = Vector3(200, 1, 200)
 [sub_resource type="StandardMaterial3D" id="floor_mat"]
 albedo_color = Color(0.32, 0.34, 0.32, 1)
 
-[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
-
 [sub_resource type="Environment" id="env"]
 background_mode = 2
-sky = SubResource("sky_mat")
+background_energy_multiplier = 6.15
 tonemap_mode = 2
 
 [sub_resource type="BoxMesh" id="pillar_mesh"]
@@ -35,158 +33,159 @@ emission_enabled = true
 emission = Color(1, 0.7, 0.1, 1)
 emission_energy_multiplier = 2.0
 
-[node name="Playground" type="Node3D"]
+[node name="Playground" type="Node3D" unique_id=24250063]
 script = ExtResource("1_pg")
-auto_walk = false
-diagnostic_direct_velocity = false
 
-[node name="Floor" type="StaticBody3D" parent="."]
-collision_layer = 1
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1918732275]
 collision_mask = 2
 
-[node name="FloorShape" type="CollisionShape3D" parent="Floor"]
+[node name="FloorShape" type="CollisionShape3D" parent="Floor" unique_id=544751649]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("floor_shape")
 
-[node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
+[node name="FloorMesh" type="MeshInstance3D" parent="Floor" unique_id=1253380974]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("floor_mesh")
 surface_material_override/0 = SubResource("floor_mat")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1356114607]
 transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
+light_energy = 1.705
+light_volumetric_fog_energy = 0.0
+light_bake_mode = 1
 shadow_enabled = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1222724344]
 environment = SubResource("env")
 
-[node name="RagdollCharacter" parent="." instance=ExtResource("2_ch")]
+[node name="RagdollCharacter" parent="." unique_id=1809384552 instance=ExtResource("2_ch")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
-[node name="Pillars" type="Node3D" parent="."]
+[node name="Pillars" type="Node3D" parent="." unique_id=460506807]
 
-[node name="P00" type="MeshInstance3D" parent="Pillars"]
+[node name="P00" type="MeshInstance3D" parent="Pillars" unique_id=58427514]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.5, 2)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P01" type="MeshInstance3D" parent="Pillars"]
+[node name="P01" type="MeshInstance3D" parent="Pillars" unique_id=371541423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.5, 2)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P02" type="MeshInstance3D" parent="Pillars"]
+[node name="P02" type="MeshInstance3D" parent="Pillars" unique_id=1479594358]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.5, -2)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P03" type="MeshInstance3D" parent="Pillars"]
+[node name="P03" type="MeshInstance3D" parent="Pillars" unique_id=1870609161]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.5, -2)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P04" type="MeshInstance3D" parent="Pillars"]
+[node name="P04" type="MeshInstance3D" parent="Pillars" unique_id=803335691]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.5, 6)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P05" type="MeshInstance3D" parent="Pillars"]
+[node name="P05" type="MeshInstance3D" parent="Pillars" unique_id=690546786]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.5, 6)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P06" type="MeshInstance3D" parent="Pillars"]
+[node name="P06" type="MeshInstance3D" parent="Pillars" unique_id=1101572045]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.5, -6)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P07" type="MeshInstance3D" parent="Pillars"]
+[node name="P07" type="MeshInstance3D" parent="Pillars" unique_id=1313425306]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.5, -6)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P08" type="MeshInstance3D" parent="Pillars"]
+[node name="P08" type="MeshInstance3D" parent="Pillars" unique_id=1988872095]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.5, 0)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P09" type="MeshInstance3D" parent="Pillars"]
+[node name="P09" type="MeshInstance3D" parent="Pillars" unique_id=1664010498]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.5, 0)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P10" type="MeshInstance3D" parent="Pillars"]
+[node name="P10" type="MeshInstance3D" parent="Pillars" unique_id=307075299]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 10)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="P11" type="MeshInstance3D" parent="Pillars"]
+[node name="P11" type="MeshInstance3D" parent="Pillars" unique_id=877501454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -10)
 mesh = SubResource("pillar_mesh")
 surface_material_override/0 = SubResource("pillar_mat")
 
-[node name="Markers" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="." unique_id=122654759]
 
-[node name="M00" type="MeshInstance3D" parent="Markers"]
+[node name="M00" type="MeshInstance3D" parent="Markers" unique_id=1431227853]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -0.4, 0)
 mesh = SubResource("marker_mesh")
 surface_material_override/0 = SubResource("marker_mat")
 
-[node name="M01" type="MeshInstance3D" parent="Markers"]
+[node name="M01" type="MeshInstance3D" parent="Markers" unique_id=1556831654]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, -4)
 mesh = SubResource("marker_mesh")
 surface_material_override/0 = SubResource("marker_mat")
 
-[node name="M02" type="MeshInstance3D" parent="Markers"]
+[node name="M02" type="MeshInstance3D" parent="Markers" unique_id=853982521]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -0.4, 0)
 mesh = SubResource("marker_mesh")
 surface_material_override/0 = SubResource("marker_mat")
 
-[node name="M03" type="MeshInstance3D" parent="Markers"]
+[node name="M03" type="MeshInstance3D" parent="Markers" unique_id=2007029297]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 4)
 mesh = SubResource("marker_mesh")
 surface_material_override/0 = SubResource("marker_mat")
-[node name="Boxes" type="Node3D" parent="."]
 
-[node name="Box01" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Boxes" type="Node3D" parent="." unique_id=1416737917]
+
+[node name="Box01" parent="Boxes" unique_id=1304642093 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.35, -3)
 
-[node name="Box02" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box02" parent="Boxes" unique_id=1077850963 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 0.35, -4.2)
 
-[node name="Box03" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box03" parent="Boxes" unique_id=109740654 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, -5.6)
 
-[node name="Box04" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box04" parent="Boxes" unique_id=1975283023 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 0.35, -6.4)
 
-[node name="Box05" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box05" parent="Boxes" unique_id=265671373 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 0.35, -7.4)
 
-[node name="Box06" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box06" parent="Boxes" unique_id=145778580 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.35, -8.2)
 
-[node name="Box07" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box07" parent="Boxes" unique_id=1258425080 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.05, -8.2)
 
-[node name="Box08" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box08" parent="Boxes" unique_id=722043099 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0.35, -9.6)
 
-[node name="Box09" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box09" parent="Boxes" unique_id=1687605471 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0.35, -10.8)
 
-[node name="Box10" parent="Boxes" instance=ExtResource("3_box")]
+[node name="Box10" parent="Boxes" unique_id=39413930 instance=ExtResource("3_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.35, -11.6)
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=870605858]
 
-[node name="Info" type="Label" parent="HUD"]
+[node name="Info" type="Label" parent="HUD" unique_id=280566400]
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 900.0
 offset_bottom = 400.0
 theme_override_colors/font_color = Color(1, 0.95, 0.2, 1)
-theme_override_font_sizes/font_size = 26
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 26
 text = "cargando..."
