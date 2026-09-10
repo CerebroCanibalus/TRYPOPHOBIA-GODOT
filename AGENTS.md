@@ -474,18 +474,65 @@ por delante y en un choque la camara giraria sola (mareo).
 - `SpringArm3D.spring_length = 5.0` era la 3a persona.
 - Pitch limitado a **+-45 grados** y `grab_dir` saturaba a los 43 -> reescalar.
 
-### Fases
+### Estado de las fases (2026-09-10, fin de jornada)
 
-1. **1a: Camara FP** — `spring_length=0`, posicion a la frente, rotacion raton,
-   pitch +-85, `near=0.05`, toggle debug, shader de clip.
-2. **1b: Lean corporal** por pitch (entrada de CONTROL al spring; NO animacion
-   por codigo).
-3. **2: Puntero** — `RayCast3D` al centro + `Node3D Pointer` en el impacto +
-   reticle minimo (2D: punto; 3D: destino real de las manos).
-4. **3: Manos al puntero** — IK de brazo con clamp al alcance.
-5. **4: Interaccion** — la mano toca; mapa de CAPAS (hoy todo es capa 1 y el
-   `GrabArea` detecta el SUELO); sweep de `get_overlapping_bodies()`.
-6. **5: Red** — rotacion local + estado replicable sin huesos (D15).
+1. ✅ **Camara FP** — `spring_length=0`, posicion a la frente del hueso Head, rotacion 100%
+   raton, pitch ±85, toggle debug F2 (solo `OS.is_debug_build()`), shader de clip por distancia
+   (`src/ragdoll_character/shaders/fp_body_clip.gdshader` + `materials/fp_body_clip.tres`).
+   Valores ajustados por el General: `head_distance` ~0.2, `fp_clip_radius` 0.55.
+1b. ✅ **Lean corporal por pitch** — es una ENTRADA DE CONTROL al spring PD (NO animacion por
+   codigo), repartida `Body 0.75 / Head 0.25`. **NO hay hueso fisico Neck**: los 10 son
+   `Body, LArm1/2, RArm1/2, LLeg1/2, RLeg1/2, Head`. `lean_max_degrees = 2`.
+   **OJO:** a 2 grados el lean es **imperceptible en FP** (mueve la cabeza ~2 cm). Lo que el
+   jugador SI siente al clickear es el **clip `Grab`, que pliega el torso entero** — no el lean.
+2. ✅ **Puntero** — `ragdoll_pointer.gd` (`RayCast3D` desde la camara, `interact_range` 0.9,
+   excluye los huesos propios por RID) + `pointer_reticle.gd` (reticle 2D, estados
+   IDLE/TARGET/BLOCKED).
+3. ✅ **IK de brazos FUNCIONANDO** — `TwoBoneIK3D` (`ArmIK`) bajo el esqueleto ANIMADO. Cuatro
+   cosas que costaron y hay que recordar SIEMPRE:
+   - **Requiere POLE NODE.** Con solo `pole_direction_vector` el solver procesa pero **NO
+     escribe pose**. Y hace falta **UN POLO POR BRAZO** (`PoleTargetL`/`PoleTargetR`): con uno
+     solo los dos codos caen en el mismo plano (ala de pollo).
+   - **La pose modificada solo es valida en el instante de `modification_processed`.** Fuera de
+     esa señal el `Skeleton3D` devuelve la del AnimationMixer. El PD del ragdoll lee de un
+     **cache** (`_anim_pose_cache`) que se llena en esa señal.
+   - **El alcance se MIDE del rig** (`_place_poles_and_measure`): hombro→muñeca = **1.397 m**;
+     `arm_reach = 1.397 × 0.92 = 1.286`. Un valor corto NO acorta el brazo: **lo pliega entero**
+     (el codo hace tope). Con 0.55 el codo desviaba 45° de la recta.
+   - **CLICK vs IDLE:** sin click `influence = 0` (el IK no escribe pose → los brazos siguen la
+     animacion, idle); con click `influence = 1` y **el brazo apretado se ESTIRA hacia el
+     puntero HAYA O NO impacto** (el otro brazo se queda quieto: su objetivo es su propia mano).
+     El `influence` se interpola (`ik_influence_fade_speed`) para que soltar no de un tiron.
+   - **`set_influence()` es de `SkeletonModifier3D` y es UN valor para TODO el modificador**
+     (no hay influence por cadena).
+4. ⏳ **Interaccion** — mapa de CAPAS aplicado (**1 Entorno / 2 Jugador / 3 Interactuable**:
+   grab areas `layer=0 mask=4`, huesos `layer=2 mask=7`, cajas `layer=4 mask=7`). Antes las
+   grab areas tenian `mask=1` y **agarraban el SUELO**. FALTA: probar el agarre real de una caja
+   y el sweep de `get_overlapping_bodies()` al activar (`body_entered` no dispara si el body ya
+   estaba dentro).
+5. ⏳ **Red** — estado replicable sin huesos (D13–D17).
+
+### Deuda tecnica abierta (2026-09-10)
+
+- **Brazos: decidir si los anima el clip o los lleva SIEMPRE el IK.** Si los lleva el IK, en los
+  clips basta **1 key neutral** por hueso y **R1 se cumple sin animar nada**. (Recomendacion:
+  IK — ya funciona y elimina el gradiente redundante.)
+- **`Walk` patina**: 0.833 s/ciclo vs `SPEED=50` ≈ 5 m/s. Lo correcto es **escalar la velocidad
+  del `AnimationTree`** con la velocidad real, no recortar frames. Falta **medir el stride del
+  pie por ciclo** (se puede samplear `LLeg2.001` de la `Animation`).
+- **Los clips no animan los brazos** (9 huesos sin track) → ver `## ESTANDAR DE ANIMACIONES`.
+- **Diagnostico honesto:** dos rondas de diagnostico se fueron en **metricas propias ROTAS**
+  (`find_bone("Body")` devuelve un indice que no parece; comparar el fisico contra el animado con
+  IDs de fuentes distintas da numeros basura). De ahi el `body_debugger`: **medir con el tool,
+  no a ojo.**
+
+### Comandos de test (gotchas)
+
+- Correr el playground:
+  `& "D:\Mis Juegos\Godot\Godot_v4.7.1-stable_win64_console.exe" --path "D:\Mis Juegos\Tripofobia\Repositorio" --quit-after 300 "res://tools/ragdoll_playground/ragdoll_playground.tscn"`
+- **`--quit-after N` cuenta FRAMES, no segundos** (a ~150 FPS, 300 ≈ 2 s). La fisica sigue a 60 Hz.
+- **SIEMPRE comillas** en `--path`: sin comillas se corta en `D:\Mis` y aborta.
+- Bash es **PowerShell**: sin `||`, usar `cmd.exe /c`, `Select-String`, `Select-Object`.
 
 ## GOTCHA DE REPO — el .gitignore ocultaba el codigo fuente (2026-09-10)
 
