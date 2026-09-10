@@ -6,11 +6,12 @@
 .scene
 .tscn
 .gd
-*.gd
 *.gdc
 *.gde
+# NOTA: `*.gd` y `*.res` estaban listados aca y ocultaban TODO script o recurso
+# nuevo que se creara: los scripts y los .res del ragdoll nunca llegaron a git.
+# El codigo fuente SI se versiona.
 *.tres
-*.res
 # EXCEPCION: los materiales compartidos SI se versionan (regla de oro: los
 # materiales/shaders viven como .tres o como sub-recursos del .tscn, nunca
 # creados proceduralmente en GDScript).
