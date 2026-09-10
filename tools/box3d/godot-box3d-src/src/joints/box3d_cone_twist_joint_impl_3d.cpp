@@ -48,14 +48,16 @@ real_t Box3DConeTwistJointImpl3D::get_param(Param p_param) const {
 void Box3DConeTwistJointImpl3D::set_param(Param p_param, real_t p_value) {
 	switch (p_param) {
 		case PhysicsServer3D::CONE_TWIST_JOINT_SWING_SPAN: {
-			// Godot exposes swing_span in degrees; Box3D expects radians.
-			// We use the explicit factor (Math_PI / 180.0) instead of Math::deg_to_rad
-			// to avoid namespace lookups across godot-cpp versions.
-			swing_span = (real_t)(p_value * (Math_PI / 180.0));
+			// PhysicsServer3D delivers swing_span/twist_span ALREADY in radians:
+			// PhysicalBone3D::ConeJointData and ConeTwistJoint3D call Math::deg_to_rad()
+			// before forwarding to the server, and Box3D also expects radians. Store the
+			// value as-is. Converting again here shrank a 45 degree cone to ~0.8 degrees
+			// and locked every joint (the active ragdoll went rigid).
+			swing_span = p_value;
 			_apply_cone_limit();
 		} break;
 		case PhysicsServer3D::CONE_TWIST_JOINT_TWIST_SPAN: {
-			twist_span = (real_t)(p_value * (Math_PI / 180.0));
+			twist_span = p_value;
 			_apply_twist_limits();
 		} break;
 		case PhysicsServer3D::CONE_TWIST_JOINT_BIAS:

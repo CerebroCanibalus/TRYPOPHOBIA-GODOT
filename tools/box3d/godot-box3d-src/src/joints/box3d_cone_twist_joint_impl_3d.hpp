@@ -9,8 +9,9 @@
 // dedicated API. We configure both at creation time and apply runtime updates via
 // b3SphericalJoint_SetConeLimit / b3SphericalJoint_SetTwistLimits.
 //
-// Godot's ConeTwistJointParam uses degrees for SWING_SPAN / TWIST_SPAN; Box3D uses
-// radians. Conversions happen in set_param().
+// Span units: PhysicsServer3D delivers SWING_SPAN / TWIST_SPAN in RADIANS (the scene
+// nodes convert degrees->radians before calling the server), and Box3D also works in
+// radians, so set_param() stores them as-is. Do not convert again.
 class Box3DConeTwistJointImpl3D final : public Box3DJointImpl3D {
 public:
 	using Param = PhysicsServer3D::ConeTwistJointParam;
@@ -27,11 +28,13 @@ protected:
 	b3JointId _create_joint_id(b3WorldId p_world_id, b3BodyId p_body_a, b3BodyId p_body_b, b3Transform p_local_frame_a, b3Transform p_local_frame_b) override;
 
 private:
-	// SWING_SPAN is stored as the cone half-angle in radians.
-	// TWIST_SPAN is the full symmetric range around 0 in radians; we expand it into
-	// lower = -span/2 and upper = +span/2 when calling b3SphericalJoint_SetTwistLimits.
-	real_t swing_span = Math_PI; // default: unrestricted (180 degrees)
-	real_t twist_span = Math_PI; // default: unrestricted (180 degrees)
+	// Both spans are stored in RADIANS. SWING_SPAN is the cone half-angle; TWIST_SPAN is
+	// the full symmetric range around 0 (expanded to lower = -span/2 / upper = +span/2
+	// when calling b3SphericalJoint_SetTwistLimits). Defaults mirror Godot's
+	// PhysicalBone3D::ConeJointData so a ragdoll that never overrides them behaves the
+	// same as with the built-in/Jolt solvers.
+	real_t swing_span = Math_PI * 0.25; // 45 degrees
+	real_t twist_span = Math_PI;        // 180 degrees
 
 	// Bias / softness / relaxation are exposed by Godot but have no direct Box3D
 	// equivalent; the cone/twist limit constraints in Box3D are hard. We accept the
