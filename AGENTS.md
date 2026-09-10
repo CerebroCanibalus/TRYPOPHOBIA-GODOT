@@ -218,6 +218,29 @@ NO huesos. `pose = f(estado_replicado, tiempo_local)` — funcion PURA en cada c
 
 ---
 
+## ESTÁNDAR DE ANIMACIONES (2026-09-10)
+
+**`meta/docs/Estandar_Animaciones.md`** — qué clips debe tener el jugador, con cuántos frames
+y qué características, para FP + ragdoll + multijugador. Reglas duras nacidas de bugs MEDIDOS:
+
+- **R1 — Todos los huesos, en todos los clips.** Un hueso sin track queda en reposo y el
+  ragdoll pelea contra él. Bug medido (`body_debugger`): `LArm1` a 89.9° constantes = los
+  clips Idle/Walk **NO animan los brazos** → los brazos se van a los costados.
+- **R2 — Cabeza y torso superior QUIETOS en FP.** La cámara vive en la cabeza: animar el
+  torso sacude la vista (el clip `Grab` pliega el torso → "la vista se va adelante").
+- R3 cero root motion · R4 el loop cierra (frame 1 == último) · R5 brazos con recorrido para
+  el IK · R6 nada de `scale` · R7 30 fps en el fuente.
+
+Incluye catálogo de clips (locomoción, salto, interacción, daño/muerte, infectado), blend
+times, marcas/eventos (`footstep_*`, `grab_contact`) y el plan sugerido.
+
+**Decisión operativa (2026-09-10):** en FP **no** se reproduce `Grab`; el agarre lo hace
+**solo el IK**. Los brazos **sin click = idle** (el IK no escribe pose, `influence=0`);
+**con click = se estiran** hacia el puntero, haya o no impacto. El `influence` se interpola
+(`ik_influence_fade_speed`) para que soltar no dé un tirón.
+
+---
+
 ## TOOL — body_debugger (diagnostico de rigs) (2026-09-10)
 
 **`tools/body_debugger/`** — debugger de cuerpo completo, **agnostico al rig y multimodelo**.

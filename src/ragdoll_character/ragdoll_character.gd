@@ -91,6 +91,9 @@ var _rest_arm_len := 0.0
 ## Influence del modificador de IK cuando SI hay objetivo (0..1). Con 0 el IK no
 ## escribe pose aunque haya objetivo. Util para medir cuanto inclina el brazo.
 @export var ik_influence := 1.0
+## Velocidad de interpolacion del influence (por segundo). Evita que el brazo de
+## un tiron al apretar y, sobre todo, al SOLTAR (vuelve al idle suavemente).
+@export var ik_influence_fade_speed := 12.0
 ## Polo del codo, RELATIVO AL HOMBRO y en el espacio del esqueleto. Dos cosas
 ## aprendidas midiendo el rig:
 ##  - TwoBoneIK3D "requires a pole target": con SOLO una direccion custom
@@ -477,10 +480,19 @@ func update_hand_targets(world_point: Vector3, _has_target: bool) -> void:
 		return
 	if _l_arm_id < 0 or _r_arm_id < 0:
 		return
-	# El IK SIEMPRE escribe pose (influence = ik_influence). Lo que decide si un
-	# brazo se mueve NO es si el rayo golpeo: es si la accion esta apretada. Si
-	# apretas y apuntas al aire, el brazo+mano se ESTIRAN igual (pedido del General).
-	arm_ik.set_influence(ik_influence)
+	# CLICK vs IDLE (pedido del General):
+	#   sin click -> influence 0: el IK NO escribe pose y los brazos siguen la
+	#                ANIMACION (idle). No se estiran ni apuntan a nada.
+	#   con click -> influence 1: el brazo apretado se ESTIRA hacia el puntero
+	#                (haya o no impacto); el otro queda donde esta (su objetivo es
+	#                su propia mano, asi el IK no lo mueve).
+	# El influence se INTERPOLA para que soltar no de un tiron.
+	var clicked := active_arm_left or active_arm_right
+	var want := ik_influence if clicked else 0.0
+	var dt := get_physics_process_delta_time()
+	arm_ik.set_influence(move_toward(arm_ik.get_influence(), want, ik_influence_fade_speed * dt))
+	if not clicked:
+		return
 	var b := animated_skel.global_transform
 	var inv := b.basis.inverse()
 	var fwd: Vector3 = (inv * (-camera_pivot.global_transform.basis.z)).normalized()
@@ -494,7 +506,7 @@ func update_hand_targets(world_point: Vector3, _has_target: bool) -> void:
 	var l_goal: Vector3 = l_root + fwd * reach + drop
 	var r_goal: Vector3 = r_root + fwd * reach + drop
 	# Brazo NO apretado: su objetivo queda donde YA esta la mano, asi el IK no lo
-	# mueve y se mantiene flojo. De este modo solo alcanza el brazo del click.
+	# mueve. De este modo solo alcanza el brazo del click.
 	if not active_arm_left and _l_hand_id >= 0:
 		l_goal = animated_skel.get_bone_global_pose(_l_hand_id).origin
 	if not active_arm_right and _r_hand_id >= 0:
