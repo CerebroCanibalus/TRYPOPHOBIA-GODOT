@@ -218,6 +218,37 @@ NO huesos. `pose = f(estado_replicado, tiempo_local)` — funcion PURA en cada c
 
 ---
 
+## TOOL — body_debugger (diagnostico de rigs) (2026-09-10)
+
+**`tools/body_debugger/`** — debugger de cuerpo completo, **agnostico al rig y multimodelo**.
+Existe porque diagnosticar el ragdoll "a ojo" produjo DOS conclusiones falsas seguidas.
+
+- Descubre **todos** los `Skeleton3D` bajo `target` (auto_find si queda null) y los compara
+  **por NOMBRE de hueso**. Cero nombres hardcodeados: todo sale de `get_bone_name(i)`.
+- Tabla en vivo con 5 columnas: `hueso` (con su **indice**: `2:LArm1`) · inclinacion vs
+  vertical de A · la de B · **delta** (desacuerdo A/B del mismo hueso) · **rest** (el mismo
+  delta en REPOSO).
+- **`rest` es la columna que clasifica el bug**: `rest != 0` = los rigs tienen ejes distintos
+  (el PD pelea un offset constante); `rest ~ 0` = los ejes coinciden y **la pose viva
+  diverge** (el PD no llega). Marca los huesos que existen en un solo esqueleto.
+- Dibuja cruz de 3 ejes por hueso + linea al padre en 3D (verde/rojo/amarillo), a traves de
+  la malla (`no_depth_test`).
+
+**Trampas que el tool ya resolvio (y que hay que recordar):**
+1. `Skeleton3D.find_bone(nombre)` puede devolver un indice que NO parece el esperado: el
+   indice real se lee de `get_bone_name(i)`. En este rig: `0:Body`, `2:LArm1`, `17:Neck`.
+2. `Node.find_child()` en esta version de Godot toma **3** argumentos (no acepta `type`);
+   `find_children()` si acepta los 4.
+3. Comparar el esqueleto fisico contra el animado con IDs de fuentes distintas (uno por
+   `find_bone`, otro por `PhysicalBone3D.get_bone_id()`) da numeros basura.
+
+**HALLAZGO (primera corrida):** con `rest=0.00` en TODOS los huesos, `LArm1/LArm2/RArm1/RArm2`
+dan **delta 90.00 grados** fisico-vs-animado. No es el modelo: es que el gate `active_arm_*`
+saltea el PD de los brazos, se van a la deriva y al agarrar el PD los arranca 90 grados.
+Eso explica el "flexiona raro" y el "se inclina al clickear".
+
+---
+
 ## PIVOTE Y FIX — Active Ragdoll (Jolt/Box3D) (2026-09-10)
 
 **Pivote (D18):** Abandonado el sistema procedural de marioneta (spring sobre PhysicalBone3D del

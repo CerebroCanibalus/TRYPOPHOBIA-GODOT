@@ -62,10 +62,16 @@ var _rest_arm_len := 0.0
 
 # Inclinacion del torso segun el pitch de la camara. Es una ENTRADA DE CONTROL
 # al spring, no una animacion por codigo.
-@export var lean_max_degrees := 6.0
+@export var lean_max_degrees := 2.0
 @export var lean_reference_degrees := 45.0
 ## Si el cuerpo se inclina al reves (mirar abajo lo tira para atras), poner -1.
 @export var lean_direction := 1.0
+## Reparto del lean por hueso. OJO (verificado 2026-09-10): el ragdoll tiene 10
+## huesos fisicos (Body, LArm1/2, RArm1/2, LLeg1/2, RLeg1/2, Head) y **NO hay
+## Neck**: los unicos del torso son Body y Head. El lean se reparte entre esos dos.
+## Los pesos suman 1 => el tilt total del craneo = lean_max_degrees.
+@export var lean_share_body := 0.75
+@export var lean_share_head := 0.25
 
 
 # Direccion del blend de agarre de los brazos (grab_lower .. grab_upper) segun
@@ -80,6 +86,9 @@ var _rest_arm_len := 0.0
 # camara * alcance) y NO desde el punto del mundo: usar el punto del mundo tiraria
 # de los brazos hacia un lugar a metros de distancia.
 @export var ik_enabled := true
+## Influence del modificador de IK cuando SI hay objetivo (0..1). Con 0 el IK no
+## escribe pose aunque haya objetivo. Util para medir cuanto inclina el brazo.
+@export var ik_influence := 1.0
 ## Polo del codo, RELATIVO AL HOMBRO y en el espacio del esqueleto. Dos cosas
 ## aprendidas midiendo el rig:
 ##  - TwoBoneIK3D "requires a pole target": con SOLO una direccion custom
@@ -334,12 +343,21 @@ func _on_skeleton_3d_skeleton_updated() -> void:
 ## animacion por codigo (el cuerpo conserva su peso y puede ser detenido por una
 ## pared).
 func _apply_body_lean(bone: PhysicalBone3D, target: Transform3D) -> Transform3D:
-	if lean_max_degrees <= 0.0 or not bone.name.contains("Body"):
+	if lean_max_degrees <= 0.0:
+		return target
+	# Que parte del lean le toca a este hueso (ver lean_share_*). ends_with() y no
+	# contains(): asi "Physical Bone Head" entra y un futuro "Head.001" (hocico) no.
+	var share := 0.0
+	if bone.name.ends_with("Head"):
+		share = lean_share_head
+	elif bone.name.ends_with("Body"):
+		share = lean_share_body
+	if is_zero_approx(share):
 		return target
 	var lean := clampf(camera_pivot.rotation.x / deg_to_rad(lean_reference_degrees), -1.0, 1.0)
 	if is_zero_approx(lean):
 		return target
-	var angle := -lean * lean_direction * deg_to_rad(lean_max_degrees)
+	var angle := -lean * lean_direction * deg_to_rad(lean_max_degrees) * share
 	var forward := animated_skel.global_transform.basis.z
 	var right := forward.cross(Vector3.UP).normalized()
 	if right.is_zero_approx():
@@ -440,12 +458,22 @@ func update_hand_targets(world_point: Vector3, has_target: bool) -> void:
 		return
 	if _l_arm_id < 0 or _r_arm_id < 0:
 		return
+	# SIN objetivo NO se estira el brazo. Estirarlo a arm_reach (1.286 m, casi
+	# extension completa) lo vuelve una palanca que VUELCA EL TORSO hacia adelante:
+	# eso es el "al clickear se inclina mucho". Con influence 0 el IK no escribe
+	# ninguna pose y los brazos se quedan como los dejo la animacion.
+	# OJO: set_influence() es de SkeletonModifier3D y es UN valor para TODO el
+	# modificador (no existe influence por cadena). Alcanza igual: el puntero mueve
+	# las dos manos a la vez y quien decide cual se mueve es active_arm_left/right.
+	if not has_target:
+		arm_ik.set_influence(0.0)
+		return
+	arm_ik.set_influence(ik_influence)
 	var b := animated_skel.global_transform
 	var inv := b.basis.inverse()
 	var fwd: Vector3 = (inv * (-camera_pivot.global_transform.basis.z)).normalized()
-	var reach := arm_reach
-	if has_target:
-		reach = clampf(camera_pivot.global_position.distance_to(world_point), 0.0, arm_reach)
+	# Distancia al objetivo medida desde la camara, con tope = alcance REAL del brazo.
+	var reach := clampf(camera_pivot.global_position.distance_to(world_point), 0.0, arm_reach)
 	var drop := Vector3(0.0, -hand_drop, 0.0)
 	var l_root: Vector3 = animated_skel.get_bone_global_pose(_l_arm_id).origin
 	var r_root: Vector3 = animated_skel.get_bone_global_pose(_r_arm_id).origin

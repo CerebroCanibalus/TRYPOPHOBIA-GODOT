@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://tr8au3nscake"]
+
+[ext_resource type="Script" path="res://tools/body_debugger/body_debugger.gd" id="1_cmvlb"]
+[ext_resource type="Material" uid="uid://lvoi5dich6th" path="res://tools/body_debugger/materials/body_debug_material.tres" id="2_a4axy"]
+[ext_resource type="ImmediateMesh" uid="uid://ogclln4u21rq" path="res://tools/body_debugger/body_debug_mesh.tres" id="3_1ohft"]
+
+[node name="BodyDebugger" type="Node3D" unique_id=633038731]
+script = ExtResource("1_cmvlb")
+debug_material = ExtResource("2_a4axy")
+update_hz = 10.0
+
+[node name="DebugMesh" type="MeshInstance3D" parent="." unique_id=117846070]
+material_override = ExtResource("2_a4axy")
+cast_shadow = 0
+mesh = ExtResource("3_1ohft")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1736463703]
+
+[node name="Panel" type="Panel" parent="HUD" unique_id=252051409]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 700.0
+offset_bottom = 620.0
+
+[node name="Text" type="RichTextLabel" parent="HUD/Panel" unique_id=372188556]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true

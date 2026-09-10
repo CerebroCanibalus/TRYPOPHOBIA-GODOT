@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://by0j2xnat0m5a"]
 
 [ext_resource type="Script" uid="uid://bn7byu7wi4vsg" path="res://tools/ragdoll_playground/ragdoll_playground.gd" id="1_pg"]
-[ext_resource type="PackedScene" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="2_ch"]
-[ext_resource type="PackedScene" path="res://tools/ragdoll_playground/physics_box.tscn" id="3_box"]
+[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="2_ch"]
+[ext_resource type="PackedScene" uid="uid://cwkhojdh3yo07" path="res://tools/ragdoll_playground/physics_box.tscn" id="3_box"]
+[ext_resource type="PackedScene" uid="uid://tr8au3nscake" path="res://tools/body_debugger/body_debugger.tscn" id="4_206fg"]
 
 [sub_resource type="BoxShape3D" id="floor_shape"]
 size = Vector3(200, 1, 200)
@@ -189,3 +190,5 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 26
 text = "cargando..."
+
+[node name="BodyDebugger" parent="." unique_id=633038731 instance=ExtResource("4_206fg")]
