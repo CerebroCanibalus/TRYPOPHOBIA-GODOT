@@ -81,6 +81,11 @@ func _physics_process(_delta: float) -> void:
 
 	if pointer != null:
 		pointer.global_position = point
+	# El IK de brazos vive en el ragdoll. Duck typing (has_method) para no acoplar
+	# los scripts: el puntero solo avisa donde esta el objetivo.
+	var root := _scene_root()
+	if root != null and root.has_method("update_hand_targets"):
+		root.update_hand_targets(point, has_target)
 	if reticle != null:
 		# Object.set() en vez de `reticle.state = ...`: el export esta tipado
 		# como Control y el analizador no conoce la propiedad `state`.

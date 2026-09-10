@@ -31,6 +31,16 @@ var physics_bones = [] # all physical bones
 @onready var animation_player: AnimationPlayer = $Animated/AnimationPlayer
 @onready var physical_bone_body : PhysicalBone3D = $"Physical/Armature/Skeleton3D/Physical Bone Body"
 @onready var body_mesh : MeshInstance3D = $"Physical/Armature/Skeleton3D/Character"
+@onready var arm_ik: TwoBoneIK3D = get_node_or_null("Animated/Armature/Skeleton3D/ArmIK") as TwoBoneIK3D
+@onready var ik_pole_target: Node3D = get_node_or_null("Animated/Armature/Skeleton3D/PoleTarget")
+@onready var hand_target_l: Node3D = get_node_or_null("HandTargetL")
+@onready var hand_target_r: Node3D = get_node_or_null("HandTargetR")
+
+var _l_arm_id := -1
+var _r_arm_id := -1
+var _ik_mods := 0
+## bone_id -> pose global del ANIMATED, cacheada en `modification_processed`.
+var _anim_pose_cache: Dictionary = {}
 
 
 # 1a persona: recorte de la geometria propia alrededor de la camara. Evita ver
@@ -53,6 +63,25 @@ var physics_bones = [] # all physical bones
 # Direccion del blend de agarre de los brazos (grab_lower .. grab_upper) segun
 # el pitch de la camara.
 @export var grab_dir_reference_degrees := 45.0
+
+
+# IK de brazos: hace que el MASTER (Animated) apunte al puntero; el spring PD
+# arrastra los huesos fisicos.
+# OJO: el esqueleto ANIMADO **no se traslada**, solo rota (el que camina es el
+# Physical). Por eso el target se calcula en SU espacio (hombro + direccion de la
+# camara * alcance) y NO desde el punto del mundo: usar el punto del mundo tiraria
+# de los brazos hacia un lugar a metros de distancia.
+@export var ik_enabled := true
+## Posicion del nodo de polo, en el espacio del esqueleto. TwoBoneIK3D "requires
+## a pole target": con SOLO una direccion custom (SECONDARY_DIRECTION_CUSTOM) el
+## solver procesa pero no escribe ninguna pose. Ubicado detras de los hombros
+## para que el codo vaya hacia atras.
+@export var ik_pole_offset := Vector3(0.0, 0.9, -0.8)
+## Alcance maximo del brazo (m). Mas alla, la mano APUNTA pero no llega; y sin
+## contacto no hay interaccion (decision de diseno, no una traba).
+@export var arm_reach := 0.55
+## Caida del target para que el codo no quede recto.
+@export var hand_drop := 0.04
 
 
 # grabbing related stuff
@@ -88,6 +117,7 @@ func _ready():
 	# tras vaciarla). Ver project.godot -> [input] -> ragdoll.
 	var rd_events := InputMap.action_get_events("ragdoll").size() if InputMap.has_action("ragdoll") else -1
 	print("[ragdoll_character] accion 'ragdoll' (R) -> %d evento(s)" % rd_events)
+	_setup_arm_ik()
 	# El clip Walk importado del GLB trae loop_mode=NONE -> se reproduce UNA vez
 	# (0.83s) y se congela, por eso "el walk cycle no funciona bien". Forzamos
 	# loop continuo en los clips con duracion real (idle/grab son poses fijas).
@@ -265,7 +295,10 @@ func _on_skeleton_3d_skeleton_updated() -> void:
 		for b:PhysicalBone3D in physics_bones:
 			if not active_arm_left and b.name.contains("LArm"): continue # only rotated the arms if its activated
 			if not active_arm_right and b.name.contains("RArm"): continue # only rotated the arms if its activated
-			var target_transform: Transform3D = animated_skel.global_transform * animated_skel.get_bone_global_pose(b.get_bone_id())
+			# Del cache (unico lugar donde la pose refleja el IK), con fallback a
+			# la lectura directa mientras no haya corrido ninguna modificacion.
+			var anim_pose: Transform3D = _anim_pose_cache.get(b.get_bone_id(), animated_skel.get_bone_global_pose(b.get_bone_id()))
+			var target_transform: Transform3D = animated_skel.global_transform * anim_pose
 			target_transform = _apply_body_lean(b, target_transform)
 			var current_transform: Transform3D = physical_skel.global_transform * physical_skel.get_bone_global_pose(b.get_bone_id())
 			var rotation_difference: Basis = (target_transform.basis * current_transform.basis.inverse())
@@ -292,3 +325,81 @@ func _apply_body_lean(bone: PhysicalBone3D, target: Transform3D) -> Transform3D:
 	if right.is_zero_approx():
 		return target
 	return Transform3D(Basis(right, angle) * target.basis, target.origin)
+
+
+## Configura el TwoBoneIK3D. El nodo SOLO exporta `setting_count`: las cadenas se
+## setean por metodos, no hay propiedades serializables en el .tscn, por eso va en
+## codigo y no como data de escena.
+## Cadena del brazo confirmada leyendo el GLB: LArm1 -> LArm2 -> LArm2.001
+## (hombro -> brazo -> antebrazo -> mano).
+func _setup_arm_ik() -> void:
+	if arm_ik == null:
+		push_warning("[ragdoll_character] ArmIK no encontrado: sin IK de brazos")
+		return
+	if hand_target_l == null or hand_target_r == null:
+		push_warning("[ragdoll_character] HandTargetL/R no encontrados: sin IK de brazos")
+		return
+	arm_ik.setting_count = 0
+	if not ik_enabled:
+		print("[ragdoll_character] ArmIK desactivado por export")
+		return
+	arm_ik.setting_count = 2
+	if ik_pole_target != null:
+		ik_pole_target.position = ik_pole_offset
+	var chains := [
+		{ "root": "LArm1", "mid": "LArm2", "end": "LArm2.001", "t": hand_target_l },
+		{ "root": "RArm1", "mid": "RArm2", "end": "RArm2.001", "t": hand_target_r },
+	]
+	for i in chains.size():
+		var c: Dictionary = chains[i]
+		arm_ik.set_root_bone_name(i, c["root"])
+		arm_ik.set_middle_bone_name(i, c["mid"])
+		arm_ik.set_end_bone_name(i, c["end"])
+		# get_path_to() y no get_path(): el NodePath debe ser relativo al nodo que
+		# lo guarda, o se rompe si el ragdoll se instancia dentro de otra escena.
+		arm_ik.set_target_node(i, arm_ik.get_path_to(c["t"]))
+		if ik_pole_target != null:
+			arm_ik.set_pole_node(i, arm_ik.get_path_to(ik_pole_target))
+	_l_arm_id = animated_skel.find_bone("LArm1")
+	_r_arm_id = animated_skel.find_bone("RArm1")
+	arm_ik.modification_processed.connect(_on_ik_modification)
+	print("[ragdoll_character] ArmIK OK: %d cadenas | bone ids L=%d R=%d | reach=%.2fm" % [
+		arm_ik.setting_count, _l_arm_id, _r_arm_id, arm_reach])
+
+
+## El doc de SkeletonModifier3D es explicito: la pose MODIFICADA por un modifier
+## solo es valida EN EL MOMENTO en que se emite `modification_processed`. Fuera de
+## esa señal, Skeleton3D devuelve la pose SIN modificar (la que dejo el
+## AnimationMixer). Por eso cacheamos aca y el spring PD lee del cache: sin esto
+## el IK calcula perfecto pero el cuerpo fisico nunca lo ve (verificado:
+## errSig=0.000 con el IK, err=0.848 leyendo fuera).
+func _on_ik_modification() -> void:
+	_ik_mods += 1
+	if ragdoll_mode:
+		return
+	for b: PhysicalBone3D in physics_bones:
+		var id := b.get_bone_id()
+		_anim_pose_cache[id] = animated_skel.get_bone_global_pose(id)
+
+
+## Mueve los HandTarget del IK al punto que el jugador esta mirando.
+## Se calcula en el espacio del esqueleto ANIMADO (que no se traslada): se toma
+## su hombro y se avanza en la direccion de la camara el alcance pedido. El
+## alcance es el del objeto apuntado, topeado al largo del brazo: si esta mas
+## lejos, la mano apunta pero NO llega, y sin contacto no hay interaccion.
+func update_hand_targets(world_point: Vector3, has_target: bool) -> void:
+	if arm_ik == null or hand_target_l == null or hand_target_r == null:
+		return
+	if _l_arm_id < 0 or _r_arm_id < 0:
+		return
+	var b := animated_skel.global_transform
+	var inv := b.basis.inverse()
+	var fwd: Vector3 = (inv * (-camera_pivot.global_transform.basis.z)).normalized()
+	var reach := arm_reach
+	if has_target:
+		reach = clampf(camera_pivot.global_position.distance_to(world_point), 0.0, arm_reach)
+	var drop := Vector3(0.0, -hand_drop, 0.0)
+	var l_root: Vector3 = animated_skel.get_bone_global_pose(_l_arm_id).origin
+	var r_root: Vector3 = animated_skel.get_bone_global_pose(_r_arm_id).origin
+	hand_target_l.global_position = b * (l_root + fwd * reach + drop)
+	hand_target_r.global_position = b * (r_root + fwd * reach + drop)
