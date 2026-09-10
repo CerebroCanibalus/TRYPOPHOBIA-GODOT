@@ -48,8 +48,11 @@ const SKELETON_COLORS := [
 ## test DESACTIVADO (para ver los huesos a traves de la malla).
 @export var debug_material: Material
 
-## Imprimir la tabla en consola UNA vez (util para tests sin ventana).
-@export var log_once_to_console := true
+## Imprimir la tabla en consola: UNA vez al arrancar y OTRA a los
+## `console_log_seconds`. La segunda es la que importa: muestra si la pose
+## CONVERGE (arranque = reposo; a los 2 s = pose viva ya asentada).
+@export var log_to_console := true
+@export var console_log_seconds := 2.0
 
 @onready var _mesh_instance: MeshInstance3D = $DebugMesh
 @onready var _label: RichTextLabel = $HUD/Panel/Text
@@ -57,7 +60,10 @@ const SKELETON_COLORS := [
 var _skeletons: Array[Skeleton3D] = []
 var _accum := 0.0
 var _interval := 0.1
-var _logged := false
+var _logged_early := false
+var _logged_late := false
+var _t := 0.0
+var _last_text := ""
 
 
 func _ready() -> void:
@@ -68,6 +74,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_t += delta
+	if log_to_console and not _logged_late and _t >= console_log_seconds:
+		_logged_late = true
+		_print_table(" (pose asentada @%.1fs)" % _t)
 	_accum += delta
 	if _accum < _interval:
 		return
@@ -76,6 +86,15 @@ func _process(delta: float) -> void:
 		_ensure_target()
 		_discover()
 	_rebuild()
+
+
+func _print_table(tag: String = "") -> void:
+	if _last_text.is_empty():
+		return
+	var plain := _last_text
+	plain = plain.replace("[b]", "").replace("[/b]", "").replace("[table=5]", "")
+	plain = plain.replace("[/table]", "").replace("[cell]", "| ").replace("[/cell]", " ")
+	print("[body_debugger]%s\n%s" % [tag, plain])
 
 
 ## Resuelve `target` si no lo asignaron a mano: sube hasta la escena y busca el
@@ -141,9 +160,10 @@ func _rebuild() -> void:
 			b = null
 	var text := _build_text(a, b)
 	_label.text = text
-	if log_once_to_console and not _logged:
-		_logged = true
-		print("[body_debugger]\n" + text.replace("[b]", "").replace("[/b]", "").replace("[table=4]", "").replace("[/table]", "").replace("[cell]", "| ").replace("[/cell]", " ").replace("\n| ", "\n| "))
+	_last_text = text
+	if log_to_console and not _logged_early:
+		_logged_early = true
+		_print_table(" (reposo @%.1fs)" % _t)
 	_draw()
 
 

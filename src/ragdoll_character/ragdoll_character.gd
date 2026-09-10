@@ -39,6 +39,8 @@ var physics_bones = [] # all physical bones
 
 var _l_arm_id := -1
 var _r_arm_id := -1
+var _l_hand_id := -1
+var _r_hand_id := -1
 var _ik_mods := 0
 ## bone_id -> pose global del ANIMATED, cacheada en `modification_processed`.
 var _anim_pose_cache: Dictionary = {}
@@ -111,6 +113,11 @@ var _rest_arm_len := 0.0
 @export var arm_reach_margin := 0.92
 ## Caida del target para que el codo no quede recto.
 @export var hand_drop := 0.04
+## (B) Escala de rigidez de los brazos cuando NO estan agarrando. Los brazos
+## reciben PD SIEMPRE, pero flojo, para que se vean sueltos SIN derivar: antes se
+## salteaban por completo y derivaban 90 grados (medido con body_debugger), y al
+## agarrar el PD los arrancaba de golpe. Al agarrar usan la rigidez plena.
+@export var arm_spring_scale := 0.25
 
 
 # grabbing related stuff
@@ -322,8 +329,18 @@ func _on_skeleton_3d_skeleton_updated() -> void:
 	if not ragdoll_mode:# if not in ragdoll mode
 		# rotate the physical bones toward the animated bones rotations using hookes law
 		for b:PhysicalBone3D in physics_bones:
-			if not active_arm_left and b.name.contains("LArm"): continue # only rotated the arms if its activated
-			if not active_arm_right and b.name.contains("RArm"): continue # only rotated the arms if its activated
+			# (B) Los brazos reciben PD SIEMPRE, pero mas suave mientras no agarran:
+			# asi se ven sueltos sin derivar. Antes se salteaban enteros y derivaban
+			# 90 grados (medido con body_debugger) -> al agarrar el PD los arrancaba
+			# de golpe (el "flexiona raro" / "se inclina al clickear").
+			var stiff := angular_spring_stiffness
+			var damp := angular_spring_damping
+			if b.name.contains("LArm") or b.name.contains("RArm"):
+				var arm_active := (active_arm_left and b.name.contains("LArm")) \
+					or (active_arm_right and b.name.contains("RArm"))
+				if not arm_active:
+					stiff *= arm_spring_scale
+					damp *= arm_spring_scale
 			# Del cache (unico lugar donde la pose refleja el IK), con fallback a
 			# la lectura directa mientras no haya corrido ninguna modificacion.
 			var anim_pose: Transform3D = _anim_pose_cache.get(b.get_bone_id(), animated_skel.get_bone_global_pose(b.get_bone_id()))
@@ -331,7 +348,7 @@ func _on_skeleton_3d_skeleton_updated() -> void:
 			target_transform = _apply_body_lean(b, target_transform)
 			var current_transform: Transform3D = physical_skel.global_transform * physical_skel.get_bone_global_pose(b.get_bone_id())
 			var rotation_difference: Basis = (target_transform.basis * current_transform.basis.inverse())
-			var torque = hookes_law(rotation_difference.get_euler(), b.angular_velocity, angular_spring_stiffness, angular_spring_damping)
+			var torque = hookes_law(rotation_difference.get_euler(), b.angular_velocity, stiff, damp)
 			torque = torque.limit_length(max_angular_force)
 			
 			b.angular_velocity += torque * current_delta
@@ -402,6 +419,8 @@ func _setup_arm_ik() -> void:
 			push_warning("[ragdoll_character] falta el polo de la cadena %d" % i)
 	_l_arm_id = animated_skel.find_bone("LArm1")
 	_r_arm_id = animated_skel.find_bone("RArm1")
+	_l_hand_id = animated_skel.find_bone("LArm2.001")
+	_r_hand_id = animated_skel.find_bone("RArm2.001")
 	arm_ik.modification_processed.connect(_on_ik_modification)
 	print("[ragdoll_character] ArmIK OK: %d cadenas | bone ids L=%d R=%d | brazo=%.3fm alcance=%.3fm | polos L=%s R=%s" % [
 		arm_ik.setting_count, _l_arm_id, _r_arm_id, _rest_arm_len, arm_reach,
@@ -453,29 +472,32 @@ func _on_ik_modification() -> void:
 ## su hombro y se avanza en la direccion de la camara el alcance pedido. El
 ## alcance es el del objeto apuntado, topeado al largo del brazo: si esta mas
 ## lejos, la mano apunta pero NO llega, y sin contacto no hay interaccion.
-func update_hand_targets(world_point: Vector3, has_target: bool) -> void:
+func update_hand_targets(world_point: Vector3, _has_target: bool) -> void:
 	if arm_ik == null or hand_target_l == null or hand_target_r == null:
 		return
 	if _l_arm_id < 0 or _r_arm_id < 0:
 		return
-	# SIN objetivo NO se estira el brazo. Estirarlo a arm_reach (1.286 m, casi
-	# extension completa) lo vuelve una palanca que VUELCA EL TORSO hacia adelante:
-	# eso es el "al clickear se inclina mucho". Con influence 0 el IK no escribe
-	# ninguna pose y los brazos se quedan como los dejo la animacion.
-	# OJO: set_influence() es de SkeletonModifier3D y es UN valor para TODO el
-	# modificador (no existe influence por cadena). Alcanza igual: el puntero mueve
-	# las dos manos a la vez y quien decide cual se mueve es active_arm_left/right.
-	if not has_target:
-		arm_ik.set_influence(0.0)
-		return
+	# El IK SIEMPRE escribe pose (influence = ik_influence). Lo que decide si un
+	# brazo se mueve NO es si el rayo golpeo: es si la accion esta apretada. Si
+	# apretas y apuntas al aire, el brazo+mano se ESTIRAN igual (pedido del General).
 	arm_ik.set_influence(ik_influence)
 	var b := animated_skel.global_transform
 	var inv := b.basis.inverse()
 	var fwd: Vector3 = (inv * (-camera_pivot.global_transform.basis.z)).normalized()
-	# Distancia al objetivo medida desde la camara, con tope = alcance REAL del brazo.
+	# Distancia al objetivo con tope = alcance REAL del brazo. Si el rayo no golpeo,
+	# el puntero igual manda un punto al final del alcance (interact_range), asi que
+	# la mano se estira hacia ahi en vez de quedarse quieta.
 	var reach := clampf(camera_pivot.global_position.distance_to(world_point), 0.0, arm_reach)
 	var drop := Vector3(0.0, -hand_drop, 0.0)
 	var l_root: Vector3 = animated_skel.get_bone_global_pose(_l_arm_id).origin
 	var r_root: Vector3 = animated_skel.get_bone_global_pose(_r_arm_id).origin
-	hand_target_l.global_position = b * (l_root + fwd * reach + drop)
-	hand_target_r.global_position = b * (r_root + fwd * reach + drop)
+	var l_goal: Vector3 = l_root + fwd * reach + drop
+	var r_goal: Vector3 = r_root + fwd * reach + drop
+	# Brazo NO apretado: su objetivo queda donde YA esta la mano, asi el IK no lo
+	# mueve y se mantiene flojo. De este modo solo alcanza el brazo del click.
+	if not active_arm_left and _l_hand_id >= 0:
+		l_goal = animated_skel.get_bone_global_pose(_l_hand_id).origin
+	if not active_arm_right and _r_hand_id >= 0:
+		r_goal = animated_skel.get_bone_global_pose(_r_hand_id).origin
+	hand_target_l.global_position = b * l_goal
+	hand_target_r.global_position = b * r_goal
