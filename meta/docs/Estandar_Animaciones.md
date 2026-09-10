@@ -91,33 +91,44 @@ Dejar el codo a ~100°: ni extendido al máximo (el IK no puede estirar más) ni
 
 ---
 
-## 4. CATÁLOGO (mínimo, sobre las bases reales)
+## 4. CATÁLOGO
 
-**No se inventan clips nuevos hasta que el motor no alcance.** Primero, completar lo que hay.
+El sistema es de **POSES + un loop**, no de animaciones largas. Es lo correcto para nuestro
+motor: el ragdoll aporta el movimiento secundario (peso, contacto, inercia, reacción) y los
+clips sólo aportan **formas estáticas**. **5 clips, 4 de ellos de 1 key.**
 
-### 4.1 Ya existe — hay que ARREGLARLO
+| Clip | Tipo | Keys | Rol | Notas |
+|---|---|---|---|---|
+| `walk` | loop | 22 (0.83 s) | locomoción | la única con tiempo |
+| `idle` | pose | 1 (→20-30) | reposo | **brazos RELAJADOS (abajo)** |
+| `lean` | pose | 1 | inclinación por pitch | reemplaza las 3 `grab_*`. Torso casi quieto (R2) |
+| `crouch` | pose | 1 | agachado | **OVERLAY** sobre `walk`/`idle` |
+| `grab` | pose | 1 | agarre | **ambos brazos extendidos al frente**; sólo al agarrar |
 
-| Clip | Tipo | Acción |
-|---|---|---|
-| `Walk` | loop | **Agregar los 9 tracks que faltan** (R1) |
-| `idle` | pose | **Agregar los 9 tracks** + darle vida (**20-30 keys** para respiración) |
-| `grab_lower/middle/upper` | poses | **Agregar los 9 tracks** + re-autorizar con torso quieto (R2) |
+> `lean` y `grab` **reemplazan** a `grab_lower` / `grab_middle` / `grab_upper`: un solo valor
+> en vez de tres poses mezcladas por pitch. Menos que romper y sin el torso plegado.
 
-> **Ese es el 90 % del trabajo y no requiere clips nuevos.** Con 9 tracks constantes en cada
-> clip, los brazos dejan de pelear contra la T-pose.
+### 4.1 Reglas de las poses
+
+- **Los brazos en `idle`/`walk` van RELAJADOS (abajo).** La pose de `grab` (brazos al frente)
+  **no** se usa en idle: si no, el jugador caminaría con los brazos extendidos.
+- **`crouch` es un OVERLAY**, no un reemplazo. Si reemplazara al clip, el jugador agachado **no
+  caminaría** (las piernas se congelarían). El código baja la cápsula y la pose ajusta el torso.
+- **`lean`**: un solo valor mezclado por el pitch de la cámara. Cabeza y cuello quietos (R2).
+- **R1 sigue aplicando**: los 20 huesos en los 5 clips (los 9 ausentes, con 1 key constante).
 
 ### 4.2 A evaluar (sólo si aporta algo que la física no dé)
 
 | Clip | Tipo | Keys | ¿Vale la pena? |
 |---|---|---|---|
-| `walk_sprint` | loop | ~22 | Sólo si el ciclo de `Walk` a 5 m/s se ve mal |
+| `walk_sprint` | loop | ~22 | Sólo si escalar `Walk` no alcanza |
 | `jump_pose` | pose | 1 | Sólo si el ragdoll en el aire se ve flácido (anticipación) |
 | `land_pose` | pose | 1 | Sólo si el aterrizaje necesita leer el impacto |
 
 ### 4.3 Descartado (lo maneja el motor)
 
-`crouch_idle` · `crouch_walk` · `jump_launch` · `jump_air` · `walljump` · `throw` · `push` ·
-`use` · `hit_front` · `hit_back` · `downed` · `death` · `transform_in` · `transform_out` ·
+`crouch_walk` · `jump_launch` · `jump_air` · `walljump` · `throw` · `push` · `use` ·
+`hit_front` · `hit_back` · `downed` · `death` · `transform_in` · `transform_out` ·
 `skill_1/2/3` → ver §2.
 
 ---
@@ -146,11 +157,23 @@ Dejar el codo a ~100°: ni extendido al máximo (el IK no puede estirar más) ni
 
 ---
 
-## 7. Decisiones abiertas
+## 7. Decisiones
+
+**Resueltas (2026-09-10, General + criterio técnico):**
+
+- ✅ **POSES, no animaciones largas.** El ragdoll aporta el movimiento secundario; los clips
+  sólo dan **formas**. `lean` y `grab` reemplazan al gradiente de 3 `grab_*`.
+- ✅ **`grab` = 1 pose, ambos brazos al frente**, usada **sólo al agarrar**.
+- ✅ **`crouch` es un OVERLAY** sobre `walk`/`idle` (si reemplazara, agachado no caminaría).
+- ✅ **`walk` MANTIENE 22 keys.** El patinaje no se arregla con menos frames.
+
+**Abiertas:**
 
 - [ ] **Los brazos**: ¿los anima el clip (poses) o los lleva **siempre el IK**? Si los lleva el
-      IK, en los clips basta con **1 key neutral** por hueso (R1 cumplida sin trabajo de animación).
-- [ ] **`Walk` puede patinar**: 0.833 s/ciclo vs `SPEED=50` ≈ 5 m/s. ¿Atamos la velocidad del
-      `AnimationTree` a la velocidad real?
+      IK, en los clips basta **1 key neutral** por hueso (R1 cumplida sin trabajo de animación).
+- [ ] **`Walk` patina**: 0.833 s/ciclo vs `SPEED=50` ≈ 5 m/s. Lo correcto es **escalar la
+      velocidad del `AnimationTree`** con la velocidad real, no cambiar el clip.
+      *(Pendiente: medir el stride real del pie por ciclo para saber a qué velocidad deja de
+      patinar — se puede hacer con `Animation` sampleando el pie.)*
 - [ ] ¿Los 10 personajes **comparten** clips (recomendado) o alguno tiene firma propia?
 - [ ] Locomoción **8-direccional** (strafe) o sólo adelante/atrás.
