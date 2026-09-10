@@ -25,6 +25,13 @@ b3JointId Box3DConeTwistJointImpl3D::_create_joint_id(b3WorldId p_world_id, b3Bo
 	def.lowerTwistAngle = (float)(-twist_span * 0.5);
 	def.upperTwistAngle = (float)(twist_span * 0.5);
 
+	// Godot's ConeTwistJoint3D SOFTNESS/BIAS/RELAXATION map 1:1 onto Box3D's per-limit
+	// constraint tuning. With Godot's defaults (0.8 / 0.3 / 1.0) this reproduces the
+	// previous joint-constraint softness, so existing scenes are unaffected.
+	def.limitSoftness = (float)softness;
+	def.limitBias = (float)bias;
+	def.limitRelaxation = (float)relaxation;
+
 	return b3CreateSphericalJoint(p_world_id, &def);
 }
 
@@ -62,23 +69,20 @@ void Box3DConeTwistJointImpl3D::set_param(Param p_param, real_t p_value) {
 		} break;
 		case PhysicsServer3D::CONE_TWIST_JOINT_BIAS:
 			bias = p_value;
-			if (!warned_bias) {
-				WARN_PRINT_ONCE("Box3D: ConeTwistJoint3D's BIAS parameter has no Box3D equivalent and is ignored.");
-				warned_bias = true;
+			if (has_joint_id()) {
+				b3SphericalJoint_SetLimitBias(get_joint_id(), (float)bias);
 			}
 			break;
 		case PhysicsServer3D::CONE_TWIST_JOINT_SOFTNESS:
 			softness = p_value;
-			if (!warned_softness) {
-				WARN_PRINT_ONCE("Box3D: ConeTwistJoint3D's SOFTNESS parameter has no Box3D equivalent; Box3D cone/twist limits are hard.");
-				warned_softness = true;
+			if (has_joint_id()) {
+				b3SphericalJoint_SetLimitSoftness(get_joint_id(), (float)softness);
 			}
 			break;
 		case PhysicsServer3D::CONE_TWIST_JOINT_RELAXATION:
 			relaxation = p_value;
-			if (!warned_relaxation) {
-				WARN_PRINT_ONCE("Box3D: ConeTwistJoint3D's RELAXATION parameter has no Box3D equivalent and is ignored.");
-				warned_relaxation = true;
+			if (has_joint_id()) {
+				b3SphericalJoint_SetLimitRelaxation(get_joint_id(), (float)relaxation);
 			}
 			break;
 		default:

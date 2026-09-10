@@ -600,6 +600,9 @@ b3SphericalJointDef b3RecR_SPHERICALJOINTDEF( b3RecReader* rdr )
 	def.hertz = b3RecR_F32( rdr );
 	def.dampingRatio = b3RecR_F32( rdr );
 	def.targetRotation = b3RecR_QUAT( rdr );
+	def.limitSoftness = b3RecR_F32( rdr );
+	def.limitBias = b3RecR_F32( rdr );
+	def.limitRelaxation = b3RecR_F32( rdr );
 	def.enableConeLimit = b3RecR_BOOL( rdr );
 	def.coneAngle = b3RecR_F32( rdr );
 	def.enableTwistLimit = b3RecR_BOOL( rdr );

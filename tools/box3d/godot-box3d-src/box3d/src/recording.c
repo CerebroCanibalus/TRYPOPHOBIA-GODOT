@@ -333,7 +333,7 @@ _Static_assert( sizeof( void* ) != 8 || sizeof( b3PrismaticJointDef ) == 152,
 				"b3PrismaticJointDef changed: update b3RecW_PRISMATICJOINTDEF and its reader together" );
 _Static_assert( sizeof( void* ) != 8 || sizeof( b3RevoluteJointDef ) == 152,
 				"b3RevoluteJointDef changed: update b3RecW_REVOLUTEJOINTDEF and its reader together" );
-_Static_assert( sizeof( void* ) != 8 || sizeof( b3SphericalJointDef ) == 184,
+_Static_assert( sizeof( void* ) != 8 || sizeof( b3SphericalJointDef ) == 192,
 				"b3SphericalJointDef changed: update b3RecW_SPHERICALJOINTDEF and its reader together" );
 _Static_assert( sizeof( void* ) != 8 || sizeof( b3WeldJointDef ) == 128,
 				"b3WeldJointDef changed: update b3RecW_WELDJOINTDEF and its reader together" );
@@ -503,6 +503,9 @@ void b3RecW_SPHERICALJOINTDEF( b3RecBuffer* buf, b3SphericalJointDef v )
 	b3RecW_F32( buf, v.hertz );
 	b3RecW_F32( buf, v.dampingRatio );
 	b3RecW_QUAT( buf, v.targetRotation );
+	b3RecW_F32( buf, v.limitSoftness );
+	b3RecW_F32( buf, v.limitBias );
+	b3RecW_F32( buf, v.limitRelaxation );
 	b3RecW_BOOL( buf, v.enableConeLimit );
 	b3RecW_F32( buf, v.coneAngle );
 	b3RecW_BOOL( buf, v.enableTwistLimit );

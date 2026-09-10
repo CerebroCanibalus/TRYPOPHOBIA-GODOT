@@ -891,6 +891,20 @@ typedef struct b3SphericalJointDef
 	/// Target spring rotation, joint frame B relative to joint frame A.
 	b3Quat targetRotation;
 
+	/// Stiffness of the cone/twist limits. Mirrors Godot's ConeTwistJoint3D SOFTNESS
+	/// (0.01..16, default 0.8). Higher = softer limit. The solver derives the limit
+	/// constraint frequency as 12 / limitSoftness (clamped to 0.25 / h). Defaults
+	/// reproduce the historical hard-ish limit behaviour.
+	float limitSoftness;
+
+	/// Position-correction factor for the cone/twist limits. Mirrors Godot's BIAS
+	/// (default 0.3). 0.3 is neutral; larger values push a violated limit back harder.
+	float limitBias;
+
+	/// Impulse relaxation of the cone/twist limits. Mirrors Godot's RELAXATION
+	/// (default 1.0). Higher values add damping to the limit constraint.
+	float limitRelaxation;
+
 	/// A flag to enable the cone limit. The cone is centered on the frameA z-axis.
 	bool enableConeLimit;
 

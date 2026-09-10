@@ -36,16 +36,13 @@ private:
 	real_t swing_span = Math_PI * 0.25; // 45 degrees
 	real_t twist_span = Math_PI;        // 180 degrees
 
-	// Bias / softness / relaxation are exposed by Godot but have no direct Box3D
-	// equivalent; the cone/twist limit constraints in Box3D are hard. We accept the
-	// values so the .tscn loads without error, and warn the user that they are ignored.
+	// Godot's ConeTwistJoint3D tuning parameters. They map 1:1 onto Box3D's per-limit
+	// constraint softness via b3SphericalJoint_SetLimitSoftness/SetLimitBias/
+	// SetLimitRelaxation. SOFTNESS = limit stiffness (higher = softer), BIAS = position
+	// correction factor, RELAXATION = impulse damping.
 	real_t bias = 0.3;
 	real_t softness = 0.8;
 	real_t relaxation = 1.0;
-
-	bool warned_bias = false;
-	bool warned_softness = false;
-	bool warned_relaxation = false;
 
 	void _apply_cone_limit();
 	void _apply_twist_limits();

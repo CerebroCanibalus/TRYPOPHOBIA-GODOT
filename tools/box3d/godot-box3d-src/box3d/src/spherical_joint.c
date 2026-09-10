@@ -196,6 +196,48 @@ float b3SphericalJoint_GetSpringDampingRatio( b3JointId jointId )
 	return base->sphericalJoint.dampingRatio;
 }
 
+// Cone/twist limit tuning. Mirrors Godot's ConeTwistJoint3D SOFTNESS/BIAS/RELAXATION.
+// These are configuration values (not per-step state), so they are not recorded; changing
+// them mid-replay would be a user error.
+void b3SphericalJoint_SetLimitSoftness( b3JointId jointId, float softness )
+{
+	B3_ASSERT( b3IsValidFloat( softness ) && softness >= 0.0f );
+	b3JointSim* base = b3GetJointSimCheckType( jointId, b3_sphericalJoint );
+	base->sphericalJoint.limitSoftness = softness;
+}
+
+float b3SphericalJoint_GetLimitSoftness( b3JointId jointId )
+{
+	b3JointSim* base = b3GetJointSimCheckType( jointId, b3_sphericalJoint );
+	return base->sphericalJoint.limitSoftness;
+}
+
+void b3SphericalJoint_SetLimitBias( b3JointId jointId, float bias )
+{
+	B3_ASSERT( b3IsValidFloat( bias ) && bias >= 0.0f );
+	b3JointSim* base = b3GetJointSimCheckType( jointId, b3_sphericalJoint );
+	base->sphericalJoint.limitBias = bias;
+}
+
+float b3SphericalJoint_GetLimitBias( b3JointId jointId )
+{
+	b3JointSim* base = b3GetJointSimCheckType( jointId, b3_sphericalJoint );
+	return base->sphericalJoint.limitBias;
+}
+
+void b3SphericalJoint_SetLimitRelaxation( b3JointId jointId, float relaxation )
+{
+	B3_ASSERT( b3IsValidFloat( relaxation ) && relaxation >= 0.0f );
+	b3JointSim* base = b3GetJointSimCheckType( jointId, b3_sphericalJoint );
+	base->sphericalJoint.limitRelaxation = relaxation;
+}
+
+float b3SphericalJoint_GetLimitRelaxation( b3JointId jointId )
+{
+	b3JointSim* base = b3GetJointSimCheckType( jointId, b3_sphericalJoint );
+	return base->sphericalJoint.limitRelaxation;
+}
+
 void b3SphericalJoint_EnableMotor( b3JointId jointId, bool enableMotor )
 {
 	b3World* world = b3GetWorld( jointId.world0 );
@@ -370,6 +412,19 @@ void b3PrepareSphericalJoint( b3JointSim* base, b3StepContext* context )
 
 	joint->springSoftness = b3MakeSoft( joint->hertz, joint->dampingRatio, context->h );
 
+	// Cone/twist limits get their own softness so they can be tuned independently of the
+	// point-to-point constraint (mirrors Godot's ConeTwistJoint3D SOFTNESS/BIAS/RELAXATION).
+	// The defaults (0.8 / 0.3 / 1.0) derive 12 / 0.8 = 15 Hz with zeta 2.0, which is exactly
+	// the joint's historical constraint softness, so existing scenes are unaffected.
+	{
+		float limitHertz = joint->limitSoftness > 0.0f
+				? b3MinFloat( 12.0f / joint->limitSoftness, 0.25f * context->inv_h )
+				: 0.0f;
+		float limitZeta = b3MaxFloat( 0.0f, 2.0f * joint->limitRelaxation );
+		joint->limitConstraintSoftness = b3MakeSoft( limitHertz, limitZeta, context->h );
+		joint->limitBiasScale = joint->limitBias / 0.3f;
+	}
+
 	if ( context->enableWarmStarting == false )
 	{
 		joint->linearImpulse = b3Vec3_zero;
@@ -515,9 +570,9 @@ void b3SolveSphericalJoint( b3JointSim* base, b3StepContext* context, bool useBi
 			}
 			else if ( useBias )
 			{
-				bias = base->constraintSoftness.biasRate * c;
-				massScale = base->constraintSoftness.massScale;
-				impulseScale = base->constraintSoftness.impulseScale;
+				bias = joint->limitConstraintSoftness.biasRate * joint->limitBiasScale * c;
+				massScale = joint->limitConstraintSoftness.massScale;
+				impulseScale = joint->limitConstraintSoftness.impulseScale;
 			}
 
 			float cdot = b3Dot( b3Sub( wB, wA ), twistJacobian );
@@ -543,9 +598,9 @@ void b3SolveSphericalJoint( b3JointSim* base, b3StepContext* context, bool useBi
 			}
 			else if ( useBias )
 			{
-				bias = base->constraintSoftness.biasRate * c;
-				massScale = base->constraintSoftness.massScale;
-				impulseScale = base->constraintSoftness.impulseScale;
+				bias = joint->limitConstraintSoftness.biasRate * joint->limitBiasScale * c;
+				massScale = joint->limitConstraintSoftness.massScale;
+				impulseScale = joint->limitConstraintSoftness.impulseScale;
 			}
 
 			// sign flipped on Cdot
@@ -584,9 +639,9 @@ void b3SolveSphericalJoint( b3JointSim* base, b3StepContext* context, bool useBi
 		}
 		else if ( useBias )
 		{
-			bias = base->constraintSoftness.biasRate * c;
-			massScale = base->constraintSoftness.massScale;
-			impulseScale = base->constraintSoftness.impulseScale;
+			bias = joint->limitConstraintSoftness.biasRate * joint->limitBiasScale * c;
+			massScale = joint->limitConstraintSoftness.massScale;
+			impulseScale = joint->limitConstraintSoftness.impulseScale;
 		}
 
 		// sign flipped on Cdot

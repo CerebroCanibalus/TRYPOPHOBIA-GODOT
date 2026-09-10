@@ -234,6 +234,15 @@ typedef struct b3SphericalJoint
 	float twistMass;
 	b3Softness springSoftness;
 
+	// Cone/twist limit softness. Mirrors Godot's ConeTwistJoint3D SOFTNESS/BIAS/RELAXATION
+	// so the limits can be tuned independently of the point-to-point constraint.
+	// limitConstraintSoftness is derived per-step in b3PrepareSphericalJoint.
+	float limitSoftness;
+	float limitBias;
+	float limitRelaxation;
+	float limitBiasScale;
+	b3Softness limitConstraintSoftness;
+
 	bool enableSpring;
 	bool enableMotor;
 	bool enableConeLimit;

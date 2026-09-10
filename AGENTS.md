@@ -161,7 +161,7 @@ el input se pierde cada frame. Con teclado real no se nota (se relee), pero con 
 | Procedural anim | Si | Si |
 | Multithread solver | Estable | Single thread |
 | Determinismo | Si | No |
-| Ragdoll active (2026-09-10) | Rigido (limites duros) | Articulado |
+| Ragdoll active (2026-09-10) | Articulado (fix doble-conversion + H2) | Articulado |
 
 ---
 
@@ -301,11 +301,33 @@ limites sin convertir (correcto).
 pos_y 1.0-1.67, angvel 4-13 rad/s, sin crashes). Build: `tools/box3d/build-and-install.bat`.
 `project.godot` ahora en `3d/physics_engine="Box3D Physics"`.
 
-**PENDIENTE (H2/H2c):** `BIAS`/`SOFTNESS`/`RELAXATION` se siguen ignorando
-(`WARN_PRINT_ONCE`); los limites cone/twist usan la `constraintSoftness` global del joint
-(`b3PrepareJoint`: hertz=min(constraintHertz, 0.25/h), default 15Hz) + "speculation". Para
-igualar la sensacion exacta de Jolt falta un `limitSoftness` propio en `b3SphericalJoint`
-(`box3d/src/spherical_joint.c` + `box3d/src/joint.h`). NO es bloqueante.
+### FIX H2 — Limites cone/twist con softness propia (2026-09-10)
+
+**Antes:** `BIAS`/`SOFTNESS`/`RELAXATION` de `ConeTwistJoint3D` se ignoraban
+(`WARN_PRINT_ONCE`) y los limites usaban la `constraintSoftness` global del joint.
+
+**Ahora:** `b3SphericalJoint` tiene un `limitConstraintSoftness` propio (core):
+- `b3SphericalJointDef` += `limitSoftness` / `limitBias` / `limitRelaxation`
+  (defaults 0.8 / 0.3 / 1.0, iguales a `PhysicalBone3D::ConeJointData` de Godot).
+- `b3PrepareSphericalJoint` deriva `hertz = 12 / limitSoftness` (clamp 0.25/h) y
+  `zeta = 2 * limitRelaxation`; `limitBiasScale = limitBias / 0.3` escala la correccion.
+- API nueva: `b3SphericalJoint_SetLimitSoftness/SetLimitBias/SetLimitRelaxation` (+Get).
+- El plugin mapea los 3 params Godot 1:1 a esa API (ya no hay `WARN_PRINT`).
+- Recording actualizado (`b3RecW/R_SPHERICALJOINTDEF` + `_Static_assert` size 192).
+
+**NO regresivo:** con los defaults el b3Softness derivado es identico al historico
+(12/0.8 = 15 Hz, zeta 2.0). Validado: playground 13.7m/6s (vs 13.85 antes).
+
+**Efecto real validado:** `softness=6.0` en runtime afloja el ragdoll (angvel hasta 26 rad/s).
+
+**Nota:** el `softness` de Bullet tambien adelanta el umbral del twist; NO implementado
+(se usa solo como stiffness) para no cambiar el rango efectivo por defecto.
+
+**PENDIENTE (teardown, no bloqueante):** al usar grab, el server spamea
+`ERROR: Parameter "body_b" is null.` + 4x `Parameter "joint" is null.`
+(origen: `ERR_FAIL_NULL` en `box3d_physics_server_3d.cpp` — `_joint_make_cone_twist`
+llamado por `PhysicalBone3D::_reload_joint` con un RID aun no registrado; PREEXISTENTE,
+no de H2). Fix sugerido: retorno silencioso en vez de `ERR_FAIL_NULL`.
 
 ---
 

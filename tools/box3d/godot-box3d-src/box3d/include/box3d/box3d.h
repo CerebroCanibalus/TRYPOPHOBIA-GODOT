@@ -1567,6 +1567,24 @@ B3_API void b3SphericalJoint_SetMaxMotorTorque( b3JointId jointId, float torque 
 /// Get the spherical joint maximum motor torque, usually in newton-meters
 B3_API float b3SphericalJoint_GetMaxMotorTorque( b3JointId jointId );
 
+/// Set the cone/twist limit stiffness (mirrors Godot ConeTwistJoint3D SOFTNESS, default 0.8)
+B3_API void b3SphericalJoint_SetLimitSoftness( b3JointId jointId, float softness );
+
+/// Get the cone/twist limit stiffness
+B3_API float b3SphericalJoint_GetLimitSoftness( b3JointId jointId );
+
+/// Set the cone/twist limit position-correction factor (mirrors Godot BIAS, default 0.3)
+B3_API void b3SphericalJoint_SetLimitBias( b3JointId jointId, float bias );
+
+/// Get the cone/twist limit position-correction factor
+B3_API float b3SphericalJoint_GetLimitBias( b3JointId jointId );
+
+/// Set the cone/twist limit relaxation (mirrors Godot RELAXATION, default 1.0)
+B3_API void b3SphericalJoint_SetLimitRelaxation( b3JointId jointId, float relaxation );
+
+/// Get the cone/twist limit relaxation
+B3_API float b3SphericalJoint_GetLimitRelaxation( b3JointId jointId );
+
 /**@}*/ // spherical_joint
 
 /**

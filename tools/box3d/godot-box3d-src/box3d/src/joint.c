@@ -88,6 +88,13 @@ b3SphericalJointDef b3DefaultSphericalJointDef( void )
 	b3SphericalJointDef def = { 0 };
 	def.base = b3DefaultJointDef();
 	def.targetRotation = b3Quat_identity;
+
+	// Godot ConeTwistJoint3D defaults. With these values the derived limit softness matches
+	// the historical joint constraint softness (15 Hz at 60 steps/s), so existing scenes and
+	// the active ragdoll are unaffected until the values are tuned.
+	def.limitSoftness = 0.8f;
+	def.limitBias = 0.3f;
+	def.limitRelaxation = 1.0f;
 	return def;
 }
 
@@ -646,6 +653,10 @@ b3JointId b3CreateSphericalJoint( b3WorldId worldId, const b3SphericalJointDef* 
 	joint->sphericalJoint.enableConeLimit = def->enableConeLimit;
 	joint->sphericalJoint.enableTwistLimit = def->enableTwistLimit;
 	joint->sphericalJoint.enableMotor = def->enableMotor;
+
+	joint->sphericalJoint.limitSoftness = def->limitSoftness;
+	joint->sphericalJoint.limitBias = def->limitBias;
+	joint->sphericalJoint.limitRelaxation = def->limitRelaxation;
 
 	b3JointId jointId = { joint->jointId + 1, world->worldId, pair.joint->generation };
 	B3_REC_CREATE( world, CreateSphericalJoint, jointId, worldId, *def );
