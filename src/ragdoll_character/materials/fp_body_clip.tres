@@ -1,6 +1,6 @@
-[gd_resource type="ShaderMaterial" format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bnypyxv3a5m1j"]
 
-[ext_resource type="Shader" path="res://src/ragdoll_character/shaders/fp_body_clip.gdshader" id="1_y2lg8"]
+[ext_resource type="Shader" uid="uid://sd76uk2sk3f3" path="res://src/ragdoll_character/shaders/fp_body_clip.gdshader" id="1_y2lg8"]
 
 [resource]
 render_priority = 0

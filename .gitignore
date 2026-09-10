@@ -69,3 +69,9 @@ tools/box3d/godot-box3d-src/bin/
 ```
 
 tools/active_ragdoll_reference/
+
+# Heren MCP: estado de RUNTIME (cambia en cada arranque del editor; no es codigo)
+.heren/backup/
+.heren/tmp/
+.heren/server_port.json
+.heren/session.json
