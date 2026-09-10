@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://b1dirhuman01"]
-
-[ext_resource type="PackedScene" uid="uid://cd70x3de3pbl4" path="res://src/marioneta/scenes/humanoid.tscn" id="1_humanoid"]
-[ext_resource type="Script" path="res://tools/ragdoll_test/direct_humanoid_test.gd" id="2_test"]
-
-[node name="DirectHumanoidTest" type="Node3D"]
-script = ExtResource("2_test")
-
-[node name="Humanoid" parent="." instance=ExtResource("1_humanoid")]

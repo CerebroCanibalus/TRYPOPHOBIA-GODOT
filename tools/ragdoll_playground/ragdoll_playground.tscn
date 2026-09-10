@@ -1,0 +1,159 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://tools/ragdoll_playground/ragdoll_playground.gd" id="1_pg"]
+[ext_resource type="PackedScene" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="2_ch"]
+
+[sub_resource type="BoxShape3D" id="floor_shape"]
+size = Vector3(200, 1, 200)
+
+[sub_resource type="BoxMesh" id="floor_mesh"]
+size = Vector3(200, 1, 200)
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.32, 0.34, 0.32, 1)
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky_mat")
+tonemap_mode = 2
+
+[sub_resource type="BoxMesh" id="pillar_mesh"]
+size = Vector3(0.6, 3, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="pillar_mat"]
+albedo_color = Color(0.85, 0.3, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="marker_mesh"]
+size = Vector3(0.3, 0.3, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="marker_mat"]
+albedo_color = Color(1, 0.9, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.7, 0.1, 1)
+emission_energy_multiplier = 2.0
+
+[node name="Playground" type="Node3D"]
+script = ExtResource("1_pg")
+auto_walk = false
+diagnostic_direct_velocity = false
+
+[node name="Floor" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 2
+
+[node name="FloorShape" type="CollisionShape3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("floor_shape")
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("floor_mesh")
+surface_material_override/0 = SubResource("floor_mat")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="RagdollCharacter" parent="." instance=ExtResource("2_ch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="Pillars" type="Node3D" parent="."]
+
+[node name="P00" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.5, 2)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P01" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.5, 2)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P02" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.5, -2)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P03" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.5, -2)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P04" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.5, 6)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P05" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.5, 6)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P06" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.5, -6)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P07" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.5, -6)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P08" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.5, 0)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P09" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.5, 0)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P10" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 10)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="P11" type="MeshInstance3D" parent="Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -10)
+mesh = SubResource("pillar_mesh")
+surface_material_override/0 = SubResource("pillar_mat")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="M00" type="MeshInstance3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -0.4, 0)
+mesh = SubResource("marker_mesh")
+surface_material_override/0 = SubResource("marker_mat")
+
+[node name="M01" type="MeshInstance3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, -4)
+mesh = SubResource("marker_mesh")
+surface_material_override/0 = SubResource("marker_mat")
+
+[node name="M02" type="MeshInstance3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -0.4, 0)
+mesh = SubResource("marker_mesh")
+surface_material_override/0 = SubResource("marker_mat")
+
+[node name="M03" type="MeshInstance3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 4)
+mesh = SubResource("marker_mesh")
+surface_material_override/0 = SubResource("marker_mat")
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Info" type="Label" parent="HUD"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 900.0
+offset_bottom = 400.0
+theme_override_colors/font_color = Color(1, 0.95, 0.2, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+text = "cargando..."

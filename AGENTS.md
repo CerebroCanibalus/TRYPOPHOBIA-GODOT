@@ -952,40 +952,320 @@ func _read_input() -> void:
 
 ---
 
-## 🦴 PRÓXIMO — Opción B: Ragdoll mode real (2026-09-05)
+## 🦴 REFACTOR — MARIONETA mode (Hooke's Law) funcional (2026-09-05)
 
-**Decisión:** Integrar `ragdoll_fallback.gd` (ya existe, 507 líneas, completo) en `humanoid.tscn` para validar ragdoll físico real.
+**Decisión General:** El personaje ya se mueve (Body kinematic). Ahora la meta es que se mueva
+como una **marioneta**: los PhysicalBones (piernas/brazos/head) son TIRADOS por Hooke's Law
+hacia las poses procedurales, dando inercia visible. NO usar AnimationPlayer/AnimationTree.
 
-**Estructura actual de humanoid.tscn:**
-- `Character` (CharacterBody3D, character_controller.gd)
-  - `CollisionShape3D` (capsule)
-  - `Physical` (instancia Character.glb con PhysicalBones + PinJoints + Areas + ShapeCasts)
-  - `MarionetaControl` (debug handles)
-  - `BonePivot`, `PlayerCamera`, `ThirdPersonCamera`
+### Semántica DUAL (importante)
 
-**Estructura esperada por ragdoll_fallback.gd:**
-- Root con ragdoll_fallback.gd
-  - `Physical/Armature/Skeleton3D` ← YA EXISTE
-  - `Animated/Armature/Skeleton3D` ← FALTA
-  - `Animated/AnimationTree` ← FALTA (se desactiva en _ready, null-safe)
-  - `CameraPivot` ← FALTA (separado del BonePivot del character_controller)
-  - `Physical/GrabJointLeft/Right` ← YA EXISTE
-  - `Physical/JumpTimer` ← YA EXISTE
+| Modo | Cuándo | Comportamiento |
+|------|--------|----------------|
+| **MARIONETA** (default) | Mientras VIVE | Hooke's Law tira los PhysicalBodes hacia la pose procedural. Inercia visible. Bones chocan con el mundo. |
+| **FULL RAGDOLL** | Cuando MUERE | Huesos libres sin Hooke. Solo gravedad. |
 
-**Plan de integración mínimo viable:**
-1. Añadir `Animated` (instancia Character.glb) como sibling de `Physical`
-2. Añadir `Animated/AnimationTree` (placeholder null-safe)
-3. Añadir `CameraPivot` (separado)
-4. Añadir tecla `ragdoll` (F11) al character_controller que llama `toggle_ragdoll_mode()`
-5. Conectar character_controller ↔ ragdoll_fallback vía método público
-6. Test T06: ragdoll_mode=true → PhysicalBone3D responde a gravedad
+**Tecla F11** (`toggle_marioneta`) alterna entre ambos modos.
+
+### Cambios aplicados
+
+**`src/marioneta/character_controller.gd`:**
+1. `_apply_hooke_spring_forces(delta)` — portado de `ragdoll_fallback.gd`. Para cada
+   PhysicalBone, calcula el torque quaternion-based (`_spring_torque_axis_angle`) para
+   moverlo desde su posición física actual hacia la pose procedural (target). Params
+   por tipo de hueso: `stiffness_body/head/arms/legs`, `damping_*`, `max_torque`.
+2. `use_physics_bones` default ahora `true` (MARIONETA activa por defecto).
+3. `marioneta_mode: bool = true` — toggle F11. Si false → FULL RAGDOLL.
+4. `enter_full_ragdoll()` / `exit_full_ragdoll()` — API pública para muerte/respawn.
+5. `_toggle_marioneta_mode()` — maneja toggle runtime.
+6. `_disable_all_animation_players()` ahora pone `active = false` (no solo `stop()`).
+7. `_setup_physics_bones()` SIEMPRE se llama en `_ready()` (no depende de use_physics_bones).
+8. `_set_physics_bones_active()` ahora busca el `PhysicalBoneSimulator3D` dentro del
+   Skeleton3D (antes lo buscaba en `Physical` — nunca lo encontraba).
+9. `_ready()` llama `animated_skel.physical_bones_start_simulation()` si `use_physics_bones`.
+
+**`src/marioneta/scenes/humanoid.tscn`:**
+1. `animate_physical_bones = true` en el Skeleton3D (antes `false` — el skeleton IGNORABA
+   las posiciones físicas de los bones).
+2. **AÑADIDO `PhysicalBoneSimulator3D`** como hijo del Skeleton3D (`active=true`,
+   `influence=1.0`). **ESTE ERA EL BUG PRINCIPAL**: sin este nodo, los PhysicalBone3D
+   existen pero NADIE sincroniza sus posiciones con el skeleton visual.
+
+**`project.godot`:**
+- Añadida acción `toggle_marioneta` = F11 (physical_keycode 4194335).
+
+### Test (8/8 PASSED con Box3D)
+
+- T01-T05: movimiento + procedural (heredados, siguen OK)
+- **T07**: MARIONETA mode → Hooke aplicado a 10 bones
+- **T08**: FULL RAGDOLL → body_bone cae libre (Hooke desactivado)
+
+### Problemas pendientes observados por el General (2026-09-05)
+
+1. **"Se resbala mucho y cae"** — El Hooke's Law empuja los PhysicalBones, que a su vez
+   empujan al CharacterBody3D (los bones colisionan con el mundo). El Character se
+   desplaza por la reacción. Posible causa: `max_torque` alto + bones con collision_active.
+   **Investigar:** subir stiffness (más rígido = menos resbalón) o reducir masa de bones.
+2. **"La cámara mueve TODO el cuerpo"** — El `BonePivot` (que sostiene la PlayerCamera)
+   es hijo del `Physical Bone Head`. Como el hueso Head ahora es FÍSICO, el movimiento
+   del mouse rota el hueso físico, arrastrando la cámara y —por Hooke— el resto del cuerpo.
+   **Investigar:** desacoplar el pivot de la cámara del hueso Head físico, o hacer que
+   el head bone no sea afectado por la rotación de la cámara.
+3. **"Va por buen camino"** — el refactor base funciona, faltan tunear estos detalles.
+
+### Referencia a investigar — Unreal "Locomotor"
+
+Pendiente: estudiar el sistema de locomoción de UE5 (Motion Matching / Game Animation Sample)
+como referencia de arquitectura para la locomoción de MARIONETA.
+
+### 🔬 INVESTIGACIÓN — Unreal "Locomotor" (2026-09-05)
+
+**Qué es:** Plugin de UE **5.6+** de locomoción **100% procedural** — genera walk cycles SIN clips
+de animación ni keyframes. Nodo de Control Rig. Exactamente el paradigma de MARIONETA.
+
+**Fuentes:**
+- Tutorial Epic: `dev.epicgames.com/community/learning/tutorials/EkxO`
+- Little Polygon — "Procedural Animation: Locomotion": `blog.littlepolygon.com/posts/loco1/`
+- Nicolás Bertoa — "UE 5.2 Procedural Walk Cycle": `nbertoa.com/2024/05/30/unreal-5-2-procedural-walk-cycle/`
+- Canal: "Make use of automatic foot placement with LOCOMOTOR in UE 5.6"
+
+**El algoritmo (clave):**
+
+```
+FOOT PLACEMENT SYSTEM (Step System):
+1. Cada pie tiene: current_planted_pos + target_pos
+2. target = raycast abajo desde donde DEBERÍA estar el pie (según velocity)
+3. Si dist(planted, target) > STEP_TRIGGER_DISTANCE → el pie INICIA un step
+4. Step = lerp(planted → target) + arco vertical (sine curve): sube, pico a mitad, baja
+5. Left/right tienen phase offset natural → uno pisa mientras el otro vuela
+6. Step speed atado a movement speed (más rápido = steps más rápidos)
+
+BODY & PELVIS RESPONSE:
+7. Pelvis height DERIVADA de las posiciones de los pies (no al revés)
+8. Body sway = oscilación sinusoidal sincronizada con el step cycle
+   (pie izq pisa → cuerpo oscila izq; pie der pisa → cuerpo oscila der)
+
+IK:
+9. Two-Bone IK o Full Body IK resuelve las cadenas de piernas desde el foot target
+```
+
+**Diferencia conceptual VS nuestra MARIONETA actual:**
+
+| Aspecto | MARIONETA actual | Locomotor (UE) |
+|---------|------------------|----------------|
+| Walk cycle | `walk_phase += delta * freq * TAU`, poses con `sin()` | Steps disparados por DISTANCIA (umbral) |
+| Quién manda | El BODY calcula poses, los bones lo siguen (Hooke) | Los PIES mandan, el body se DERIVA de ellos |
+| Timing | Timer fijo (`walk_frequency`) | Emergente de la velocidad real |
+| Terreno | No adaptativo | Raycast por pie → adapta a cualquier superficie |
+
+**Aplicación a nuestros 2 problemas reportados:**
+
+1. **"Se resbala mucho y cae"** → En Locomotor el body NO es empujado por los huesos.
+   Los huesos son consumidores pasivos del estado del body. En nuestro caso el Hooke's Law
+   empuja los PhysicalBones que a su vez empujan al CharacterBody3D (reacción). 
+   **Fix propuesto:** que los PhysicalBones NO colisionen con el mundo/Character en MARIONETA
+   mode (collision_layer=0 ya hace esto pero el input de reacción sigue existiendo vía joints).
+   Alternativa Locomotor: bones puramente visuales, sin física de colisión mutua.
+
+2. **"La cámara mueve TODO el cuerpo"** → En Locomotor la cámara sigue al ROOT, no a un hueso
+   físico. **Fix propuesto:** desacoplar BonePivot del `Physical Bone Head`. La cámara debe
+   ser hija del root `Character` (o de un `HeadTarget` no-físico). El hueso Head físico
+   debe SEGUIR a la cámara/root, no al revés.
+
+**Concepto clave para robar:** "Foot-driven locomotion" — el body se deriva de los pies
+plantados, no los pies del body. Esto elimina el foot-sliding sin importar la velocidad.
+
+---
+
+## 🏗️ ARQUITECTURA — Linker data-driven (Opción 1) (2026-09-05)
+
+**Decisión General:** Opción 1 — targets en código + `MarionetaBoneLinker` data-driven.
+
+### Diagnóstico del problema "ragdoll desconectado de la marioneta"
+
+El sistema MARIONETA tiene DOS mundos que no se hablan:
+
+| Mundo | Quién | Cómo |
+|-------|-------|------|
+| **Procedural** | `character_controller` + `MarionetaControl` | `set_bone_pose()` (offsets de pose) |
+| **Físico** | Physics engine | `PhysicalBone3D` + gravedad + joints |
+
+**El feedback loop roto:**
+```
+animate_physical_bones = true
+  → set_bone_pose() es IGNORADO para el rendering
+  → get_bone_global_pose() devuelve la pose FÍSICA, no la que pusimos
+  → _apply_hooke_spring_forces() lee física como "target" → torque ≈ 0
+  → NADIE tira de los PhysicalBones → caen por gravedad = "ragdoll tirado"
+```
+
+### Solución: separar TARGET (data) de HUESO (física)
+
+```
+1. character_controller calcula _pose_targets: Dictionary
+   (bone_name → Transform3D en WORLD space) — puro cálculo, sin tocar el skeleton
+        ↓
+2. MarionetaBoneLinker itera los links configurados y aplica Hooke's Law
+   para tirar cada PhysicalBone hacia su target
+        ↓
+3. animate_physical_bones = true → el skeleton muestra la física (con inercia)
+```
+
+**Nuevos archivos:**
+```
+src/marioneta/
+├── marioneta_bone_link.gd      # Resource: config de UN link (bone, stiffness, damping...)
+├── marioneta_bone_linker.gd    # Node: aplica todos los links cada frame
+└── (refactor) character_controller.gd → produce _pose_targets en vez de set_bone_pose
+```
+
+**`MarionetaBoneLink` (Resource) — data-driven:**
+```gdscript
+@export var bone_name: String          # "Physical Bone LLeg1"
+@export var stiffness: float = 800.0   # cuánto tira (N·m/rad)
+@export var damping: float = 40.0      # cuánto frena
+@export var max_torque: float = 500.0  # límite de saturación
+@export var active: bool = true        # on/off dinámico (state-aware)
+@export var upright_bias: float = 0.0  # componente de erección (ver abajo)
+```
+
+**`MarionetaBoneLinker` (Node):**
+- `@export var links: Array[MarionetaBoneLink]`
+- Cada frame: para cada link activo, busca el PhysicalBone y aplica
+  `_spring_torque_axis_angle(bone_quat, target_quat, ang_vel, k, c, max)`.
+- Resuelve el bone por nombre (genérico, no hardcoded).
+
+### 🧍 SISTEMA DE ERECCIÓN ("erguido casi siempre")
+
+**Requisito General:** el modelo debe mantenerse erguido casi siempre, con inclinación
+natural al moverse/acelerar (lean) y retorno a la vertical.
+
+**Diseño: `upright_bias` por link + un "upright anchor" global.**
+
+1. **Upright anchor** (concepto): un objetivo de rotación = identidad (vertical),
+   ponderado por el `upright_bias` del link. A más bias, más tira hacia erguido.
+   ```
+   target_quat_final = slerp(target_procedural, Quaternion.IDENTITY, upright_bias)
+   ```
+2. **Body bone**: `upright_bias` alto (ej. 0.7) → casi siempre vertical.
+3. **Head**: `upright_bias` medio → sigue la mirada pero tiende a erguirse.
+4. **Piernas/brazos**: `upright_bias` bajo (0.1-0.2) → solo inercia.
+5. **Lean al acelerar**: el `target_procedural` del Body YA incluye el `walk_body_lean`
+   y el lean por aceleración — el `upright_bias` solo amortigua el exceso.
+6. **Balance controller** (heredado de `ragdoll_fallback.gd`): tobillos virtuales que
+   corrigen la posición del Body si se inclina demasiado sobre los pies.
+   - `balance_pos_stiffness`, `balance_pos_damping`, `balance_tilt_stiffness`, `balance_tilt_damping`.
+   - Solo activo cuando NO camina (en walk los pies mandan).
+
+### Ventajas de esta arquitectura
+
+- ✅ Un solo skeleton (sin duplicar mesh)
+- ✅ Sin feedback loop (el target es data explícita, no la pose física)
+- ✅ Data-driven: cada hueso puede tener su stiffness/damping/upright_bias
+- ✅ Genérico: funciona con cualquier personaje (los links referencian bones por nombre)
+- ✅ State-aware: los links se activan/desactivan según el estado (reusa la lógica de MarionetaControl)
+
+### Plan de implementación
+
+| Paso | Qué |
+|------|-----|
+| 1 | Crear `marioneta_bone_link.gd` (Resource) |
+| 2 | Crear `marioneta_bone_linker.gd` (Node) con spring torque + upright bias + balance |
+| 3 | Refactor `character_controller`: calcular `_pose_targets` (Dictionary world-space) para piernas/brazos/head/body |
+| 4 | Reemplazar `_apply_hooke_spring_forces` + `set_bone_pose` por el linker |
+| 5 | Bones sin colisión con el mundo en MARIONETA (fix resbalón) |
+| 6 | Tests: T09 (targets generados), T10 (bones siguen targets con inercia), T11 (erección) |
+
+
+
+---
+
 ## 📊 Estado actual de motores de física (2026-09-05)
 
 | Aspecto | Box3D v2 + M3 (nuestro) | Jolt (referencia) |
 |---|---|---|
 | Crashes por normal (0,0,0) | ✅ Arreglado con M3 | N/A |
 | Body se mueve con cápsula simple | ✅ Sí (minimal_test) | ✅ Sí |
-| Body se mueve con humanoid.tscn | ❌ NO (delta=0) | ✅ Sí |
-| Procedural anim funciona | ❌ Bloqueado por body inmóvil | ✅ Sí |
+| Body se mueve con humanoid.tscn | ✅ Sí (fix `_external_input`) | ✅ Sí |
+| Procedural anim funciona | ✅ Sí (8/8 PASSED) | ✅ Sí |
 | Multithread solver | ✅ Estable | ❌ Single thread |
 | Determinismo | ✅ Sí | ❌ No |
+
+
+---
+
+## INVESTIGACION - Ragdoll fisico + Procedural + Multijugador (2026-09-10)
+
+**Contexto:** El ragdoll de humanoid.tscn no respondia al procedural. Investigacion a fondo
+(cberry22 Active-Ragdoll, UE Locomotor, Glenn Fiedler/Gaffer On Games, Unity Netcode, Gang Beasts).
+
+### Hallazgo 1 - Jerarquia CORRECTA de PhysicalBone3D (doc oficial Godot)
+El PhysicalBoneSimulator3D DEBE ser PADRE de los PhysicalBone3D:
+```
+Skeleton3D
++-- PhysicalBoneSimulator3D
+    +-- Physical Bone Body / Head / ...
+```
+En humanoid.tscn los bones son HIJOS del Skeleton (hermanos del simulador) -> el simulador
+NO sincroniza -> get_bone_global_pose() devuelve la pose procedural -> el spring lee dist=0
+y NUNCA aplica fuerza. PENDIENTE corregir jerarquia.
+
+### Hallazgo 2 - Parametros canonicos del active ragdoll (cberry22)
+- angular_spring_stiffness = 4000, angular_spring_damping = 80
+- linear_spring_stiffness = 1200, linear_spring_damping = 40
+- Nuestros valores originales (8-14) eran ~300x mas debiles que la gravedad, el ragdoll
+  no podia sostenerse. YA CORREGIDO en marioneta_bone_linker.tscn.
+- Aplicacion: b.linear_velocity += force * delta  (NO apply_torque)
+- Lectura actual: skeleton.global_transform * get_bone_global_pose(id)
+- Re-anclaje de seguridad: if pos_diff.length_squared() > 1.0: b.global_position = target.origin
+- Rotacion: rot_diff = target.basis * current.basis.inverse(); torque = stiffness*rot_diff.get_euler() - damping*ang_vel
+
+### Hallazgo 3 - NETWORKING: replicar ESTADO, no animacion
+- "The most reliable approach is to replicate state, not animation." (MoCap Online)
+- "Synchronise animation state machine inputs, not the animation playhead."
+- "If the state machine is deterministic and inputs are identical, animation output should match
+  on every client without transmitting any animation data directly."
+- pose = f(estado_replicado, tiempo_local)  <- funcion PURA, corre en cada cliente.
+- Se envia: pos, vel, state_index, speed(0-1), aim_pitch (~10-20 bytes/jugador). NO huesos.
+- La animacion procedural es MAS facil en multiplayer que los clips: es una funcion pura.
+
+### Hallazgo 4 - Arquitecturas de red (Glenn Fiedler, gafferongames.com)
+| Arquitectura | Que viaja | Determinismo | Jugadores |
+|---|---|---|---|
+| Deterministic Lockstep | solo inputs | BIT-PERFECT obligatorio | 2-4 max |
+| Snapshot Interpolation | estado (snapshots) | NO requerido | escala; estandar shooters |
+| State Synchronization | estado comprimido | NO requerido | escala |
+- Para 8 jugadores co-op -> Snapshot Interpolation. NO lockstep.
+- Box3D/Jolt NO decide la animacion. Decide la fisica del mundo.
+- El determinismo de Box3D sirve para lockstep/prediccion, NO es requisito para animar.
+
+### Hallazgo 5 - PATRON LOGIC/VISUAL para ragdolls en multijugador (Unity Netcode ECS)
+DUAL: Ragdoll Logic (server/red) + Ragdoll Visual (cliente local).
+- Ragdoll Logic: collider fisico simple (el root/hips). UNICA entidad sincronizada por red.
+- Ragdoll Visual: ragdoll completo (miembros + joints). FISICA LOCAL, solo en el cliente.
+  NO sincroniza datos de miembros. Su root (Hips) es Kinematic y se ancla/interpola al Logic.
+- "Exact replication of limb folding angles is rarely necessary for gameplay; synchronizing
+  the general location via the Hips is sufficient for a convincing effect."
+-> Aplicado: el CharacterBody3D es el Ragdoll Logic (sincronizado). Los PhysicalBone3D son el
+   Ragdoll Visual (locales, anclados al CharacterBody3D). Los huesos NO se sincronizan.
+
+### Hallazgo 6 - Ragdoll de MUERTE: local y cosmetico (Unity Netcode)
+- "Death ragdolls... can desync from one client to another. The server syncs that this character
+  is now dead and sends its death position. From that point, clients apply ragdoll physics how
+  they want without syncing. Since they have no gameplay impact, it doesn't matter."
+-> Nuestro ragdoll de muerte = LOCAL (cada cliente simula el suyo desde la posicion de muerte).
+
+### Hallazgo 7 - Gang Beasts (caso extremo: la fisica ES el gameplay)
+- "the entire game is a physics simulation, animations are procedural (there are no pre-set
+  animations), irrespective of the number of physics calculations that need to be sent/synced
+  developing online modes is significantly more complex and expensive"
+- En Tripofobia la fisica central son OBJETOS (agarrables/empujables) + movimiento, NO pelear
+  con ragdolls. El "look marioneta" es cosmetico. Por eso el patron Logic/Visual nos sirve.
+
+### Decisiones tomadas (2026-09-10)
+- D13: Los PhysicalBone3D son Ragdoll VISUAL LOCAL. NO se sincronizan por red.
+- D14: El CharacterBody3D es el Ragdoll LOGIC (autoridad + sincronizado).
+- D15: La animacion procedural vive como funcion PURA del estado (pos, vel, state, walk_phase,
+       aim_pitch) para que replique sin enviar huesos.
+- D16: Ragdoll de muerte = local/cosmetico.
+- D17: La fisica de huesos NO es requisito para la animacion; es condimento visual.
