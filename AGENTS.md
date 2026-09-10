@@ -424,6 +424,26 @@ por delante y en un choque la camara giraria sola (mareo).
    `GrabArea` detecta el SUELO); sweep de `get_overlapping_bodies()`.
 6. **5: Red** — rotacion local + estado replicable sin huesos (D15).
 
+## GOTCHA DE REPO — el .gitignore ocultaba el codigo fuente (2026-09-10)
+
+`.gitignore` listaba **`*.gd` y `*.res`**. Git no re-aplica ignore a lo ya
+versionado, asi que los 26 `.gd` viejos estaban bien, pero **todo script nuevo
+se volvia invisible**. Consecuencias reales (corregidas en `0943c36`, `2fa84c9`):
+
+- Los scripts del ragdoll y sus 5 `.res` **nunca** se habian commiteado (sus
+  escenas referenciaban scripts inexistentes en una clonada).
+- Faltaban `addons/heren` (el plugin MCP), `addons/hammerforge` (editor de
+  niveles), `addons/ArmatureEditor`, `src/player`, `src/animation`,
+  `tests/physics_benchmark` -> **175 `.gd` recuperados de una**.
+
+Se quitaron `*.gd` y `*.res`; queda la excepcion `!src/**/materials/*.tres`
+para que los materiales compartidos SI se versionen. `*.uid` e `*.import`
+siguen ignorados a proposito (los regenera Godot).
+
+**Antes de crear cualquier archivo nuevo, verificar que git lo vea**
+(`git status --short`): un `.gitignore` que ignora `*.gd` rompe el repo en
+silencio.
+
 ## 🌍 WORLDBUILDING — Reglas del universo
 
 ### El Planeta
