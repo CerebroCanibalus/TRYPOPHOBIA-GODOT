@@ -32,7 +32,8 @@ var physics_bones = [] # all physical bones
 @onready var physical_bone_body : PhysicalBone3D = $"Physical/Armature/Skeleton3D/Physical Bone Body"
 @onready var body_mesh : MeshInstance3D = $"Physical/Armature/Skeleton3D/Character"
 @onready var arm_ik: TwoBoneIK3D = get_node_or_null("Animated/Armature/Skeleton3D/ArmIK") as TwoBoneIK3D
-@onready var ik_pole_target: Node3D = get_node_or_null("Animated/Armature/Skeleton3D/PoleTarget")
+@onready var ik_pole_target_l: Node3D = get_node_or_null("Animated/Armature/Skeleton3D/PoleTargetL")
+@onready var ik_pole_target_r: Node3D = get_node_or_null("Animated/Armature/Skeleton3D/PoleTargetR")
 @onready var hand_target_l: Node3D = get_node_or_null("HandTargetL")
 @onready var hand_target_r: Node3D = get_node_or_null("HandTargetR")
 
@@ -41,6 +42,7 @@ var _r_arm_id := -1
 var _ik_mods := 0
 ## bone_id -> pose global del ANIMATED, cacheada en `modification_processed`.
 var _anim_pose_cache: Dictionary = {}
+var _rest_arm_len := 0.0
 
 
 # 1a persona: recorte de la geometria propia alrededor de la camara. Evita ver
@@ -49,12 +51,18 @@ var _anim_pose_cache: Dictionary = {}
 # Mantenerlo LO MAS CHICO POSIBLE: cuanto mas lejos del craneo este la camara
 # (`head_distance` en ragdoll_camera.gd), menos geometria tiene que borrar. Solo
 # subirlo lo justo para que no se cuele el hocico en pantalla.
-@export var fp_clip_radius := 0.15
+## Radio (m) del volumen que se DESCARTA alrededor de la camara, para que no se
+## cuele la cabeza ni el hocico en pantalla. Medido en el rig: el reposo es una
+## T-POSE y el hueso Head esta a 1.339 m del origen; el craneo tiene ~0.15 m de
+## radio, asi que con la camara encima (head_distance chico) hace falta ~0.25-0.30.
+## El volumen es un elipsoide alargado hacia adelante (clip_forward_scale), asi
+## que mata el hocico de frente sin comerse los brazos, que van mas atras.
+@export var fp_clip_radius := 0.28
 
 
 # Inclinacion del torso segun el pitch de la camara. Es una ENTRADA DE CONTROL
 # al spring, no una animacion por codigo.
-@export var lean_max_degrees := 12.0
+@export var lean_max_degrees := 6.0
 @export var lean_reference_degrees := 45.0
 ## Si el cuerpo se inclina al reves (mirar abajo lo tira para atras), poner -1.
 @export var lean_direction := 1.0
@@ -72,14 +80,26 @@ var _anim_pose_cache: Dictionary = {}
 # camara * alcance) y NO desde el punto del mundo: usar el punto del mundo tiraria
 # de los brazos hacia un lugar a metros de distancia.
 @export var ik_enabled := true
-## Posicion del nodo de polo, en el espacio del esqueleto. TwoBoneIK3D "requires
-## a pole target": con SOLO una direccion custom (SECONDARY_DIRECTION_CUSTOM) el
-## solver procesa pero no escribe ninguna pose. Ubicado detras de los hombros
-## para que el codo vaya hacia atras.
-@export var ik_pole_offset := Vector3(0.0, 0.9, -0.8)
-## Alcance maximo del brazo (m). Mas alla, la mano APUNTA pero no llega; y sin
-## contacto no hay interaccion (decision de diseno, no una traba).
-@export var arm_reach := 0.55
+## Polo del codo, RELATIVO AL HOMBRO y en el espacio del esqueleto. Dos cosas
+## aprendidas midiendo el rig:
+##  - TwoBoneIK3D "requires a pole target": con SOLO una direccion custom
+##    (SECONDARY_DIRECTION_CUSTOM) el solver procesa pero NO escribe ninguna pose.
+##  - Hace falta UN POLO POR BRAZO: con uno solo, los dos codos caen en el mismo
+##    plano y quedan como ala de pollo.
+## Criterio: abajo + atras + afuera. El reposo del modelo es una T-POSE perfecta
+## (codo sin curvatura), asi que la direccion natural NO se puede derivar del rig:
+## se pone a mano. +Z local del esqueleto = adelante (medido), asi que atras = -Z.
+## La X se espeja sola para el brazo derecho.
+@export var ik_pole_offset := Vector3(0.30, -0.50, -0.30)
+## Alcance maximo del brazo (m). OJO: el rig mide 1.397 m de hombro a muneca, y un
+## valor CORTO no "acorta" el brazo: lo PLEGA entero (el codo hace tope). Con
+## arm_reach_auto=true este valor se SOBRESCRIBE midiendo el esqueleto.
+@export var arm_reach := 1.28
+## Deriva arm_reach del rig (hombro->muneca en reposo * arm_reach_margin).
+@export var arm_reach_auto := true
+## Margen sobre la longitud real, para que el codo nunca quede del todo recto
+## (una cadena 100% extendida es donde el solver tiembla y el polo da vueltas).
+@export var arm_reach_margin := 0.92
 ## Caida del target para que el codo no quede recto.
 @export var hand_drop := 0.04
 
@@ -344,11 +364,10 @@ func _setup_arm_ik() -> void:
 		print("[ragdoll_character] ArmIK desactivado por export")
 		return
 	arm_ik.setting_count = 2
-	if ik_pole_target != null:
-		ik_pole_target.position = ik_pole_offset
+	_place_poles_and_measure()
 	var chains := [
-		{ "root": "LArm1", "mid": "LArm2", "end": "LArm2.001", "t": hand_target_l },
-		{ "root": "RArm1", "mid": "RArm2", "end": "RArm2.001", "t": hand_target_r },
+		{ "root": "LArm1", "mid": "LArm2", "end": "LArm2.001", "t": hand_target_l, "p": ik_pole_target_l },
+		{ "root": "RArm1", "mid": "RArm2", "end": "RArm2.001", "t": hand_target_r, "p": ik_pole_target_r },
 	]
 	for i in chains.size():
 		var c: Dictionary = chains[i]
@@ -358,13 +377,42 @@ func _setup_arm_ik() -> void:
 		# get_path_to() y no get_path(): el NodePath debe ser relativo al nodo que
 		# lo guarda, o se rompe si el ragdoll se instancia dentro de otra escena.
 		arm_ik.set_target_node(i, arm_ik.get_path_to(c["t"]))
-		if ik_pole_target != null:
-			arm_ik.set_pole_node(i, arm_ik.get_path_to(ik_pole_target))
+		# Polo POR BRAZO. Con un solo polo los dos codos caen en el mismo plano.
+		if c["p"] != null:
+			arm_ik.set_pole_node(i, arm_ik.get_path_to(c["p"]))
+		else:
+			push_warning("[ragdoll_character] falta el polo de la cadena %d" % i)
 	_l_arm_id = animated_skel.find_bone("LArm1")
 	_r_arm_id = animated_skel.find_bone("RArm1")
 	arm_ik.modification_processed.connect(_on_ik_modification)
-	print("[ragdoll_character] ArmIK OK: %d cadenas | bone ids L=%d R=%d | reach=%.2fm" % [
-		arm_ik.setting_count, _l_arm_id, _r_arm_id, arm_reach])
+	print("[ragdoll_character] ArmIK OK: %d cadenas | bone ids L=%d R=%d | brazo=%.3fm alcance=%.3fm | polos L=%s R=%s" % [
+		arm_ik.setting_count, _l_arm_id, _r_arm_id, _rest_arm_len, arm_reach,
+		str(ik_pole_target_l != null), str(ik_pole_target_r != null)])
+
+
+## Mide el rig y coloca el polo de cada codo.
+## OJO (medido 2026-09-10): el reposo del modelo es una T-POSE perfecta y las
+## longitudes de hueso son DESIGUALES (brazo 0.638 + antebrazo 0.760), asi que el
+## "codo desviado del punto medio" da (-1,0,0) por puro artefacto aritmetico:
+## NO sirve como direccion de codo. Por eso el polo va a mano (ik_pole_offset,
+## relativo al HOMBRO) y la X se espeja para el derecho.
+## El alcance, en cambio, SI se mide (nada de numeros inventados: un alcance corto
+## no acorta el brazo, lo pliega entero).
+func _place_poles_and_measure() -> void:
+	var l_sh: Vector3 = animated_skel.get_bone_global_rest(animated_skel.find_bone("LArm1")).origin
+	var l_wr: Vector3 = animated_skel.get_bone_global_rest(animated_skel.find_bone("LArm2.001")).origin
+	var r_sh: Vector3 = animated_skel.get_bone_global_rest(animated_skel.find_bone("RArm1")).origin
+	_rest_arm_len = (l_wr - l_sh).length()
+	if arm_reach_auto and _rest_arm_len > 0.01:
+		arm_reach = _rest_arm_len * arm_reach_margin
+	if ik_pole_target_l != null:
+		ik_pole_target_l.position = l_sh + ik_pole_offset
+	if ik_pole_target_r != null:
+		ik_pole_target_r.position = r_sh + Vector3(-ik_pole_offset.x, ik_pole_offset.y, ik_pole_offset.z)
+	print("[ragdoll_character] rig medido: brazo=%.3fm auto=%s -> alcance=%.3fm | poloL=%s poloR=%s" % [
+		_rest_arm_len, str(arm_reach_auto), arm_reach,
+		str(ik_pole_target_l.position if ik_pole_target_l != null else Vector3.ZERO),
+		str(ik_pole_target_r.position if ik_pole_target_r != null else Vector3.ZERO)])
 
 
 ## El doc de SkeletonModifier3D es explicito: la pose MODIFICADA por un modifier
