@@ -11,6 +11,10 @@
 *.gde
 *.tres
 *.res
+# EXCEPCION: los materiales compartidos SI se versionan (regla de oro: los
+# materiales/shaders viven como .tres o como sub-recursos del .tscn, nunca
+# creados proceduralmente en GDScript).
+!src/**/materials/*.tres
 export_presets.cfg
 GodotSharp/
 mono_crash.*

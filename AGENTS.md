@@ -373,6 +373,57 @@ el ragdoll actual (doble skeleton PiCode9560): hoy el walk cycle es un clip, no 
 
 ---
 
+## SISTEMA FP + PUNTERO (plan) (2026-09-10)
+
+**Objetivo:** el personaje pasa a **1a persona** (el juego sera full FP) con un
+**puntero minimalista** = donde las manos del jugador actuan.
+
+### Decisiones (General, 2026-09-10)
+
+| # | Decision |
+|---|---|
+| 1 | **FP por defecto**; 3a persona SOLO debug (tecla conmutable, off en el juego) |
+| 1b | El pivote de la camara va en la **frente** (fuera del craneo) + **shader de clip por distancia** (tambien limpia el hocico de las fursonas) |
+| 2 | **Hibrido**: el rayo APUNTA (fija el destino de las manos), las manos van fisicamente |
+| 3 | **La mano DEBE tocar**: sin contacto no hay interaccion. El rayo solo apunta |
+| 4 | Shader de clip aprobado |
+| 5 | Camara **estable** (rotacion 100% raton) pero el **pitch influye en el cuerpo**: mirar abajo -> inclinarse adelante; arriba -> atras |
+
+### Arquitectura de camara elegida (B)
+
+`CameraPivot` NO cuelga del esqueleto. **Rotacion = 100% raton** (1:1, sin
+latencia ni mareo). **Posicion = frente del hueso Head**, suavizada en TIEMPO
+(`1 - exp(-delta/tau)`), con el offset aplicado en el espacio de **yaw del
+personaje** (`Animated/.../Skeleton3D`, que es quien marca el "adelante": el
+nodo `Physical` lleva 180 grados de mas).
+
+Por que NO colgar la camara del hueso fisico: la cabeza es un rigidbody con cone
+joint (+-45/180) y su rotacion la lleva un PD hacia el master -> el raton iria
+por delante y en un choque la camara giraria sola (mareo).
+
+### Obstaculos verificados (2026-09-10)
+
+- El mesh es **UNA sola superficie** (`ArrayMesh_d5t02`, skinned) -> no se puede
+  ocultar la cabeza por material; de ahi el shader de clip.
+- Material original: **`cull_mode = 2` (culling DESACTIVADO)** y **sin textura**
+  (gris 0.906, roughness 0.5) -> el shader debe replicar `cull_disabled`.
+- `Animated` esta `visible = false` -> un solo mesh visible (el `Physical`).
+- `SpringArm3D.spring_length = 5.0` era la 3a persona.
+- Pitch limitado a **+-45 grados** y `grab_dir` saturaba a los 43 -> reescalar.
+
+### Fases
+
+1. **1a: Camara FP** — `spring_length=0`, posicion a la frente, rotacion raton,
+   pitch +-85, `near=0.05`, toggle debug, shader de clip.
+2. **1b: Lean corporal** por pitch (entrada de CONTROL al spring; NO animacion
+   por codigo).
+3. **2: Puntero** — `RayCast3D` al centro + `Node3D Pointer` en el impacto +
+   reticle minimo (2D: punto; 3D: destino real de las manos).
+4. **3: Manos al puntero** — IK de brazo con clamp al alcance.
+5. **4: Interaccion** — la mano toca; mapa de CAPAS (hoy todo es capa 1 y el
+   `GrabArea` detecta el SUELO); sweep de `get_overlapping_bodies()`.
+6. **5: Red** — rotacion local + estado replicable sin huesos (D15).
+
 ## 🌍 WORLDBUILDING — Reglas del universo
 
 ### El Planeta
