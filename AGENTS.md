@@ -220,19 +220,28 @@ NO huesos. `pose = f(estado_replicado, tiempo_local)` — funcion PURA en cada c
 
 ## ESTÁNDAR DE ANIMACIONES (2026-09-10)
 
-**`meta/docs/Estandar_Animaciones.md`** — qué clips debe tener el jugador, con cuántos frames
-y qué características, para FP + ragdoll + multijugador. Reglas duras nacidas de bugs MEDIDOS:
+**`meta/docs/Estandar_Animaciones.md`** — v2, reescrito sobre MEDICIONES del GLB (la v1
+inventaba 22 clips; el motor hace mucho de eso solo). Reglas duras nacidas de bugs MEDIDOS:
+
+**BASES REALES (medidas):** 5 clips, **30 fps**, mismas 11 tracks en todas.
+`Walk` 0.833 s **22 keys (la única animación real)** · `idle` **1 key (pose)** ·
+`grab_lower/middle/upper` **1 key cada una (poses que se mezclan por el pitch)** =
+el "lean" que existe hoy.
+
+**Los 9 huesos SIN track en NINGÚN clip** (viven en reposo = T-pose):
+`LShoulder, LArm2, LArm2.001, RShoulder, RArm2, RArm2.001, Neck, Head, Head.001`
 
 - **R1 — Todos los huesos, en todos los clips.** Un hueso sin track queda en reposo y el
-  ragdoll pelea contra él. Bug medido (`body_debugger`): `LArm1` a 89.9° constantes = los
-  clips Idle/Walk **NO animan los brazos** → los brazos se van a los costados.
-- **R2 — Cabeza y torso superior QUIETOS en FP.** La cámara vive en la cabeza: animar el
-  torso sacude la vista (el clip `Grab` pliega el torso → "la vista se va adelante").
+  ragdoll pelea por alcanzar una T-pose. **Bug medido:** los brazos se van a los costados por
+  estos 9 tracks. **El fix es agregar 9 tracks constantes a los 5 clips — no clips nuevos.**
+- **R2 — Cabeza y torso superior QUIETOS en FP.** La cámara vive en la cabeza (el clip `Grab`
+  pliega el torso → "la vista se va adelante").
 - R3 cero root motion · R4 el loop cierra (frame 1 == último) · R5 brazos con recorrido para
-  el IK · R6 nada de `scale` · R7 30 fps en el fuente.
+  el IK · R6 nada de `scale` · R7 30 fps.
 
-Incluye catálogo de clips (locomoción, salto, interacción, daño/muerte, infectado), blend
-times, marcas/eventos (`footstep_*`, `grab_contact`) y el plan sugerido.
+**Principio:** si el motor lo hace solo (física del ragdoll, IK, código), **NO se anima**.
+Quedan descartados: caer, aterrizar, daño, morir, agacharse, empujar, lanzar, usar,
+transformar, wall-jump.
 
 **Decisión operativa (2026-09-10):** en FP **no** se reproduce `Grab`; el agarre lo hace
 **solo el IK**. Los brazos **sin click = idle** (el IK no escribe pose, `influence=0`);

@@ -1,189 +1,156 @@
 # Estándar de Animaciones — Tripofobia
 
-**Autor:** Lord Gatito · **Estado:** Borrador v1 (2026-09-10) · **Rama:** main
-
-Este documento define **qué animaciones debe tener el jugador, con cuántos frames y con
-qué características**, condicionado por nuestras mecánicas (FPS + ragdoll activo +
-multijugador). Cada regla "dura" nace de un **bug real medido**, no de una preferencia.
+**Autor:** Lord Gatito · **Estado:** v2 (2026-09-10) — reescrito sobre MEDICIONES del modelo
+**v1 descartada:** proponía 22 clips y cientos de frames inventados. El motor hace mucho de
+eso solo, y el modelo real tiene mucho menos. Este documento parte de los datos.
 
 ---
 
-## 1. Restricciones que mandan (arquitectura)
+## 1. BASES REALES (medidas del GLB, 2026-09-10)
 
-Antes de la lista de clips, hay tres cosas del motor que **condicionan todo**:
+`tools/body_debugger` + inspección de las `Animation` del GLB. **20 huesos**, **30 fps**
+(`step = 0.0333`).
 
-| Sistema | Qué hace | Consecuencia para animar |
-|---|---|---|
-| **Cámara FP** | Vive **dentro de la cabeza** (`CameraPivot` sobre `Physical Bone Head`) | Cualquier movimiento de **cabeza o torso** en un clip **sacude la pantalla** |
-| **Ragdoll activo** | Un esqueleto **ANIMADO invisible** es el máster; los `PhysicalBone3D` copian su pose con un spring PD | El máster **debe posar TODOS los huesos** en TODO momento; un track que falta deja el hueso en reposo y el físico **pelea contra él** |
-| **IK de brazos** | `TwoBoneIK3D` recoloca los brazos por encima de la pose | Los brazos del clip deben quedar en pose **neutral** (ni extendida ni bloqueada) |
-| **Red** | Se replica **estado** (pos, vel, state, speed, aim_pitch), **no huesos** | La animación es **función pura del estado** → no puede depender de datos locales |
+| Clip | Largo | Keys | Tipo real |
+|---|---|---|---|
+| `Walk` | 0.833 s | 22 | **loop** (la única animación real) |
+| `idle` | 0.042 s | **1** | **pose** |
+| `grab_lower` | 0.001 s | **1** | **pose** (blend por pitch) |
+| `grab_middle` | 0.001 s | **1** | **pose** (blend por pitch) |
+| `grab_upper` | 0.001 s | **1** | **pose** (blend por pitch) |
+
+**Animan 11 de 20 huesos:** `Body, LArm1, LHip, LLeg1, LLeg2, LLeg2.001, RArm1, RHip, RLeg1,
+RLeg2, RLeg2.001`
+
+**Los 9 que NO tienen track en NINGÚN clip** (viven en reposo = T-pose):
+`LShoulder, LArm2, LArm2.001, RShoulder, RArm2, RArm2.001, Neck, Head, Head.001`
+
+> **Consecuencia medida:** el ragdoll copia la pose del máster con un spring PD. Un hueso sin
+> track queda en reposo, así que **el físico pelea por alcanzar una T-pose** — los brazos se
+> van a los costados. Es la causa raíz del "el brazo flexiona raro", no el IK.
+
+**Lectura del diseño actual:** el juego se apoya en **poses mezcladas**, no en animaciones
+largas. `grab_lower/middle/upper` se interpolan según el pitch de la cámara → **ese es el
+"lean" que existe hoy**. `idle` es una pose. Sólo `Walk` tiene tiempo.
 
 ---
 
-## 2. REGLAS DURAS (no negociables)
+## 2. LO QUE EL MOTOR MANEJA **SIN** ANIMACIONES
 
-### R1 — Todos los huesos, en todos los clips
-Cada clip debe tener track de **los 20 huesos** del esqueleto, aunque sea con un valor
-constante. Un hueso sin track se queda en **reposo (T-pose)**.
+No hay que autorizar clips para esto (el ragdoll + la física + el código ya lo resuelven):
 
-> **Bug real (2026-09-10, medido con `tools/body_debugger`):** con el jugador en Idle, el
-> hueso animado `LArm1` marca **89.9° respecto a la vertical (= horizontal, T-pose)**,
-> idéntico a los 0 s y a los 2 s. Es decir: **los clips Idle/Walk no animan los brazos**.
-> El ragdoll peleaba por alcanzar una T-pose y **los brazos se iban a los costados**.
+| Estado | Quién lo resuelve |
+|---|---|
+| Caer / estar en el aire | **Física** (ragdoll) |
+| Aterrizar / absorber impacto | **Física** |
+| Recibir daño / empujones | **Física** (ragdoll reacciona) |
+| Morir | **Ragdoll** (el cuerpo se suelta, local/cosmético) |
+| Agacharse | **Código** (baja el cuerpo/cápsula) |
+| Movimiento (velocidad, dirección, sprint) | **CharacterBody3D** |
+| Agarrar / lanzar / empujar / usar | **IK de brazos** + poses de brazo |
+| Transformar (infectado) | **Shader/VFX** + ragdoll |
+| Wall-jump | **Física** |
 
-### R2 — Cabeza y torso superior QUIETOS en los clips de FP
-En primera persona, **no** se anima traslación/rotación de `Neck`, `Head` ni `Head.001`,
-y el torso (`Body`) se mueve **como máximo unos pocos grados** (respiración, peso).
+**Regla:** si el motor lo hace solo, **no se anima**. Sólo se anima lo que aporte algo que la
+física no pueda dar (peso, contacto con el suelo, anticipación).
 
-> **Bug real:** el clip `Grab` pliega todo el torso hacia adelante. Como la cámara está
-> sobre la cabeza, al agarrar **la vista se va hacia adelante** y resulta mareador. Ese
-> síntoma se atribuyó al lean procedural durante dos rondas de diagnóstico erróneo.
+---
+
+## 3. REGLAS DURAS
+
+### R1 — **TODOS los huesos, en TODOS los clips** (la más importante)
+Cada clip debe tener track de **los 20 huesos**, aunque sea con **1 key** de valor constante.
+Un hueso sin track se queda en reposo y el ragdoll pelea contra él.
+
+- **Bug medido:** los 9 huesos listados en §1 no tienen track → los antebrazos y las manos
+  viven en T-pose → los brazos se van a los costados.
+- **Fix mínimo:** agregar esos 9 tracks (constantes) a los 5 clips existentes. **No hace falta
+  animarlos**: alcanza con que **declaren una pose** en vez de quedar en reposo.
+
+### R2 — Cabeza y torso superior QUIETOS en FP
+La cámara vive **dentro de la cabeza**. Animar `Neck`/`Head`/`Head.001` o plegar el `Body`
+**sacude la vista**.
+
+- **Bug medido:** `grab_upper/middle/lower` pliegan el torso entero → al agarrar "la vista se
+  va para adelante". El gradiente está bien; hay que **re-autorizarlo con el torso casi
+  quieto** (el agarre lo hace el brazo).
 
 ### R3 — Cero root motion
-El desplazamiento lo lleva el `CharacterBody3D` (código). El clip **no** traslada la raíz.
-Un clip con root motion pelea contra la física y rompe la predicción en red.
+El desplazamiento lo lleva el código. Un clip con root motion pelea con la física y rompe la
+predicción en red.
 
-### R4 — Loops: el frame 1 debe ser igual al último
-Todo clip en bucle cierra el ciclo. **Además**, el `Animation` importado de glTF viene con
-`loop_mode = NONE`: en Godot hay que forzar `LOOP_LINEAR` en código (`ragdoll_character.gd`
-ya lo hace para clips con `length > 0.1`).
+### R4 — Loop: frame 1 == último frame
+Y en Godot, `loop_mode` se fuerza por código (el import de glTF trae `NONE`).
 
 ### R5 — Brazos con recorrido para el IK
-La pose de brazos del clip debe dejar **recorrido**: no extendida al máximo (el IK no puede
-estirar más) ni pegada al cuerpo (queda sin espacio). Pose neutral ≈ **codo a ~100°**.
+Dejar el codo a ~100°: ni extendido al máximo (el IK no puede estirar más) ni pegado al cuerpo.
 
-### R6 — Nada de animar `scale`
-Solo traslación y rotación de huesos. La escala rompe el ragdoll.
+### R6 — Nada de `scale`. Solo traslación/rotación.
 
-### R7 — 30 fps en el fuente
-Todos los clips a **30 fps** en Blender. Godot interpola; no hace falta 60.
+### R7 — 30 fps en el fuente (lo que ya usa el modelo).
 
 ---
 
-## 3. Catálogo de clips
+## 4. CATÁLOGO (mínimo, sobre las bases reales)
 
-**Frames a 30 fps.** `once` = se reproduce una vez y se queda/blendea; `loop` = cíclico.
+**No se inventan clips nuevos hasta que el motor no alcance.** Primero, completar lo que hay.
 
-### 3.1 Locomoción (MVP: imprescindibles)
+### 4.1 Ya existe — hay que ARREGLARLO
 
-| Clip | Tipo | Frames | Dur. | Loop | Notas |
-|---|---|---|---|---|---|
-| `idle` | loop | 120 | 4.0 s | ✔ | Respiración + micro-movimiento. **Torso casi quieto (R2)** |
-| `walk` | loop | 36 | 1.2 s | ✔ | 2 pasos/ciclo. Sin root motion |
-| `sprint` | loop | 30 | 1.0 s | ✔ | Inclinación leve permitida (≤ 8°) |
-| `crouch_idle` | loop | 90 | 3.0 s | ✔ | Torso bajo, pero **R2 sigue aplicando** |
-| `crouch_walk` | loop | 48 | 1.6 s | ✔ | 2 pasos/ciclo |
-
-### 3.2 Salto y aire
-
-| Clip | Tipo | Frames | Dur. | Loop | Notas |
-|---|---|---|---|---|---|
-| `jump_launch` | once | 10 | 0.33 s | — | Compresión antes de despegar |
-| `jump_air` | loop | 30 | 1.0 s | ✔ | Pose de caída sostenida |
-| `land` | once | 15 | 0.5 s | — | Absorción del impacto |
-| `walljump` | once | 12 | 0.4 s | — | Empuje desde pared |
-
-### 3.3 Interacción (manos)
-
-| Clip | Tipo | Frames | Dur. | Loop | Notas |
-|---|---|---|---|---|---|
-| `grab_reach_R` | once | 12 | 0.4 s | — | **Solo brazo derecho.** Torso quieto (R2) |
-| `grab_hold_R` | loop | 60 | 2.0 s | ✔ | Sostener. El IK manda la mano |
-| `throw_R` | once | 15 | 0.5 s | — | Solo brazo |
-| `push` | once | 18 | 0.6 s | — | Ambas manos |
-| `use` | once | 20 | 0.67 s | — | Accionar palanca/botón |
-
-> **`grab_*_L`**: hoy el sistema es **simétrico por acción** (`grab_left` / `grab_right`);
-> los clips de la mano izquierda son espejo. Se pueden generar espejando en Blender.
-
-### 3.4 Daño y muerte
-
-| Clip | Tipo | Frames | Dur. | Loop | Notas |
-|---|---|---|---|---|---|
-| `hit_front` | once | 15 | 0.5 s | — | Retroceso por golpe frontal |
-| `hit_back` | once | 15 | 0.5 s | — | Opcional MVP |
-| `downed` | once | 45 | 1.5 s | — | Último frame engancha con el **ragdoll** |
-| `death` | once | 40 | 1.33 s | — | Ídem: al terminar pasa a ragdoll local/cosmético |
-
-### 3.5 Infectado (rol especial)
-
-| Clip | Tipo | Frames | Dur. | Loop | Notas |
-|---|---|---|---|---|---|
-| `transform_in` | once | 45 | 1.5 s | — | Humano → mutado |
-| `transform_out` | once | 45 | 1.5 s | — | Mutado → humano |
-| `skill_1` / `skill_2` / `skill_3` | once | 30 | 1.0 s | — | Placeholder: 1 por habilidad |
-
-### 3.6 Fuera de juego
-
-| Estado | Animación |
-|---|---|
-| **Director** (jugador muerto) | No tiene cuerpo. Solo cámara/interfaz |
-
----
-
-## 4. Convenciones
-
-- **Nombres:** `snake_case`, sin prefijos de personaje (`walk`, no `shiba_walk`). Los clips
-  son **compartidos** por los 10 personajes; lo específico va en el esqueleto/GLB.
-- **Un solo GLB por personaje**, todos los clips dentro.
-- **Export glTF:** sin root motion, sin escala, 30 fps, `+Y up`.
-- **Nada de clips de 1 frame**: si un clip dura `< 0.1 s` el código no le fuerza el loop.
-
----
-
-## 5. Marcas / eventos
-
-Los eventos van como **`Animation` call-method tracks** (no por código en `_process`):
-
-| Marca | Cuándo | Para qué |
+| Clip | Tipo | Acción |
 |---|---|---|
-| `footstep_l` / `footstep_r` | al apoyar cada pie | Sonido + `SoundArea` (¡los enemigos oyen!) |
-| `grab_contact` | cuando la mano llega | Enclavar el `PinJoint` del agarre |
-| `grab_release` | al soltar | Liberar el joint |
-| `land_impact` | al tocar suelo | Ruido + sacudida |
-| `debug_end` | último frame de los `once` | Volver al estado anterior |
+| `Walk` | loop | **Agregar los 9 tracks que faltan** (R1) |
+| `idle` | pose | **Agregar los 9 tracks** + darle vida (**20-30 keys** para respiración) |
+| `grab_lower/middle/upper` | poses | **Agregar los 9 tracks** + re-autorizar con torso quieto (R2) |
 
-> Las marcas son **datos de la animación**, no lógica: mantienen el clip utilizable por
-> cualquier personaje y no dependen del framerate.
+> **Ese es el 90 % del trabajo y no requiere clips nuevos.** Con 9 tracks constantes en cada
+> clip, los brazos dejan de pelear contra la T-pose.
+
+### 4.2 A evaluar (sólo si aporta algo que la física no dé)
+
+| Clip | Tipo | Keys | ¿Vale la pena? |
+|---|---|---|---|
+| `walk_sprint` | loop | ~22 | Sólo si el ciclo de `Walk` a 5 m/s se ve mal |
+| `jump_pose` | pose | 1 | Sólo si el ragdoll en el aire se ve flácido (anticipación) |
+| `land_pose` | pose | 1 | Sólo si el aterrizaje necesita leer el impacto |
+
+### 4.3 Descartado (lo maneja el motor)
+
+`crouch_idle` · `crouch_walk` · `jump_launch` · `jump_air` · `walljump` · `throw` · `push` ·
+`use` · `hit_front` · `hit_back` · `downed` · `death` · `transform_in` · `transform_out` ·
+`skill_1/2/3` → ver §2.
 
 ---
 
-## 6. Transiciones (blend times)
+## 5. Convenciones
 
-| Salto | Tiempo |
-|---|---|
-| idle ↔ walk ↔ sprint | **0.15 – 0.25 s** |
-| acción → idle (`once` → loop) | **0.08 – 0.12 s** (rápido, para que no se sienta pegajoso) |
-| cualquier estado → `downed`/`death` | **0.10 s** y luego ragdoll |
-| `transform_in/out` | **0.0 s** (son transiciones "duras" a propósito) |
+- **Nombres:** `snake_case`, sin prefijo de personaje (`walk`, no `shiba_walk`). Los clips son
+  **compartidos**; lo específico va en el esqueleto/GLB.
+- **Un solo GLB por personaje**, todos los clips dentro.
+- **Export glTF:** 30 fps, sin root motion, sin escala, `+Y up`.
+- **Pose = 1 key.** No hace falta un clip de 30 frames para algo estático.
+- **`loop_mode`** se fuerza por código para clips con `length > 0.1`.
 
 ---
 
-## 7. Estado actual vs objetivo
+## 6. Estado actual vs objetivo
 
 | | Hoy | Objetivo |
 |---|---|---|
-| Clips existentes | `Idle`, `Walk`, `Grab` (mínimos) | Catálogo de §3 |
-| Tracks de brazos | **NO existen** en Idle/Walk (bug R1) | Presentes en todos |
-| Torso en `Grab` | **Pliado entero** (bug R2) | Quieto; el agarre lo hace el IK |
-| Loop | se fuerza por código | Igual + clips cerrados (R4) |
-| Eventos | ninguno | §5 |
-
-### Plan sugerido
-1. **Ahora (sin assets nuevos):** en FP **no** reproducir `Grab`; el agarre lo hace **solo
-   el IK**. Elimina el tirón de cámara y el torso doblado.
-2. **Corto:** agregar los tracks de **brazos** a `Idle`/`Walk` (o dejarlos al IK) → R1.
-3. **Medio:** clips nuevos de §3 en Blender con las reglas R1–R7.
+| Clips | `Walk` (loop) + `idle` + 3 poses de agarre | **los mismos** + los tracks que faltan |
+| Huesos animados | **11 / 20** | **20 / 20** en todos |
+| `idle` | 1 key (rígido) | 20-30 keys (respiración) |
+| Gradiente de agarre | pliega el torso (marea en FP) | torso quieto (R2) |
+| Loop | se fuerza por código | igual |
+| Eventos | ninguno | `footstep_l/r` en `Walk` (los enemigos oyen) |
 
 ---
 
-## 8. Decisiones abiertas
+## 7. Decisiones abiertas
 
-- [ ] ¿Los brazos los lleva **siempre el IK** (y el clip solo marca el hombro), o el clip
-      los anima en idle/walk y el IK sólo al agarrar?
-- [ ] ¿`walljump` necesita clip propio o sale del `jump`?
-- [ ] Frames exactos por personaje: ¿el stride depende de la velocidad (`SPEED=50` ≈ 5 m/s)?
-      Hoy `walk` dura 0.83 s/ciclo y **puede patinar** si la velocidad real no coincide.
-- [ ] ¿Los 10 personajes comparten clips (recomendado) o alguno tiene firma propia?
-- [ ] Locomoción **8-direccional** (strafe) o solo adelante/atrás.
+- [ ] **Los brazos**: ¿los anima el clip (poses) o los lleva **siempre el IK**? Si los lleva el
+      IK, en los clips basta con **1 key neutral** por hueso (R1 cumplida sin trabajo de animación).
+- [ ] **`Walk` puede patinar**: 0.833 s/ciclo vs `SPEED=50` ≈ 5 m/s. ¿Atamos la velocidad del
+      `AnimationTree` a la velocidad real?
+- [ ] ¿Los 10 personajes **comparten** clips (recomendado) o alguno tiene firma propia?
+- [ ] Locomoción **8-direccional** (strafe) o sólo adelante/atrás.
