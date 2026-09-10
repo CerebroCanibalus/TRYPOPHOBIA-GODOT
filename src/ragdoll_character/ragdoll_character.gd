@@ -84,6 +84,10 @@ func _ready():
 	# sesion anterior, arrancaba en ragdoll_mode=true y solo se inclinaba.
 	ragdoll_mode = false
 	print("[ragdoll_character] READY ragdoll_mode=%s bones=%d simulator=%s" % [ragdoll_mode, physics_bones.size(), _simulator != null])
+	# Diagnostico: si la accion no tiene eventos, R no hace NADA (fue el caso
+	# tras vaciarla). Ver project.godot -> [input] -> ragdoll.
+	var rd_events := InputMap.action_get_events("ragdoll").size() if InputMap.has_action("ragdoll") else -1
+	print("[ragdoll_character] accion 'ragdoll' (R) -> %d evento(s)" % rd_events)
 	# El clip Walk importado del GLB trae loop_mode=NONE -> se reproduce UNA vez
 	# (0.83s) y se congela, por eso "el walk cycle no funciona bien". Forzamos
 	# loop continuo en los clips con duracion real (idle/grab son poses fijas).
@@ -114,7 +118,12 @@ func _setup_physical_bone_simulator() -> PhysicalBoneSimulator3D:
 
 
 func _input(event):
-	if Input.is_action_just_pressed("ragdoll"): ragdoll_mode = bool(1-int(ragdoll_mode)) # toggle ragdoll mode
+	# La accion `ragdoll` quedo VACIA en project.godot cuando se arreglo el
+	# toggle accidental (R estaba mapeada y el personaje arrancaba en ragdoll).
+	# Ahora R vuelve a estar mapeada A PROPOSITO: es la tecla de full ragdoll.
+	if Input.is_action_just_pressed("ragdoll"):
+		ragdoll_mode = not ragdoll_mode
+		print("[ragdoll_character] MODO RAGDOLL = %s" % ragdoll_mode)
 
 	active_arm_left = Input.is_action_pressed("grab_left")# activate left arm with mouse left click
 	active_arm_right = Input.is_action_pressed("grab_right")# activate right arm with mouse right click
