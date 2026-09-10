@@ -18,10 +18,15 @@ extends Node3D
 ## Skeleton3D del Animated, NO el pivote: el nodo Physical lleva 180 grados de
 ## mas, asi que usar el yaw del pivote pondria la camara detras del craneo.
 @export var facing_node: Node3D
-## Offset del pivote desde el ORIGEN del hueso de la cabeza, en el espacio del
-## personaje: +Z = adelante, +Y = arriba. La frente cae alrededor de
-## (0.0, 0.08, 0.12); se ajusta a ojo con el juego abierto.
-@export var forehead_offset := Vector3(0.0, 0.08, 0.12)
+## DISTANCIA (m) desde el origen del hueso de la cabeza hacia ADELANTE donde vive
+## la camara. Es LA perilla para sacarla del craneo: cuanto mas adelante, menos
+## geometria propia tiene que borrar el shader de recorte. El origen del hueso
+## esta en la base del craneo, asi que ~0.20-0.30 cae en la frente/cara.
+@export var head_distance := 0.25
+## Altura de la camara relativa al hueso (+ arriba).
+@export var head_height := 0.08
+## Desplazamiento lateral en el espacio del personaje (+ su derecha).
+@export var head_side := 0.0
 ## Constante de tiempo del suavizado de POSICION (s). 0.0 = pegada al hueso
 ## (puede vibrar con la fisica); valores altos = mas flotante.
 @export var position_smoothing := 0.03
@@ -107,7 +112,7 @@ func _target_position() -> Vector3:
 	if facing_node != null:
 		yaw = facing_node.global_rotation.y
 	var b := Basis(Vector3.UP, yaw)
-	return target_node.global_position + b * forehead_offset
+	return target_node.global_position + b * Vector3(head_side, head_height, head_distance)
 
 
 ## El toggle 1a/3a es SOLO para debug: en una exportacion de release nunca se

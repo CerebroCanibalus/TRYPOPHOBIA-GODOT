@@ -36,7 +36,10 @@ var physics_bones = [] # all physical bones
 # 1a persona: recorte de la geometria propia alrededor de la camara. Evita ver
 # el interior del craneo y limpia el hocico de las fursonas. El ShaderMaterial
 # lo asigna el .tscn como material_override; aca solo se muta su parametro.
-@export var fp_clip_radius := 0.35
+# Mantenerlo LO MAS CHICO POSIBLE: cuanto mas lejos del craneo este la camara
+# (`head_distance` en ragdoll_camera.gd), menos geometria tiene que borrar. Solo
+# subirlo lo justo para que no se cuele el hocico en pantalla.
+@export var fp_clip_radius := 0.15
 
 
 # Inclinacion del torso segun el pitch de la camara. Es una ENTRADA DE CONTROL
