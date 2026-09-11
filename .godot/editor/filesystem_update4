@@ -1,0 +1,5 @@
+res://src/ragdoll_character/scenes/ragdoll_character.tscn
+res://src/ragdoll_character/ragdoll_character.gd
+res://tools/ragdoll_playground/ragdoll_playground.gd
+res://tools/ragdoll_playground/ragdoll_playground.tscn
+res://tools/body_debugger/body_debugger.gd
