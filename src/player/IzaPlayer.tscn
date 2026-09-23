@@ -3,7 +3,7 @@
 [ext_resource type="Resource" uid="uid://b8p7moiotok7a" path="res://src/player/iza_stats.tres" id="1_izastats"]
 [ext_resource type="Script" uid="uid://c4pibqpwhdw66" path="res://src/player/iza_player.gd" id="1_m5ixq"]
 [ext_resource type="Shader" uid="uid://bqpi3gls0yr4d" path="res://src/player/postprocess.gdshader" id="2_25kiw"]
-[ext_resource type="PackedScene" uid="uid://s6hcxc3wyigt" path="res://assets/players/iza_rig.tscn" id="2_wfc3i"]
+[ext_resource type="PackedScene" uid="uid://s6hcxc3wyigt" path="res://assets/players/zorrillo/iza_rig.tscn" id="2_wfc3i"]
 [ext_resource type="Shader" uid="uid://ircrmsbekoxg" path="res://src/player/outline.gdshader" id="3_hk1ip"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hcfog"]

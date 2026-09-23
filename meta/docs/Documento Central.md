@@ -1,9 +1,5 @@
 # Documento Central — Tripofobia
 
-**Autor:** Lord Gatito
-**Estado:** Activo
-**Última actualización:** 2026-08-31
-
 ---
 
 ## 1. Resumen Ejecutivo
@@ -39,6 +35,7 @@ Un planeta **3 veces más grande que la Tierra**, dominado por agua. Tras una in
 Un **imperio socialista** nacido de la revolución de los pueblos íberos. La unión de las naciones íberas en una revolución comunista acabó con sus monarcas y creó un Estado socialista que, tras una guerra devastadora (la **Guerra de la Última Corola**), conquistó gran parte del planeta.
 
 **Datos clave del imperio:**
+
 - La guerra dejó a la sociedad **mayoritariamente femenina** — la mayoría de los hombres murieron en combate
 - 200 años después de la revolución, Gran Iberia está en su **auge imperial**
 - Burocracia masiva, heroísmo popular, contradicciones internas
@@ -48,6 +45,7 @@ Un **imperio socialista** nacido de la revolución de los pueblos íberos. La un
 ### La Niebla Roja
 
 La amenaza del juego. Una **entidad colonial viva** compuesta por billones de microorganismos que emergió de la zona no explorada del **Nuevo Continente**. La Niebla Roja:
+
 - Infecta y asimila organismos vivos
 - Crea **Colmenas** — estructuras enormes que sirven como nidos y centros de expansión
 - Se propaga como una niebla rojiza que consume todo lo que toca
@@ -78,6 +76,7 @@ LOBBY (preparación)
 ### Roles
 
 #### Tripulante Sano (mayoría)
+
 - Explora el entorno infestado
 - Recolecta armas, herramientas y recursos
 - Busca y destruye la Colmena
@@ -85,6 +84,7 @@ LOBBY (preparación)
 - Puede morir y pasar a ser **Director**
 
 #### Infectado (1 jugador)
+
 - Comienza como un tripulante normal — **visualmente idéntico**
 - Puede **transformarse** voluntariamente en su forma mutada (capaz de matar)
 - Tiene habilidades especiales que dependen del tipo de infección
@@ -92,6 +92,7 @@ LOBBY (preparación)
 - Debe ser creativo — el juego no le da restricciones, solo oportunidades
 
 #### Director (jugador muerto)
+
 - Jugador que fue eliminado mientras esper reaparición
 - Puede **interactuar con el entorno**: puertas, luces, maquinaria, sonidos
 - Puede ayudar a los sanos o al infectado (su lealtad es ambigua)
@@ -99,9 +100,9 @@ LOBBY (preparación)
 
 ### Condiciones de Victoria
 
-| Equipo | Condición |
-|--------|-----------|
-| **Sanos** | La Colmena es destruida |
+| Equipo        | Condición                                  |
+| ------------- | ------------------------------------------ |
+| **Sanos**     | La Colmena es destruida                    |
 | **Infectado** | Todos los tripulantes sanos son eliminados |
 
 **No hay límite de tiempo.** La presión proviene del entorno y del infectado, no de un cronómetro.
@@ -109,48 +110,54 @@ LOBBY (preparación)
 ### Mecánicas Principales
 
 #### Movimiento FPS
+
 - Caminar, correr (sprint), agacharse, saltar
 - **Wall jump**: saltar desde paredes para acceder a zonas elevadas
 - Sistema de stamina: sprint y saltos consumen resistencia
 
 #### Interacción con el Entorno
+
 - `E` — Usar objeto activo / interactuar
 - `Click izquierdo` — Agarrar objetos del entorno (RigidBodies)
 - `Click derecho` — Empujar objetos y entidades
 - El entorno es interactuable: puertas, interruptores, maquinaria, elevation
 
 #### Inventario (4 slots)
+
 - Cada jugador porta hasta 4 objetos ciclables con Scroll
 - **Objeto único del personaje**: cada uno de los 12+ personajes tiene un objeto exclusivo
 - **Objetos del entorno**: armas, herramientas, consumibles encontrados en el mapa
 
 #### Transformación del Infectado
+
 - Mantener `F` para alternar entre forma humana y forma mutada
 - La transformación tiene un **coste visual/sonoro** — revela al infectado si hay testigos
 - En forma mutada: acceso a 3 habilidades ciclables con Scroll, activables con `Q`
 
 #### Crea Tu Propia Estrategia
+
 El juego es **deliberadamente caótico**. No hay una forma "correcta" de hacer las cosas:
+
 - Puedes usar el entorno a tu favor (apagar luces, bloquear pasarelas, crear distracciones)
 - Puedes traicionar sutilmente (guía al equipo por mal camino, "accidentalmente" activar alarmas)
 - Puedes ser agresivo o sigiloso — el juego te deja decidir
 
 ### Controles (PC — Teclado + Ratón)
 
-| Acción | Input | Contexto |
-|--------|-------|----------|
-| Mover | WASD | Siempre |
-| Mirar | Ratón | Siempre |
-| Saltar / Wall Jump | Espacio | Siempre |
-| Agacharse | Ctrl | Siempre |
-| Sprint | Shift | Siempre |
-| Ciclar inventario | Scroll | Modo normal |
-| Usar / Interactuar | E | Modo normal |
-| Agarrar objeto | Click izq. | Modo normal |
-| Empujar | Click der. | Modo normal |
-| Ciclar habilidades | Scroll | Infectado mutado |
-| Activar habilidad | Q | Infectado mutado |
-| Transformar (hold) | F | Solo infectado |
+| Acción             | Input      | Contexto         |
+| ------------------ | ---------- | ---------------- |
+| Mover              | WASD       | Siempre          |
+| Mirar              | Ratón      | Siempre          |
+| Saltar / Wall Jump | Espacio    | Siempre          |
+| Agacharse          | Ctrl       | Siempre          |
+| Sprint             | Shift      | Siempre          |
+| Ciclar inventario  | Scroll     | Modo normal      |
+| Usar / Interactuar | E          | Modo normal      |
+| Agarrar objeto     | Click izq. | Modo normal      |
+| Empujar            | Click der. | Modo normal      |
+| Ciclar habilidades | Scroll     | Infectado mutado |
+| Activar habilidad  | Q          | Infectado mutado |
+| Transformar (hold) | F          | Solo infectado   |
 
 ---
 
@@ -168,12 +175,12 @@ Cada misión se desarrolla en una **zona infestada** — una ciudad, enclave o e
 
 ### Tipos de Mapa (futuros)
 
-| Tipo | Descripción |
-|------|-------------|
-| Ciudad flotante | Estructura vertical sobre el agua, múltiples niveles |
-| Plataforma industrial | Complejo mecánico con tuberías y máquinas |
-| Ruinas submarinas | Zonas inundadas, visibilidad reducida |
-| Nave de guerra | Interior de un buque de La Carabela comprometido |
+| Tipo                  | Descripción                                          |
+| --------------------- | ---------------------------------------------------- |
+| Ciudad flotante       | Estructura vertical sobre el agua, múltiples niveles |
+| Plataforma industrial | Complejo mecánico con tuberías y máquinas            |
+| Ruinas submarinas     | Zonas inundadas, visibilidad reducida                |
+| Nave de guerra        | Interior de un buque de La Carabela comprometido     |
 
 ---
 
@@ -182,6 +189,7 @@ Cada misión se desarrolla en una **zona infestada** — una ciudad, enclave o e
 ### Estructura
 
 Cada personaje tiene:
+
 - **Nombre y apariencia** única
 - **Objeto exclusivo** que define parte de su rol
 - **Stats base** (velocidad, stamina, resistencia) — similares entre todos
@@ -202,18 +210,21 @@ Los personajes son tripulantes de La Carabela, cada uno con personalidad y habil
 El estilo visual propio de Tripofobia se llama **Barroco Futurismo**: un análisis estético del contraste entre la modernidad temprana hispana y el futurismo. No es retrofuturismo soviético ni steampunk — es una identidad visual propia que nace del barroco ibérico, el mestizaje cultural y la ornamentalidad excesiva como lenguaje de poder.
 
 **Pilares del estilo:**
+
 - **Ornamento como identidad**: estructuras cubiertas de relieves, molduras, filigranas — el exceso decorativo del barroco aplicado a tecnología futurista. Cada edificio, cada arma, cada objeto cuenta una historia cultural
 - **Mestizaje visual**: fusiones de estilos artísticos hispanoamericanos con tecnología avanzada — azulejos sevillanos con circuitos, arquitectura virreinal con gravedad artificial, trajes ceremoniales con exoesqueletos
 - **Contraste barroco**: luz y oscuridad extrema (tenebrismo), decoración excesiva vs funcionalidad mínima, lo sagrado vs lo profano, lo antiguo vs lo ultramoderno
 - **Horror orgánico**: la Niebla Roja corrompe el ornamento — los crecimientos biológicos se entrelazan con las molduras, la filigrana se retuerce, lo hermoso se vuelve grotesco
 
 **Paleta:**
+
 - Dorados y bronce (ornamento imperial, poder)
 - Rojos profundos (Niebla Roja, sangre, pasión)
 - Azules oscuros (océano, distancia, misterio)
 - Negros y blancos extremos (tenebrismo barroco)
 
 **Referentes:**
+
 - Barroco hispanoamericano (iglesias de Oaxaca, Potosí, Cartagena)
 - Arquitectura virreinal adaptada a escala futurista
 - Filigrana andaluza y morisca fusionada con tecnología
@@ -246,11 +257,11 @@ El estilo visual propio de Tripofobia se llama **Barroco Futurismo**: un anális
 
 ### Addons Activos
 
-| Addon | Uso |
-|-------|-----|
-| godot-jolt | Física mejorada |
-| roommate | Generación procedural de niveles |
-| cyclops_level builder | Edición de geometría BSP |
+| Addon                 | Uso                              |
+| --------------------- | -------------------------------- |
+| godot-jolt            | Física mejorada                  |
+| roommate              | Generación procedural de niveles |
+| cyclops_level builder | Edición de geometría BSP         |
 
 ### Shaders y Efectos
 
@@ -262,14 +273,14 @@ El estilo visual propio de Tripofobia se llama **Barroco Futurismo**: un anális
 
 ## 8. Referentes Competitivo
 
-| Aspecto | Lethal Company | Among Us | **Tripofobia** |
-|---------|----------------|----------|----------------|
-| Traidor oculto | No | Sí (estático) | **Sí (dinámico, transformación)** |
-| Jugadores muertos activos | No | Fantasma pasivo | **Director con agencia real** |
-| Identidad cultural | No | No | **Gran Iberia — Barroco Futurismo** |
-| Multiplayer | 4 | 10 | **6-8** |
-| Setting | Corportativo genérico | Espacial genérico | **Imperio socialista acuático** |
-| Estilo visual | Realismo sucio | Minimalista | **Barroco futurista con mestizaje** |
+| Aspecto                   | Lethal Company        | Among Us          | **Tripofobia**                      |
+| ------------------------- | --------------------- | ----------------- | ----------------------------------- |
+| Traidor oculto            | No                    | Sí (estático)     | **Sí (dinámico, transformación)**   |
+| Jugadores muertos activos | No                    | Fantasma pasivo   | **Director con agencia real**       |
+| Identidad cultural        | No                    | No                | **Gran Iberia — Barroco Futurismo** |
+| Multiplayer               | 4                     | 10                | **6-8**                             |
+| Setting                   | Corportativo genérico | Espacial genérico | **Imperio socialista acuático**     |
+| Estilo visual             | Realismo sucio        | Minimalista       | **Barroco futurista con mestizaje** |
 
 ---
 
@@ -285,6 +296,7 @@ El estilo visual propio de Tripofobia se llama **Barroco Futurismo**: un anális
 ## 10. Estado Actual
 
 ### Completado
+
 - Menú principal con efectos shader de horror
 - Sistema de multijugador ENet (básico)
 - Controlador FPS con stamina
@@ -294,10 +306,12 @@ El estilo visual propio de Tripofobia se llama **Barroco Futurismo**: un anális
 - Efectos de post-proceso
 
 ### En Progreso
+
 - Documento Central (este documento)
 - Diseño de niveles con Cyclops
 
 ### Pendiente
+
 - Sistema de infección / transformación
 - Rol de Director
 - Diseño de personajes

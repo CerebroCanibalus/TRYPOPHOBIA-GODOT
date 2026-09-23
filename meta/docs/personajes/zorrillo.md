@@ -92,7 +92,7 @@ De ahí, enlistarse fue una obviedad.
 - Cariñosa 
 - Insensibilizada a la violencia
 - Terca
-- **Tiene un humor seco y oscuro** que aflora sin aviso. Las Hermanas aprendieron a no beber cerca de ella.
+- Humor seco y oscuro
 - Glotona
 - Síndrome post-traumático
 - Incómoda frente a temas sexuales

@@ -1,0 +1,425 @@
+[gd_scene format=3 uid="uid://coneja_player_001"]
+
+[ext_resource type="Script" path="res://src/ragdoll_character/ragdoll_character.gd" id="1_lo1uq"]
+[ext_resource type="PackedScene" path="res://assets/players/coneja_p/coneja.glb" id="1_nfcse"]
+[ext_resource type="Material" path="res://src/ragdoll_character/materials/fp_body_clip.tres" id="3_k507y"]
+[ext_resource type="Script" path="res://src/ragdoll_character/ragdoll_camera.gd" id="3_ya0u6"]
+[ext_resource type="Script" path="res://src/ragdoll_character/ragdoll_pointer.gd" id="5_e7a7b"]
+[ext_resource type="Script" path="res://src/ragdoll_character/pointer_reticle.gd" id="6_mn3uv"]
+[ext_resource type="Resource" path="res://src/ragdoll_character/resources/coneja_rig_config.tres" id="7_rig"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(0.95, 1.4, 0.55)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_arm"]
+radius = 0.13
+height = 0.32
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_forearm"]
+radius = 0.11
+height = 0.30
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_grab"]
+radius = 0.16
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_thigh"]
+radius = 0.16
+height = 0.42
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_calf"]
+radius = 0.13
+height = 0.50
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_floor"]
+radius = 0.18
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_head"]
+radius = 0.18
+height = 0.35
+
+[node name="Character" type="Node3D"]
+script = ExtResource("1_lo1uq")
+rig_config = ExtResource("7_rig")
+angular_spring_stiffness = 3000.0
+fp_clip_radius = 0.30
+ik_pole_offset = Vector3(0.30, -0.50, -0.30)
+lean_max_degrees = 2.0
+
+[node name="Physical" parent="." instance=ExtResource("1_nfcse")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="Skeleton3D" parent="Physical/Armature" index="0"]
+
+[node name="Physical Bone espina2" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="1"]
+transform = Transform3D(1.000000, 0.000000, 0.000000, -0.000000, 0.983669, -0.179987, -0.000000, 0.179987, 0.983669, 0.000000, 0.269680, -0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 30.000000
+joint_constraints/twist_span = 30.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "espina2"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone espina2"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, 0.400000, 0.000000)
+shape = SubResource("BoxShape3D_body")
+
+[node name="Physical Bone cabeza" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="2"]
+transform = Transform3D(1.000000, 0.000000, -0.000000, -0.000000, 0.991300, -0.131625, -0.000000, 0.131625, 0.991300, 0.000000, 0.314593, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 45.000000
+joint_constraints/twist_span = 60.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "cabeza"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone cabeza"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, 0.180000, 0.000000)
+shape = SubResource("CapsuleShape3D_head")
+
+[node name="Physical Bone brazo1_L" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="3"]
+transform = Transform3D(0.992623, -0.121244, 0.000001, 0.119934, 0.981895, -0.146621, 0.017776, 0.145540, 0.989193, 0.000000, 0.370117, -0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 90.000000
+joint_constraints/twist_span = 45.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "brazo1_L"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo1_L"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.160000, 0.000000)
+shape = SubResource("CapsuleShape3D_arm")
+
+[node name="Physical Bone brazo2_L" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="4"]
+transform = Transform3D(0.996197, -0.032141, 0.080983, 0.014094, 0.976677, 0.214248, -0.085981, -0.212292, 0.973416, -0.000000, 0.640603, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 120.000000
+joint_constraints/twist_span = 60.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "brazo2_L"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo2_L"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.150000, 0.000000)
+shape = SubResource("CapsuleShape3D_forearm")
+
+[node name="LGrabArea" type="Area3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo2_L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, -0.2)
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo2_L/LGrabArea"]
+shape = SubResource("SphereShape3D_grab")
+
+[node name="Physical Bone mano_L" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="5"]
+transform = Transform3D(0.921480, -0.232684, 0.311018, 0.253970, 0.966772, -0.029182, -0.293893, 0.105880, 0.949956, 0.000000, 0.454441, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 60.000000
+joint_constraints/twist_span = 30.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "mano_L"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone mano_L"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.080000, 0.000000)
+shape = SubResource("SphereShape3D_grab")
+
+[node name="Physical Bone brazo1_R" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="6"]
+transform = Transform3D(0.992623, 0.121244, -0.000001, -0.119934, 0.981895, -0.146621, -0.017776, 0.145540, 0.989193, -0.000000, 0.370117, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 90.000000
+joint_constraints/twist_span = 45.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "brazo1_R"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo1_R"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.160000, 0.000000)
+shape = SubResource("CapsuleShape3D_arm")
+
+[node name="Physical Bone brazo2_R" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="7"]
+transform = Transform3D(0.996197, 0.032141, -0.080983, -0.014094, 0.976677, 0.214248, 0.085981, -0.212292, 0.973416, 0.000000, 0.640603, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 120.000000
+joint_constraints/twist_span = 60.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "brazo2_R"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo2_R"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.150000, 0.000000)
+shape = SubResource("CapsuleShape3D_forearm")
+
+[node name="RGrabArea" type="Area3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo2_R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, -0.2)
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone brazo2_R/RGrabArea"]
+shape = SubResource("SphereShape3D_grab")
+
+[node name="Physical Bone mano_R" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="8"]
+transform = Transform3D(0.921480, 0.232684, -0.311018, -0.253970, 0.966772, -0.029182, 0.293893, 0.105880, 0.949956, 0.000000, 0.454441, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 60.000000
+joint_constraints/twist_span = 30.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "mano_R"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone mano_R"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.080000, 0.000000)
+shape = SubResource("SphereShape3D_grab")
+
+[node name="Physical Bone pierna1_L" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="9"]
+transform = Transform3D(-0.003970, -0.004494, 0.999982, 0.188185, -0.982127, -0.003666, 0.982126, 0.188167, 0.004744, 0.255535, 2.442315, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 45.000000
+joint_constraints/twist_span = 30.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "pierna1_L"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone pierna1_L"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.210000, 0.000000)
+shape = SubResource("CapsuleShape3D_thigh")
+
+[node name="Physical Bone pierna2_L" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="10"]
+transform = Transform3D(0.999997, -0.002265, 0.000450, 0.002247, 0.999323, 0.036712, -0.000533, -0.036711, 0.999326, -0.000000, 1.144222, -0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 30.000000
+joint_constraints/twist_span = 20.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "pierna2_L"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone pierna2_L"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.250000, 0.000000)
+shape = SubResource("CapsuleShape3D_calf")
+
+[node name="Physical Bone pie_L" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="11"]
+transform = Transform3D(0.999997, -0.002200, 0.000180, 0.002184, 0.974564, -0.224097, 0.000318, 0.224097, 0.974567, -0.000000, 1.313537, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 30.000000
+joint_constraints/twist_span = 15.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "pie_L"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone pie_L"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, 0.100000, 0.200000)
+shape = SubResource("SphereShape3D_floor")
+
+[node name="OnFloorLeft" type="ShapeCast3D" parent="Physical/Armature/Skeleton3D/Physical Bone pie_L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+shape = SubResource("SphereShape3D_floor")
+target_position = Vector3(0, 0, -0.4)
+max_results = 10
+
+[node name="Physical Bone pierna1_R" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="12"]
+transform = Transform3D(-0.003970, 0.004494, -0.999982, -0.188185, -0.982127, -0.003666, -0.982126, 0.188167, 0.004744, -0.255535, 2.442315, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 45.000000
+joint_constraints/twist_span = 30.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "pierna1_R"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone pierna1_R"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.210000, 0.000000)
+shape = SubResource("CapsuleShape3D_thigh")
+
+[node name="Physical Bone pierna2_R" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="13"]
+transform = Transform3D(0.999997, 0.002265, -0.000450, -0.002247, 0.999323, 0.036712, 0.000533, -0.036711, 0.999326, 0.000000, 1.144222, -0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 30.000000
+joint_constraints/twist_span = 20.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "pierna2_R"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone pierna2_R"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, -0.250000, 0.000000)
+shape = SubResource("CapsuleShape3D_calf")
+
+[node name="Physical Bone pie_R" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="14"]
+transform = Transform3D(0.999997, 0.002200, -0.000180, -0.002184, 0.974564, -0.224097, -0.000318, 0.224097, 0.974567, 0.000000, 1.313537, 0.000000)
+collision_layer = 2
+collision_mask = 7
+joint_type = 2
+joint_constraints/swing_span = 30.000000
+joint_constraints/twist_span = 15.000000
+joint_constraints/bias = 0.3
+joint_constraints/softness = 0.8
+joint_constraints/relaxation = 1.0
+friction = 0.2
+linear_damp_mode = 1
+angular_damp = 1.0
+can_sleep = false
+bone_name = "pie_R"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Physical/Armature/Skeleton3D/Physical Bone pie_R"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.000000, 0.100000, 0.200000)
+shape = SubResource("SphereShape3D_floor")
+
+[node name="OnFloorRight" type="ShapeCast3D" parent="Physical/Armature/Skeleton3D/Physical Bone pie_R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+shape = SubResource("SphereShape3D_floor")
+target_position = Vector3(0, 0, -0.4)
+max_results = 10
+
+[node name="AnimationPlayer" parent="Physical" index="1"]
+autoplay = &"idle"
+
+[node name="Character" parent="Physical/Armature/Skeleton3D" index="0"]
+material_override = ExtResource("3_k507y")
+
+[node name="GrabJointRight" type="PinJoint3D" parent="Physical"]
+
+[node name="GrabJointLeft" type="PinJoint3D" parent="Physical"]
+
+[node name="JumpTimer" type="Timer" parent="Physical"]
+one_shot = true
+
+[node name="Animated" parent="." instance=ExtResource("1_nfcse")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="Skeleton3D" parent="Animated/Armature" index="0"]
+visible = false
+
+[node name="ArmIK" type="TwoBoneIK3D" parent="Animated/Armature/Skeleton3D" index="1"]
+
+[node name="PoleTargetL" type="Node3D" parent="Animated/Armature/Skeleton3D" index="2"]
+
+[node name="PoleTargetR" type="Node3D" parent="Animated/Armature/Skeleton3D" index="3"]
+
+[node name="AnimationTree" type="AnimationTree" parent="Animated"]
+deterministic = false
+anim_player = NodePath("../AnimationPlayer")
+
+[node name="CameraPivot" type="Node3D" parent="." node_paths=PackedStringArray("target_node", "physical_skel")]
+script = ExtResource("3_ya0u6")
+target_node = NodePath("../Physical/Armature/Skeleton3D/Physical Bone cabeza")
+head_distance = 0.25
+physical_skel = NodePath("../Physical/Armature/Skeleton3D")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
+spring_length = 0.0
+margin = 0.2
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+current = true
+
+[node name="PointerRay" type="RayCast3D" parent="CameraPivot/SpringArm3D/Camera3D"]
+script = ExtResource("5_e7a7b")
+interact_range = 1.0
+
+[node name="Pointer" type="Node3D" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Reticle" type="Control" parent="HUD"]
+anchors_preset = 0
+script = ExtResource("6_mn3uv")
+
+[node name="HandTargetL" type="Node3D" parent="."]
+
+[node name="HandTargetR" type="Node3D" parent="."]
+
+[connection signal="skeleton_updated" from="Physical/Armature/Skeleton3D" to="." method="_on_skeleton_3d_skeleton_updated"]
+[connection signal="body_entered" from="Physical/Armature/Skeleton3D/Physical Bone brazo2_L/LGrabArea" to="." method="_on_l_grab_area_body_entered"]
+[connection signal="body_entered" from="Physical/Armature/Skeleton3D/Physical Bone brazo2_R/RGrabArea" to="." method="_on_r_grab_area_body_entered"]
+[connection signal="timeout" from="Physical/JumpTimer" to="." method="_on_jump_timer_timeout"]
+
+[editable path="Physical"]
+[editable path="Animated"]
