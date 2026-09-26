@@ -9,6 +9,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"blendermcp_server_running":1
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -17,8 +20,12 @@
 	],
 	"nodes":[
 		{
+			"extras":{
+				"huella_generada":"b7dd2fe191f1d674d9e3bf134edd1918",
+				"generado_por":"construir_nie07.py"
+			},
 			"mesh":0,
-			"name":"NIE-07_Aguja_de_Colmena"
+			"name":"NIE-07_Aguja_de_Colmena-col"
 		}
 	],
 	"materials":[

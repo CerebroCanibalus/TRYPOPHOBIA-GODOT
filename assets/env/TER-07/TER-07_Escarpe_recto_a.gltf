@@ -9,6 +9,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"blendermcp_server_running":1
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -17,8 +20,12 @@
 	],
 	"nodes":[
 		{
+			"extras":{
+				"huella_generada":"7c40d3fe5ddee35e491f2102821c9cff",
+				"generado_por":"construir_ter07.py"
+			},
 			"mesh":0,
-			"name":"TER-07_Escarpe_recto_a"
+			"name":"TER-07_Escarpe_recto_a-col"
 		}
 	],
 	"materials":[

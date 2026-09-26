@@ -9,6 +9,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"blendermcp_server_running":1
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -17,8 +20,12 @@
 	],
 	"nodes":[
 		{
+			"extras":{
+				"huella_generada":"ca4510bf0ca74f132361511966f38723",
+				"generado_por":"construir_orn01.py"
+			},
 			"mesh":0,
-			"name":"ORN-01_Cornisa_modular"
+			"name":"ORN-01_Cornisa_modular-col"
 		}
 	],
 	"materials":[

@@ -9,6 +9,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"blendermcp_server_running":1
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -17,8 +20,17 @@
 	],
 	"nodes":[
 		{
+			"extras":{
+				"huella_generada":"c2165e165fc7470c5edc3c471ffa73a4",
+				"generado_por":"construir_ter02.py"
+			},
 			"mesh":0,
-			"name":"TER-02_Losa_roto"
+			"name":"TER-02_Losa_roto-col",
+			"translation":[
+				3.4000000953674316,
+				0,
+				3.4000000953674316
+			]
 		}
 	],
 	"materials":[

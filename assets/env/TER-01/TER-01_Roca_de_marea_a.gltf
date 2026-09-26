@@ -9,6 +9,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"blendermcp_server_running":1
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -17,8 +20,12 @@
 	],
 	"nodes":[
 		{
+			"extras":{
+				"huella_generada":"706e309d06d89ef08745813537a76b58",
+				"generado_por":"construir_ter01.py"
+			},
 			"mesh":0,
-			"name":"TER-01_Roca_de_marea_a"
+			"name":"TER-01_Roca_de_marea_a-convcol"
 		}
 	],
 	"materials":[
