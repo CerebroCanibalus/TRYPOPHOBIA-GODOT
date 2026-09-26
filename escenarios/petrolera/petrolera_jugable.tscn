@@ -1,41 +1,35 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
-; La Petrolera con Iza dentro y lista para correr.
+; La Petrolera lista para correr.
 ;
-; petrolera.tscn es SOLO el escenario: lo escribe montar_petrolera.py desde la
-; biblia y se regenera entero cada vez, asi que no se le puede meter nada a mano.
-; Esta escena es la que lo envuelve y le anade lo que no sale del generador: el
-; jugador, su linterna y las marcas de salida.
+; petrolera.tscn ya trae dentro su cielo, su sol y a Iza: lo escribe entero
+; montar_petrolera.py y una mision tiene que poder abrirse sola. Asi que esta
+; escena NO instancia otro jugador — hacerlo ponia dos camaras y dos
+; CharacterBody3D leyendo el mismo teclado, y lo que se veia no era el mapa mal
+; montado sino la camara equivocada. Aqui solo se le cuelga lo que el generador no
+; puede escribir: la linterna y las marcas de salida.
 ;
-; LA LINTERNA VA AQUI Y NO EN IzaPlayer.tscn a proposito: IzaPlayer no monta
-; ninguna luz, y de los trece metros de agua para abajo eso es injugable. Se pone
-; en la escena y no en el prefab compartido para no tocar al jugador de los demas
-; mientras esto se decide. src/player/flashlight.tscn existe pero su script pide
-; un $AnimationTree que esa escena no tiene, asi que aqui va un SpotLight3D pelado
-; con sus mismos valores (alcance 21,33 · cono 15,28).
+; LA LINTERNA VA AQUI Y NO EN IzaPlayer.tscn: el jugador no monta ninguna luz, y
+; de los trece metros de agua para abajo eso es injugable. Se pone en la escena y
+; no en el prefab compartido para no tocar al jugador de los demas mientras esto
+; se decide. src/player/flashlight.tscn existe, pero su script pide un
+; $AnimationTree que esa escena no tiene, asi que va un SpotLight3D pelado con sus
+; mismos valores (alcance 21,33 · cono 15,28).
 
 [ext_resource type="PackedScene" path="res://escenarios/petrolera/petrolera.tscn" id="1_mapa"]
-[ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="2_iza"]
 
 [node name="PetroleraJugable" type="Node3D"]
 
 [node name="Petrolera" parent="." instance=ExtResource("1_mapa")]
 
-; SOBRE LA PLATAFORMA, que es casa. La cubierta de PUE-05 esta en 15,46 (la pieza
-; va de -0,38 a +0,26 y el montaje la planta en 15,20) y tiene 5 m de radio; la
-; pata mide 2,5. A 3,7 del eje la capsula de 0,7 no toca ni la columna (3,0 > 2,5)
-; ni el borde (4,4 < 5,0).
-[node name="Iza" parent="." instance=ExtResource("2_iza")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 15.6, 0)
-
-[node name="Linterna" type="SpotLight3D" parent="Iza/CameraPivot/Camera3D"]
+[node name="Linterna" type="SpotLight3D" parent="Petrolera/Iza/CameraPivot/Camera3D"]
 shadow_enabled = true
 spot_range = 21.3291
 spot_angle = 15.2845
 
-; Para empezar abajo, arrastrar a Iza a una de estas. La rotonda de la plataforma
-; esta en el origen con 16,70 de radio y su suelo en -12; las de los extremos, en
-; los pies de I0 e I6. (Blender -> Godot: x, z, -y.)
+; Para empezar en otro sitio, arrastrar a Petrolera/Iza a una de estas. La rotonda
+; de la plataforma esta en el origen con 16,70 de radio y su suelo en -12; las de
+; los extremos, en los pies de I0 e I6. (Blender -> Godot: x, z, -y.)
 [node name="SalidaBaseP" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, -11.9, 0)
 

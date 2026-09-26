@@ -55,16 +55,29 @@
 [ext_resource type="PackedScene" path="res://assets/env/MAR-01/MAR-01_Lamina_de_mar.gltf" id="52"]
 
 [sub_resource type="Environment" id="Environment_1"]
+tonemap_mode = 4
+tonemap_exposure = 7.00
+tonemap_white = 1.0
 background_mode = 1
-background_color = Color(0.4200, 0.0550, 0.0580, 1)
-ambient_light_source = 3
-ambient_light_color = Color(0.4200, 0.0550, 0.0580, 1)
-ambient_light_energy = 0.55
+background_color = Color(0.3256, 0.1369, 0.1239, 1)
+background_energy_multiplier = 1.0
+ambient_light_source = 2
+ambient_light_color = Color(0.3256, 0.1369, 0.1239, 1)
+ambient_light_energy = 1.10
 fog_enabled = true
-fog_light_color = Color(0.4200, 0.0550, 0.0580, 1)
+fog_light_color = Color(0.3256, 0.1369, 0.1239, 1)
 fog_light_energy = 0.9
 fog_density = 0.00201
 fog_sky_affect = 0.0
+
+[sub_resource type="StandardMaterial3D" id="Mar_lejano_mat"]
+albedo_color = Color(0.1152, 0.0910, 0.1160, 1)
+roughness = 0.55
+metallic = 0.0
+
+[sub_resource type="PlaneMesh" id="Mar_lejano_malla"]
+size = Vector2(1800.0, 1800.0)
+material = SubResource("Mar_lejano_mat")
 
 [node name="Petrolera" type="Node3D"]
 
@@ -77,6 +90,11 @@ light_color = Color(1.0000, 0.8000, 0.7000, 1)
 light_energy = 3.400
 shadow_enabled = true
 directional_shadow_max_distance = 120.0
+
+[node name="MarLejano" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0300, 0)
+mesh = SubResource("Mar_lejano_malla")
+cast_shadow = 0
 
 [node name="Columnas" type="Node3D" parent="."]
 
