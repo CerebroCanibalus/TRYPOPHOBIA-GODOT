@@ -1,0 +1,155 @@
+[gd_scene load_steps=36 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Arena_suelo_a.gltf" id="1_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Arena_suelo_b.gltf" id="2_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Arena_suelo_c.gltf" id="3_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Cesped_mata.gltf" id="4_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Cesped_suelo_a.gltf" id="5_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Cesped_suelo_b.gltf" id="6_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Cesped_suelo_c.gltf" id="7_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Tierra_suelo_a.gltf" id="8_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Tierra_suelo_b.gltf" id="9_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Tierra_suelo_c.gltf" id="10_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/TransArena_esq_ext.gltf" id="11_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/TransArena_esq_int.gltf" id="12_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/TransArena_recta_a.gltf" id="13_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/TransArena_recta_b.gltf" id="14_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Trans_esq_ext.gltf" id="15_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Trans_esq_int.gltf" id="16_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Trans_recta_a.gltf" id="17_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-06_suelos/Trans_recta_b.gltf" id="18_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-07/TER-07_Escarpe_esq_ext.gltf" id="19_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-07/TER-07_Escarpe_esq_int.gltf" id="20_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-07/TER-07_Escarpe_rampa.gltf" id="21_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-07/TER-07_Escarpe_recto_a.gltf" id="22_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-07/TER-07_Escarpe_recto_b.gltf" id="23_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-07/TER-07_Escarpe_recto_c.gltf" id="24_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-01/TER-01_Roca_de_marea_a.gltf" id="25_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-01/TER-01_Roca_de_marea_b.gltf" id="26_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-01/TER-01_Roca_de_marea_c.gltf" id="27_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-02/TER-02_Losa_esquina.gltf" id="28_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-02/TER-02_Losa_recta_a.gltf" id="29_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-02/TER-02_Losa_recta_b.gltf" id="30_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-02/TER-02_Losa_recta_c.gltf" id="31_p"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-02/TER-02_Losa_roto.gltf" id="32_p"]
+[ext_resource type="PackedScene" path="res://assets/env/FLO-02/FLO-02_Arbol_zancudo.gltf" id="33_p"]
+[ext_resource type="PackedScene" path="res://assets/env/NIE-07/NIE-07_Aguja_de_Colmena.gltf" id="34_p"]
+[ext_resource type="PackedScene" path="res://assets/env/ORN-01/ORN-01_Cornisa_modular.gltf" id="35_p"]
+
+[node name="PruebaAssets" type="Node3D"]
+
+[node name="Sol" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.86, -0.35, 0.37, 0, 0.72, 0.69, -0.51, -0.59, 0.62, 0, 12, 0)
+light_energy = 2.5
+shadow_enabled = true
+
+[node name="Ambiente" type="WorldEnvironment" parent="."]
+
+[node name="Camara" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.87, 0.5, 0, -0.5, 0.87, 0, 14, 22)
+fov = 55.0
+
+[node name="Arena_suelo_a" parent="." instance=ExtResource("1_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42.5, 0, 0.0)
+
+[node name="Arena_suelo_b" parent="." instance=ExtResource("2_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.5, 0, 0.0)
+
+[node name="Arena_suelo_c" parent="." instance=ExtResource("3_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.5, 0, 0.0)
+
+[node name="Cesped_mata" parent="." instance=ExtResource("4_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.5, 0, 0.0)
+
+[node name="Cesped_suelo_a" parent="." instance=ExtResource("5_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.5, 0, 0.0)
+
+[node name="Cesped_suelo_b" parent="." instance=ExtResource("6_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5, 0, 0.0)
+
+[node name="Cesped_suelo_c" parent="." instance=ExtResource("7_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0, 0.0)
+
+[node name="Tierra_suelo_a" parent="." instance=ExtResource("8_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, 0.0)
+
+[node name="Tierra_suelo_b" parent="." instance=ExtResource("9_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, 0.0)
+
+[node name="Tierra_suelo_c" parent="." instance=ExtResource("10_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 0.0)
+
+[node name="TransArena_esq_ext" parent="." instance=ExtResource("11_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0, 0.0)
+
+[node name="TransArena_esq_int" parent="." instance=ExtResource("12_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0, 0.0)
+
+[node name="TransArena_recta_a" parent="." instance=ExtResource("13_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 0, 0.0)
+
+[node name="TransArena_recta_b" parent="." instance=ExtResource("14_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 0, 0.0)
+
+[node name="Trans_esq_ext" parent="." instance=ExtResource("15_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 0, 0.0)
+
+[node name="Trans_esq_int" parent="." instance=ExtResource("16_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.5, 0, 0.0)
+
+[node name="Trans_recta_a" parent="." instance=ExtResource("17_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.5, 0, 0.0)
+
+[node name="Trans_recta_b" parent="." instance=ExtResource("18_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42.5, 0, 0.0)
+
+[node name="TER_07_Escarpe_esq_ext" parent="." instance=ExtResource("19_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.0, 0, -14.0)
+
+[node name="TER_07_Escarpe_esq_int" parent="." instance=ExtResource("20_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.0, 0, -14.0)
+
+[node name="TER_07_Escarpe_rampa" parent="." instance=ExtResource("21_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0, 0, -14.0)
+
+[node name="TER_07_Escarpe_recto_a" parent="." instance=ExtResource("22_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, -14.0)
+
+[node name="TER_07_Escarpe_recto_b" parent="." instance=ExtResource("23_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, -14.0)
+
+[node name="TER_07_Escarpe_recto_c" parent="." instance=ExtResource("24_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, -14.0)
+
+[node name="TER_01_Roca_de_marea_a" parent="." instance=ExtResource("25_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, -22.0)
+
+[node name="TER_01_Roca_de_marea_b" parent="." instance=ExtResource("26_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, -22.0)
+
+[node name="TER_01_Roca_de_marea_c" parent="." instance=ExtResource("27_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0, -22.0)
+
+[node name="TER_02_Losa_esquina" parent="." instance=ExtResource("28_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.0, 0, -28.0)
+
+[node name="TER_02_Losa_recta_a" parent="." instance=ExtResource("29_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0, 0, -28.0)
+
+[node name="TER_02_Losa_recta_b" parent="." instance=ExtResource("30_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, -28.0)
+
+[node name="TER_02_Losa_recta_c" parent="." instance=ExtResource("31_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, -28.0)
+
+[node name="TER_02_Losa_roto" parent="." instance=ExtResource("32_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, -28.0)
+
+[node name="FLO_02_Arbol_zancudo" parent="." instance=ExtResource("33_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, -38.0)
+
+[node name="NIE_07_Aguja_de_Colmena" parent="." instance=ExtResource("34_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, -48.0)
+
+[node name="ORN_01_Cornisa_modular" parent="." instance=ExtResource("35_p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, -54.0)

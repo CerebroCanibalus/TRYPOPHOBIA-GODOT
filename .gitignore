@@ -1,6 +1,13 @@
-```
 # Godot specific ignores
-*.import
+.godot/
+# Cache del editor: se regenera sola y es distinta en cada maquina. Estaba
+# versionada con 3887 ficheros y 67 MB, y era la causa de que cada sesion
+# de Godot dejara 150 ficheros 'modificados' en el arbol.
+# *.import NO se ignora: es la convencion de Godot y ademas guarda los
+# ajustes de importacion. Para el pixel art de este juego eso es el asset:
+# sin el .import, Godot reimporta con compresion VRAM y mipmaps, y la
+# cuantizacion a Tripofobia-32 deja de ser exacta. Ya habia 1074 versionados
+# de antes de esta regla; la regla solo bloqueaba los NUEVOS.
 *.uid
 .rid
 .scene
@@ -66,7 +73,6 @@ AGENTS.md
 tools/box3d/build/
 tools/box3d/godot-box3d-src/.git/
 tools/box3d/godot-box3d-src/bin/
-```
 
 tools/active_ragdoll_reference/
 
