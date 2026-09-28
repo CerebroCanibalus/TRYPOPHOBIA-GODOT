@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://tls8t60u108r" path="res://src/ragdoll_character/ragdoll_camera.gd" id="3_ya0u6"]
 [ext_resource type="Script" uid="uid://cq3kyg42vhqt5" path="res://src/ragdoll_character/ragdoll_pointer.gd" id="5_e7a7b"]
 [ext_resource type="Script" uid="uid://d3ijx5ksw4r4x" path="res://src/ragdoll_character/pointer_reticle.gd" id="6_mn3uv"]
+[ext_resource type="Resource" path="res://src/ragdoll_character/resources/character_rig_config.tres" id="7_rig"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l0mvc"]
 resource_name = "Character"
@@ -119,6 +120,7 @@ node_connections = [&"output", 0, &"Blend2 ", &"Blend2 ", 0, &"walking", &"Blend
 
 [node name="Character" type="Node3D" unique_id=94893202]
 script = ExtResource("1_lo1uq")
+rig_config = ExtResource("7_rig")
 angular_spring_stiffness = 3000.0
 fp_clip_radius = 0.55
 

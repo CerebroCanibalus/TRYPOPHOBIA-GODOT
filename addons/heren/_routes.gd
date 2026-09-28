@@ -1,4 +1,4 @@
-@tool
+﻿@tool
 extends RefCounted
 
 ## Heren MCP — Routing declarativo (Fase 3 §0.8, 2026-09-03).
@@ -116,7 +116,7 @@ const ROUTES := {
 	"animation/rename": "handle_rename",
 	"animation/reverse": "handle_reverse",
 	# NOTE 2026-09-09: animation/tree_* (7) + capture_pose + blend_pose + retarget
-	# archivados a addons/heren/archive/handlers/. Reemplazados por scene_script.
+	# archivados a archived_handlers/gd_source/handlers/. Reemplazados por scene_script.
 
 	# Signal
 	"debug/summary": "handle_summary",
@@ -138,7 +138,7 @@ const ROUTES := {
 	"signal/connect": "handle_connect",
 	"signal/disconnect": "handle_disconnect",
 	"signal/list": "handle_list",
-	# NOTE 2026-09-09: signal/set_script eliminado — duplica node/set_script (v4.9).
+	# NOTE 2026-09-09: signal/set_script eliminado — duplica node/set_script (v5.0).
 
 	# Visual (server side `visual` tool, 4 actions)
 	"visual/coords": "handle_coords",
@@ -147,9 +147,10 @@ const ROUTES := {
 	"visual/spatial": "handle_scene_spatial",
 	"visual/scene_summary": "handle_summary",  # alias interno usado por validator
 
-	# Scene script (W4 Worker-First §0.12)
+	# Scene script (W4 Worker-First §0.12; W4b = vista previa sin ejecutar worker)
 	"scene_script/run": "handle_run",
 	"scene_script/list": "handle_list",
+	"scene_script/inspect": "handle_inspect",
 
 	# Filesystem (W4b §0.12 — scan/status/import_errors/exists/import).
 	"filesystem/scan": "handle_scan",
@@ -163,7 +164,7 @@ const ROUTES := {
 	"ui/canvas_layer": "handle_ui_canvas_layer",
 	"ui/templates": "handle_ui_templates",
 	"ui/get_info": "handle_ui_get_info",
-	# NOTE 2026-09-09: ui/layout + ui/theme archivados a addons/heren/archive/handlers/.
+	# NOTE 2026-09-09: ui/layout + ui/theme archivados a archived_handlers/gd_source/handlers/.
 }
 
 

@@ -13,6 +13,105 @@ Este es un proyecto de Godot 4.4. El desarrollo se realiza a través del Editor 
 - **Ejecutar el juego:** Abrir `project.godot` en Godot 4.4+ y presionar F5 (inicia desde `main_menu.tscn`)
 - **Exportar (Windows):** Proyecto → Exportar → Windows Desktop → genera en `../Lanzamientos/infdev/Tripofobia.exe`
 - **Escena de entrada:** `res://main_menu.tscn`
+- **Probar una escena concreta (scripts que tocan el mar):**
+  `& "D:\Mis Juegos\Godot\Godot_v4.7.1-stable_win64_console.exe" --path "D:\Mis Juegos\Tripofobia\Repositorio" --quit-after 300 "res://maps/misiones/petrolera_c1/petrolera.tscn"`
+  Sin la ruta de escena como argumento sale `main_menu.tscn` y **el shader nunca se compila**: el log se ve limpio y no prueba nada.
+
+## 🌊 EL OCÉANO DE LA PETROLERA (2026-09-28)
+
+**Shader:** `src/shaders/ocean_stylized.gdshader` · **Controlador:** `src/shaders/ocean.gd`
+(`class_name Ocean`) · **Material:** `src/shaders/materials/ocean_stylized_mat.tres`
+· Cableado en `maps/misiones/petrolera_c1/petrolera.tscn` → `Mar/MarLejano` + `Mar/Ocean`.
+
+**Base:** "Absorption based stylized water" (godotshaders.com) + "screen space refraction shader"
+(ambos CC0). `src/shaders/agua1.gdshader` es el original descargado y **lo usa NADIE** — se
+conserva solo como referencia. No conectarlo.
+
+**Decisiones (por qué NO es agua1 con otros nombres):**
+
+| # | Decisión | Motivo |
+|---|---|---|
+| O1 | 3 olas de **Gerstner analíticas por pixel** | agua1 desplaza con textura de ruido tiling. Gerstner da silueta real y la normal no depende de la densidad de malla. |
+| O2 | **Desplazamiento con LOD por distancia** | La malla es de 1800 m. Bajo niebla 0.002 a 500 m no se ve nada; la geometría de lejos es geometría desperdiciada. |
+| O3 | **SIN SSR** | El cielo del mapa es un color plano (`background_mode=1`). El SSR de agua1 son ~100 iteraciones × 2 muestras para reflejar un color liso. Sustituido por Fresnel contra el color de niebla: mismo resultado, 1/200 del coste. |
+| O4 | **SIN caústicas simplex** | `os2NoiseWithDerivatives` de agua1 ≈ 120 ALU × 2 octavas. Aquí 4 senos (~12 ALU) y solo en agua somera. |
+| O5 | Absorción en **metros de mundo** | agua1 usa distancia lineal de cámara → el color del agua cambia por mover la cámara sin que cambie el mar. |
+| O6 | `unshaded` + `fog_disabled` + niebla **a mano** | `unshaded` evita que la luz multiplique un color ya iluminado a mano. `fog_disabled` evita la **niebla doble** (la pantalla refraccionada ya viene con niebla) y que el horizonte no case con el cielo. `ocean.gd` inyecta color/densidad de niebla y sol cada frame leyendo el `WorldEnvironment` y la `DirectionalLight3D`. |
+| O7 | Normal map en **espacio de mundo** (T=X, B=Z) | Evita depender de `TANGENT`/`BITANGENT` (que en Godot 4 llegan ya rotados). Sobre un plano horizontal es exacto. |
+| O8 | `PlaneMesh` subdividido **192×192** | Venía con subdivide **0** (un quad de 1800 m): el vertex displacement no tenía dónde trabajar. 192 → quad de 9.4 m para un swell de 34 m. 74k tris. |
+
+**Presupuesto:** 2 depth + 1 screen + 2 normal + 2 espuma = **7 muestras/píxel**, un solo pase,
+sin render targets extra. `cast_shadow = OFF` (una ola con la normal inclinada proyectando
+sombra sobre sí misma da Shadow acne en todo el horizonte).
+
+### GOTA — `INV_PROJECTION_MATRIX` dentro de una función NO compila
+
+`SHADER ERROR: Unknown identifier in expression: 'INV_PROJECTION_MATRIX'`. El nombre es
+**correcto**; el problema es el **ámbito**: dentro del cuerpo de una función el parser no lo
+resuelve. En el cuerpo de `vertex()`/`fragment()` sí. Por eso `outline.gdshader` y `agua1.gdshader`
+**nunca** lo leen dentro de una función: siempre lo pasan como argumento.
+
+**Regla:** `world_from_depth(uv, d, inv_proj, inv_view)` y `cam_distance(p, cam_pos)` reciben las
+matrices desde el cuerpo de `vertex()`/`fragment()`. No "simplificar" pasando a leerlas dentro.
+
+Ojo: Godot **corta en el primer error**, así que las líneas siguientes nunca se evalúan. Un solo
+error de shader esconde todos los demás. Iterar de a uno.
+
+### GOTA — `global uniform` inexistente rompe el shader SIN avisar en consola
+
+Declarar `global uniform float tide_level` sin crearlo en *Configuración del Proyecto →
+Shader Globals* hace que **el shader no parsee**, y el error sale en un **popup del editor**,
+no en la consola. `RenderingServer.global_shader_parameter_set()` con un nombre inexistente
+tampoco avisa: empuja un `ERROR` **por frame**.
+
+**Por eso el shader usa SÓLO los 2 globals que ya existen** (`wind_intensity`, `wind_direction`,
+declarados en `project.godot [shader_globals]`). `tide_level` y los `ripple_*` son **uniforms
+normales del material**, empujados por `ocean.gd`. Menos elegante, cero sección de configuración
+que se pueda desincronizar. `heren.project shader_global` solo los crea **en runtime**, no los
+persiste en `project.godot` — no sirve para esto.
+
+### GOTA — `ShaderMaterial` guardado sin `shader_parameter/*` sale NEGRO
+
+Las claves `shader_parameter/x` **no son propiedades del `Resource`**. `heren.resource update`
+responde `{"applied": [...]}` y **no escribe nada en el `.tres`**. Por eso `ocean.gd` inyecta las
+texturas en `_bind_material()` en cada arranque, con defaults en `DEFAULT_NORMAL_MAP` /
+`DEFAULT_FOAM_NOISE`. Es la red de seguridad, no adorno.
+
+### Texturas
+- `assets/env/textures/nature/agua1_nm.png` → `normal_map` (normal map real, `compress/normal_map=1`)
+- `assets/env/textures/nature/agua1.png` → `foam_noise` (celular en escala de grises: la espuma
+  rompe en celdas, lee como dibujada a mano y no como ruido)
+
+### Estado
+- ✅ Compila limpio: **0 errores, 0 warnings** en la run del mapa.
+- ⏳ **Sin verificar visualmente.** No se ha visto el agua renderizada ni se ha medido FPS.
+  `heren` no tiene tool de captura y `heren.scene create` **no persiste la `.tscn`** (pasa a
+  `save_to` la escena que ya estaba abierta → contamina el mapa; limpiar con `node remove` +
+  `scene save` y verificar el conteo de nodos).
+- ⏳ `tide_starts_high` / `tide_period` sin afinar. `wind_intensity` global sigue a **0.0** en
+  `project.godot` hasta que `Ocean._process` lo empuje; el shader tiene guarda anti-NaN para
+  `wind_direction = (0,0,0)`.
+
+### "LA MAREA" — efecto propuesto (pendiente de decisión)
+
+`maps/misiones/petrolera_c1` tiene props llamados **`TOR-03_Arranque_de_marea_001..011`**: el
+mapa YA TIENE la marea como elemento de guion, solo que sin mecánica. La idea es Promote
+ese prop a sistema:
+
+1. **La marea es el reloj de la misión.** `tide_level` ya está implementado y sube/baja el plano
+   del agua. Con marea baja se alcanzan rutas que con marea alta están cortadas. Coste: **1 uniform**.
+   En co-op el nivel lo decide el servidor (`apply_network_tide()`), va en el mismo paquete que
+   el resto del estado.
+2. **El agua es el radar de sonido.** El anillo `ripple_center`/`ripple_time`/`ripple_strength`
+   ya está en el shader: se inyecta en la MISMA solución de olas, así que no cuesta un draw call
+   ni una textura. `Ocean.emit_noise(pos, fuerza)` se llama desde `SoundArea`. Los enemigos ya
+   persiguen esos `SoundArea` → **no se cablea nada nuevo**, solo se pone en la superficie lo que
+   el juego ya sabe. El anillo además revienta la película de aceite (iridiscencia invertida).
+3. **Película de aceite (thin-film).** Paleta coseno, ~12 ALU, ya en el shader. Es la identidad
+   visual: una refinería flotando sobre su propio producto.
+
+**Lo que NO se ha conectado:** `emit_noise()` no tiene llamador. Hay que engancharlo al sistema
+`src/sounds/Sound.gd` + `src/enemy/Enemy.gd`.
 
 ## Arquitectura
 

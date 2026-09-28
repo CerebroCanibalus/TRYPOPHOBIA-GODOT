@@ -357,6 +357,7 @@ func _on_jump_timer_timeout() -> void:
 
 func _on_skeleton_3d_skeleton_updated() -> void:
 	if ragdoll_mode: return
+	if rig_config == null: return
 	var arm_tok := rig_config.arm_name_token
 	var leg_tok := rig_config.leg_name_token
 	for b: PhysicalBone3D in physics_bones:

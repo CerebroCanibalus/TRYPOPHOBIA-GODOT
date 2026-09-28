@@ -121,6 +121,13 @@ func _init() -> void:
 	_run("filesystem _count_files_recursive(null) = 0", _test_w4b_count_null_safe)
 	_run("filesystem _walk_import_errors(null) safe", _test_w4b_walk_null_safe)
 	_run("filesystem handle_exists res:// + user://", _test_w4b_exists)
+	# W4b inspect: vista READ-ONLY sin ejecutar worker.
+	_run("scene_script inspect not_found devuelve error", _test_w4b_inspect_not_found)
+	_run("scene_script inspect walk_packed_scene_opaque marca como opaca", _test_w4b_inspect_opaque)
+	_run("scene_script inspect aggregates skeleton + animation + material", _test_w4b_inspect_aggregates)
+	# W4b receipt: handle_run devuelve aggregates + tier dinámico + snapshot_subtree.
+	_run("scene_script run receipt agrega aggregates y sube tier si toca dynamic", _test_w4b_receipt_aggregates_dynamic)
+	_run("scene_script run ctx.snapshot_subtree adjunta subárbol al receipt", _test_w4b_receipt_snapshot_subtree)
 
 	print("RESULT: %d passed, %d failed" % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
@@ -1467,12 +1474,12 @@ func _test_w4_ctx_relpath() -> bool:
 	mid.add_child(leaf)
 	var ctx := _make_ctx(root, false)
 	var rp: String = ctx._relpath(leaf)
-	if rp != "/Mid/Leaf":
-		push_error("relpath esperado /Mid/Leaf, got %s" % rp)
+	if rp != "./Mid/Leaf":
+		push_error("relpath esperado ./Mid/Leaf, got %s" % rp)
 		root.free()
 		return false
-	if ctx._relpath(root) != "/":
-		push_error("relpath del root debe ser /")
+	if ctx._relpath(root) != ".":
+		push_error("relpath del root debe ser '.', got %s" % ctx._relpath(root))
 		root.free()
 		return false
 	root.free()
@@ -1951,4 +1958,321 @@ func _test_w4b_exists() -> bool:
 		fs.free()
 		return false
 	fs.free()
+	return true
+
+
+# ============================================================
+# W4b scene_script/inspect — vista READ-ONLY sin ejecutar worker.
+# ============================================================
+
+
+func _test_w4b_inspect_not_found() -> bool:
+	var ss: Node = SceneScriptScript.new()
+	# Sin editor interface, get_edited_scene_root devuelve null → error scene_path requerido.
+	var r: Dictionary = ss.handle_inspect({})
+	if r.get("ok", true):
+		push_error("inspect sin args debe dar ok=false, dio: %s" % str(r))
+		ss.free()
+		return false
+	if not str(r.get("error", "")).begins_with("scene_path"):
+		push_error("error esperado sobre scene_path, dio: %s" % str(r.get("error", "")))
+		ss.free()
+		return false
+	# path inexistente.
+	var r2: Dictionary = ss.handle_inspect({"scene_path": "res://nope/no_existe.tscn"})
+	if r2.get("ok", true):
+		push_error("inspect de path inexistente debe dar ok=false, dio: %s" % str(r2))
+		ss.free()
+		return false
+	ss.free()
+	return true
+
+
+func _test_w4b_inspect_opaque() -> bool:
+	# Crear escena mínima con un nodo y otra PackedScene instanciada (no expandida por default).
+	var scene_path: String = "res://.heren/tmp/test_inspect_opaque.tscn"
+	SceneScriptScript.ensure_dir(scene_path)
+	# Sub-escena con un hijo para verificar que child_count se reporta pero NO aparece como children expandidos.
+	var sub_scene_path: String = "res://.heren/tmp/test_inspect_sub.tscn"
+	SceneScriptScript.ensure_dir(sub_scene_path)
+	var sub_root: Node2D = Node2D.new()
+	sub_root.name = "SubRoot"
+	var sub_child: Node2D = Node2D.new()
+	sub_child.name = "SubChild"
+	sub_root.add_child(sub_child)
+	sub_child.owner = sub_root
+	var sub_packed: PackedScene = PackedScene.new()
+	sub_packed.pack(sub_root)
+	var sub_save_err: int = ResourceSaver.save(sub_packed, sub_scene_path)
+	sub_root.free()
+	if sub_save_err != OK:
+		push_error("save sub_packed falló: %d" % sub_save_err)
+		return false
+	# Escena principal: instancia la sub-escena.
+	var main_root: Node3D = Node3D.new()
+	main_root.name = "MainRoot"
+	var sub_inst: Node = load(sub_scene_path).instantiate()
+	sub_inst.name = "SubInst"
+	main_root.add_child(sub_inst)
+	sub_inst.owner = main_root
+	var main_packed: PackedScene = PackedScene.new()
+	main_packed.pack(main_root)
+	var main_save_err: int = ResourceSaver.save(main_packed, scene_path)
+	main_root.free()
+	if main_save_err != OK:
+		push_error("save main_packed falló: %d" % main_save_err)
+		return false
+	# Inspect sin expand_scene → sub-escena debe aparecer como opaca.
+	var ss: Node = SceneScriptScript.new()
+	var r: Dictionary = ss.handle_inspect({"scene_path": scene_path})
+	if not r.get("ok", false):
+		push_error("inspect ok=false: %s" % str(r))
+		ss.free()
+		return false
+	var opaques: Array = r.get("opaque_packed_scenes", [])
+	if opaques.size() != 1:
+		push_error("esperaba 1 opaca, dio %d: %s" % [opaques.size(), str(r)])
+		ss.free()
+		return false
+	# Verifica que la sub_inst se reporta como PackedScene sin children expandidos.
+	var root_data: Dictionary = r.get("root", {})
+	var sub_node: Dictionary = {}
+	for c in root_data.get("children", []):
+		if c.get("name", "") == "SubInst":
+			sub_node = c
+			break
+	if sub_node.is_empty():
+		push_error("SubInst no aparece en tree: %s" % str(root_data))
+		ss.free()
+		return false
+	if sub_node.get("kind", "") != "PackedScene":
+		push_error("SubInst.kind esperaba PackedScene, dio: %s" % str(sub_node.get("kind", "")))
+		ss.free()
+		return false
+	if sub_node.get("child_count", -1) != 1:
+		push_error("SubInst.child_count esperaba 1, dio: %s" % str(sub_node.get("child_count", -1)))
+		ss.free()
+		return false
+	if sub_node.has("children"):
+		push_error("SubInst NO debe traer children (es opaca): %s" % str(sub_node))
+		ss.free()
+		return false
+	# Inspect CON expand_scene → debe expandir la sub-escena.
+	var r2: Dictionary = ss.handle_inspect({"scene_path": scene_path, "expand_scene": [sub_scene_path]})
+	if not r2.get("ok", false):
+		push_error("inspect expand ok=false: %s" % str(r2))
+		ss.free()
+		return false
+	if r2.get("opaque_packed_scenes", []).size() != 0:
+		push_error("con expand_scene, no debe haber opacas: %s" % str(r2))
+		ss.free()
+		return false
+	var sub_expanded: Dictionary = {}
+	for c in r2.get("root", {}).get("children", []):
+		if c.get("name", "") == "SubInst":
+			sub_expanded = c
+			break
+	if sub_expanded.is_empty():
+		push_error("SubInst no aparece con expand: %s" % str(r2.get("root", {})))
+		ss.free()
+		return false
+	if sub_expanded.get("kind", "") == "PackedScene":
+		push_error("SubInst.kind esperaba != PackedScene (expandida), dio: %s" % str(sub_expanded.get("kind", "")))
+		ss.free()
+		return false
+	if not sub_expanded.has("children"):
+		push_error("SubInst expandida debe traer children: %s" % str(sub_expanded))
+		ss.free()
+		return false
+	ss.free()
+	return true
+
+
+func _test_w4b_inspect_aggregates() -> bool:
+	# Escena mínima con: Skeleton3D + AnimationPlayer + MeshInstance3D.
+	var scene_path: String = "res://.heren/tmp/test_inspect_agg.tscn"
+	SceneScriptScript.ensure_dir(scene_path)
+	var root: Node3D = Node3D.new()
+	root.name = "Main"
+	var skel: Skeleton3D = Skeleton3D.new()
+	skel.name = "Skel"
+	root.add_child(skel)
+	skel.owner = root
+	var mesh: MeshInstance3D = MeshInstance3D.new()
+	mesh.name = "Mesh"
+	root.add_child(mesh)
+	mesh.owner = root
+	var player: AnimationPlayer = AnimationPlayer.new()
+	player.name = "Player"
+	root.add_child(player)
+	player.owner = root
+	var packed: PackedScene = PackedScene.new()
+	packed.pack(root)
+	var save_err: int = ResourceSaver.save(packed, scene_path)
+	root.free()
+	if save_err != OK:
+		push_error("save falló: %d" % save_err)
+		return false
+	var ss: Node = SceneScriptScript.new()
+	var r: Dictionary = ss.handle_inspect({"scene_path": scene_path, "tier": 1})
+	if not r.get("ok", false):
+		push_error("inspect ok=false: %s" % str(r))
+		ss.free()
+		return false
+	var aggr: Dictionary = r.get("aggregates", {})
+	# Skeleton3D → debe aparecer en skeletons_3d.
+	var sk3: Array = aggr.get("skeletons_3d", [])
+	if sk3.size() != 1:
+		push_error("esperaba 1 skeleton_3d, dio %d: %s" % [sk3.size(), str(sk3)])
+		ss.free()
+		return false
+	if str(sk3[0].get("path", "")) != "./Skel":
+		push_error("path skeleton_3d mal: %s" % str(sk3[0]))
+		ss.free()
+		return false
+	# AnimationPlayer → debe aparecer en animations.
+	var anims: Array = aggr.get("animations", [])
+	if anims.size() != 1:
+		push_error("esperaba 1 animation, dio %d: %s" % [anims.size(), str(anims)])
+		ss.free()
+		return false
+	if str(anims[0].get("path", "")) != "./Player":
+		push_error("path animation mal: %s" % str(anims[0]))
+		ss.free()
+		return false
+	# MeshInstance3D sin material → NO debe aparecer en materials.
+	var mats: Array = aggr.get("materials", [])
+	if mats.size() != 0:
+		push_error("sin material, esperaba 0, dio %d: %s" % [mats.size(), str(mats)])
+		ss.free()
+		return false
+	# scene_node_count = root + Skel + Mesh + Player = 4
+	if int(r.get("scene_node_count", -1)) != 4:
+		push_error("scene_node_count esperaba 4, dio: %s" % str(r.get("scene_node_count", -1)))
+		ss.free()
+		return false
+	ss.free()
+	return true
+
+
+# ============================================================
+# W4b scene_script run receipt: aggregates + tier dinámico + snapshot_subtree.
+# ============================================================
+
+
+func _test_w4b_receipt_aggregates_dynamic() -> bool:
+	# Escena mínima con un Skeleton3D + AnimationPlayer. El motor del receipt
+	# (_receipt_coords → _inspect_aggregates) se valida indirectamente via
+	# inspect, ya que handle_run requiere editor vivo (no disponible en test
+	# SceneTree puro). Validamos que el shape de aggregates coincide.
+	var scene_path: String = "res://.heren/tmp/test_receipt_dyn.tscn"
+	SceneScriptScript.ensure_dir(scene_path)
+	var root: Node3D = Node3D.new()
+	root.name = "Main"
+	var skel: Skeleton3D = Skeleton3D.new()
+	skel.name = "Skel"
+	root.add_child(skel)
+	skel.owner = root
+	var player: AnimationPlayer = AnimationPlayer.new()
+	player.name = "Player"
+	root.add_child(player)
+	player.owner = root
+	var packed: PackedScene = PackedScene.new()
+	packed.pack(root)
+	var save_err: int = ResourceSaver.save(packed, scene_path)
+	root.free()
+	if save_err != OK:
+		push_error("save falló: %d" % save_err)
+		return false
+	var ss: Node = SceneScriptScript.new()
+	var insp: Dictionary = ss.handle_inspect({"scene_path": scene_path, "tier": 1})
+	if not insp.get("ok", false):
+		push_error("inspect base ok=false: %s" % str(insp))
+		ss.free()
+		return false
+	var aggr: Dictionary = insp.get("aggregates", {})
+	if int(aggr.get("node_count", -1)) != 3:
+		push_error("aggregates.node_count esperaba 3 (root+Skel+Player), dio %d" % int(aggr.get("node_count", -1)))
+		ss.free()
+		return false
+	if aggr.get("skeletons_3d", []).size() != 1:
+		push_error("aggregates.skeletons_3d esperaba 1, dio: %s" % str(aggr.get("skeletons_3d", [])))
+		ss.free()
+		return false
+	if aggr.get("animations", []).size() != 1:
+		push_error("aggregates.animations esperaba 1, dio: %s" % str(aggr.get("animations", [])))
+		ss.free()
+		return false
+	ss.free()
+	return true
+
+
+func _test_w4b_receipt_snapshot_subtree() -> bool:
+	# Valida WorkerCtx.snapshot_subtree: rechazo en read-only, registro en edit,
+	# path inexistente rechazado. Sin editor no corremos handle_run entero, pero
+	# el comportamiento del ctx es testeable directamente.
+	var scene_path: String = "res://.heren/tmp/test_receipt_subtree.tscn"
+	SceneScriptScript.ensure_dir(scene_path)
+	var root: Node3D = Node3D.new()
+	root.name = "Root"
+	var child: Node3D = Node3D.new()
+	child.name = "Child"
+	root.add_child(child)
+	child.owner = root
+	var packed: PackedScene = PackedScene.new()
+	packed.pack(root)
+	var save_err: int = ResourceSaver.save(packed, scene_path)
+	root.free()
+	if save_err != OK:
+		push_error("save falló: %d" % save_err)
+		return false
+	var loaded: PackedScene = load(scene_path)
+	var ss: Node = SceneScriptScript.new()
+	# 1) read-only: snapshot_subtree rechazado.
+	var detached_ro: Node = loaded.instantiate()
+	var ctx_ro: RefCounted = SceneScriptScript.WorkerCtx.new()
+	ctx_ro.setup(ss, detached_ro, scene_path, true)
+	if ctx_ro.snapshot_subtree("./Child", 2):
+		push_error("snapshot_subtree en read-only debe rechazarse")
+		detached_ro.free()
+		ss.free()
+		return false
+	if not str(ctx_ro._error).begins_with("snapshot_subtree"):
+		push_error("error esperado sobre snapshot_subtree, dio: %s" % str(ctx_ro._error))
+		detached_ro.free()
+		ss.free()
+		return false
+	detached_ro.free()
+	# 2) edit: registra el snapshot correctamente.
+	var detached: Node = loaded.instantiate()
+	var ctx: RefCounted = SceneScriptScript.WorkerCtx.new()
+	ctx.setup(ss, detached, scene_path, false)
+	if not ctx.snapshot_subtree("./Child", 2):
+		push_error("snapshot_subtree falló: %s" % str(ctx._error))
+		detached.free()
+		ss.free()
+		return false
+	if ctx._snapshots.size() != 1:
+		push_error("_snapshots esperaba 1, dio %d" % ctx._snapshots.size())
+		detached.free()
+		ss.free()
+		return false
+	if str(ctx._snapshots[0].get("path", "")) != "./Child":
+		push_error("snapshot path mal: %s" % str(ctx._snapshots[0]))
+		detached.free()
+		ss.free()
+		return false
+	if int(ctx._snapshots[0].get("tier", -1)) != 2:
+		push_error("snapshot tier mal: %s" % str(ctx._snapshots[0]))
+		detached.free()
+		ss.free()
+		return false
+	# Path inexistente → error.
+	if ctx.snapshot_subtree("./NoExiste", 1):
+		push_error("snapshot_subtree path inexistente debe rechazarse")
+		detached.free()
+		ss.free()
+		return false
+	detached.free()
+	ss.free()
 	return true

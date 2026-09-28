@@ -1,0 +1,72 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://dbja1p0l4y85y"]
+
+[ext_resource type="Shader" uid="uid://mre1gh86t41m" path="res://src/shaders/ocean_stylized.gdshader" id="1_6vch1"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_vb28n"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_b6xmk"]
+noise_type = 2
+frequency = 0.0527
+cellular_distance_function = 1
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_7dton"]
+noise = SubResource("FastNoiseLite_b6xmk")
+seamless = true
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_6vch1")
+shader_parameter/tide_level = -0.54
+shader_parameter/ripple_center = Vector3(0, 0, 0)
+shader_parameter/ripple_time = 0.0
+shader_parameter/ripple_strength = 0.0
+shader_parameter/wave_lod_near = 150.0
+shader_parameter/wave_lod_far = 654.0
+shader_parameter/swell_length = 26.70000039041144
+shader_parameter/swell_height = 0.4499999899416
+shader_parameter/swell_speed = 2.4
+shader_parameter/swell_chop = 0.3499999921768
+shader_parameter/ripple_length = 62.0000009164238
+shader_parameter/ripple_height = 0.2999999932944
+shader_parameter/ripple_speed = 3.1
+shader_parameter/ripple_chop = 0.4
+shader_parameter/chop_length = 15.0000002160674
+shader_parameter/chop_height = 0.055
+shader_parameter/chop_speed = 4.0
+shader_parameter/chop_chop = 0.0
+shader_parameter/wave_spread = 1.499999966472
+shader_parameter/scatter_color = Color(0.21404877, 0.1897243, 0.27089152, 1)
+shader_parameter/scatter_density = 0.0
+shader_parameter/max_view_depth = 174.0
+shader_parameter/reflect_color = Color(0.42, 0.055, 0.058, 1)
+shader_parameter/reflect_amount = 0.499999988824
+shader_parameter/reflect_power = 1.6999999731775999
+shader_parameter/roughness = 1.0
+shader_parameter/specular = 0.2999999932944
+shader_parameter/refraction_strength = 0.0150000007125
+shader_parameter/contact_width = 0.9000000134110799
+shader_parameter/contact_sharpness = 3.2999999374144
+shader_parameter/crest_amount = 0.18999999575312
+shader_parameter/crest_height = 0.86999998055376
+shader_parameter/foam_scale = 0.78999998234193
+shader_parameter/foam_speed = 0.6499999854712
+shader_parameter/foam_color = Color(0.7677369, 0.96874636, 0.7440827, 1)
+shader_parameter/wet_darkening = 0.499999988824
+shader_parameter/foam_contrast = 1.0
+shader_parameter/oil_center = Vector2(2.98, 0)
+shader_parameter/oil_radius = 55.0
+shader_parameter/oil_amount = 0.0999999977648
+shader_parameter/oil_threshold = 0.26999999396496
+shader_parameter/oil_softness = 0.1
+shader_parameter/oil_scale = 0.012
+shader_parameter/oil_drift = 0.02
+shader_parameter/oil_thickness = 1.4
+shader_parameter/oil_spread = 13.0000001937156
+shader_parameter/caustics_strength = 1.0
+shader_parameter/normal_map = SubResource("NoiseTexture2D_7dton")
+shader_parameter/foam_noise = SubResource("NoiseTexture2D_vb28n")
+shader_parameter/normal_scale = 0.055000002612499994
+shader_parameter/normal_strength = 0.7999999821184
+shader_parameter/normal_speed = 0.2999999932944
+shader_parameter/normal_lod_fade = 320.0
+shader_parameter/debug_view = 0

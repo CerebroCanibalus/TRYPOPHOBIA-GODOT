@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://bbppdxwbs524f" path="res://maps/misiones/petrolera_c1/petrolera.tscn" id="1_mapa"]
+
+[node name="PetroleraJugable" type="Node3D"]
+
+[node name="Petrolera" parent="." instance=ExtResource("1_mapa")]
+
+[node name="Linterna" type="SpotLight3D" parent="Petrolera/Iza/CameraPivot/Camera3D"]
+shadow_enabled = true
+spot_range = 21.3291
+spot_angle = 15.2845
+
+; Para empezar en otro sitio, arrastrar a Petrolera/Iza a una de estas. Van
+; DESPLAZADAS DEL EJE del nudo a proposito: en el eje esta la columna, que mide 5 m
+; de diametro, y alli no hay suelo — el de la rotonda es un anillo alrededor de la
+; pata. Puesta en el centro, Iza cae al fondo del mar. La rotonda
+; de la plataforma esta en el origen con 16,70 de radio y su suelo en -12; las de
+; los extremos, en los pies de I0 e I6. (Blender -> Godot: x, z, -y.)
+[node name="SalidaBaseP" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, -11.9, 0)
+
+[node name="SalidaBaseI0" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.3, -11.9, 21.25)
+
+[node name="SalidaPuerto" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 1.8, 16.8)

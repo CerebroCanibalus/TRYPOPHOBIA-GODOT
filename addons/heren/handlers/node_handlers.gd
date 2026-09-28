@@ -1,4 +1,4 @@
-@tool
+﻿@tool
 extends "res://addons/heren/handlers/heren_handler.gd"
 # Heren MCP v4 - Node handlers (Fase 2).
 # CRUD completo de nodos sobre la escena VIVA del editor (ADR-002):
@@ -1037,7 +1037,7 @@ func _array_without_at(arr: Variant, index: int) -> Variant:
 	return out
 
 
-## v4.9: set_script como acción de nodo (alias para signal/set_script).
+## v5.0: set_script como acción de nodo (alias para signal/set_script).
 ## El agente suele llamar node/set_script o resource/set_script — es más
 ## intuitivo que signal/set_script para esta operación.
 func handle_set_script(args: Dictionary) -> Dictionary:

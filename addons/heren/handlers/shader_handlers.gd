@@ -11,7 +11,7 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 #   inspect  -> lista uniforms + tipos del shader compilado
 #
 # 2026-09-09 (§0.12 W4 cleanup):
-#   - material, uniform, apply: archivados a addons/heren/archive/handlers/shader_ops_handlers.gd
+#   - material, uniform, apply: archivados a archived_handlers/gd_source/handlers/shader_ops_handlers.gd
 #   Reemplazados por scene_script workers.
 
 const HerenCoordsScript := preload("coords.gd")

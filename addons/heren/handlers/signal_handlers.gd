@@ -1,4 +1,4 @@
-@tool
+﻿@tool
 extends "res://addons/heren/handlers/heren_handler.gd"
 # Heren MCP v4 - Signal handlers (Fase 2).
 # Señales y scripts entre nodos de la escena viva (ADR-002).
@@ -8,7 +8,7 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 #   connect      -> node.connect(signal, target, method, CONNECT_PERSIST)
 #   disconnect   -> node.disconnect(...)
 #   list         -> señales del nodo + conexiones activas
-#   set_script   -> ELIMINADO 2026-09-09 (duplicaba node/set_script, v4.9)
+#   set_script   -> ELIMINADO 2026-09-09 (duplicaba node/set_script, v5.0)
 
 const HerenCoordsScript := preload("coords.gd")
 const HerenSceneRegistryScript := preload("../scene_registry.gd")

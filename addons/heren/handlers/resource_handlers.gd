@@ -1,4 +1,4 @@
-@tool
+﻿@tool
 extends "res://addons/heren/handlers/heren_handler.gd"
 # Heren MCP v4 - Resource handlers (Fase 2).
 # Recursos .tres y scripts .gd vÃ­a EditorFileSystem + ResourceSaver (ADR-002):
@@ -392,7 +392,7 @@ func handle_edit_script(args: Dictionary) -> Dictionary:
 	return result
 
 
-## v4.9: set_script tambiÃ©n funciona desde resource (fallback redirect).
+## v5.0: set_script tambiÃ©n funciona desde resource (fallback redirect).
 ## El agente suele llamar resource/set_script pensando que es operaciÃ³n de
 ## recurso. Implementamos directamente â€” es load() + node.set_script().
 func handle_set_script(args: Dictionary) -> Dictionary:

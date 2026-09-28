@@ -27,6 +27,7 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 #   ensure_unique_child_name(p, n)      remove_node(path)  clear_children(node)
 #   coords(node, tier) -> Dictionary    (sistema de coords §0.11 DENTRO del worker)
 #   log(msg)  error(msg)  mark_modified()  output(key, value)
+#   snapshot_subtree(path, tier)        (adjunta al receipt el árbol de un subpath)
 #
 # Modo inspect: instancia el PackedScene DETACHED (read-only), helpers de
 # mutación rechazados, instancia liberada al terminar. NUNCA guarda.
@@ -63,6 +64,7 @@ class WorkerCtx extends RefCounted:
 	var _outputs: Dictionary = {}
 	var _changes: Dictionary = {"added": [], "removed": [], "instanced": [], "templates": []}
 	var _touched: Array = []  # Nodes tocados (para coords del receipt)
+	var _snapshots: Array = []  # [{path, tier}] via ctx.snapshot_subtree(path, tier)
 	var _root_set: bool = false
 
 	func setup(handler: Node, root: Node, scene_path: String, read_only: bool) -> void:
@@ -255,6 +257,22 @@ class WorkerCtx extends RefCounted:
 		if _outputs.size() < MAX_OUTPUTS:
 			_outputs[key] = value
 
+	## Adjunta al receipt un snapshot completo de un subárbol (tier configurable).
+	## Útil para que el worker reporte "así quedó el personaje" sin que el agente
+	## tenga que re-inspectar la escena entera. Coste acotado al subárbol.
+	## Sin efecto en modo inspect.
+	func snapshot_subtree(path: String, sub_tier: int = 1) -> bool:
+		if _read_only:
+			_fail("snapshot_subtree rechazado en modo inspect (read-only)")
+			return false
+		var n: Node = get_node_or_null(path)
+		if n == null:
+			_fail("snapshot_subtree: path no existe '" + path + "'")
+			return false
+		var rel: String = _relpath(n)
+		_snapshots.append({"path": rel, "tier": sub_tier})
+		return true
+
 	# ------------------------------------------------------------ internals
 
 	func _fail(msg: String) -> void:
@@ -269,7 +287,15 @@ class WorkerCtx extends RefCounted:
 			_changes[kind] = arr
 
 	## Relpath manual (get_path() requiere SceneTree — NUNCA en detached).
+## Convención unificada:
+##   root → "."
+##   hijo → "./X/Y/Z" (prefijo "./" para distinguir de paths absolutos)
+##   fuera del root (huérfano) → nombre plano
+## Mismo formato que _inspect_walk para que el agente vea paths consistentes
+## entre changes.added[] y inspect.tree.
 	func _relpath(node: Node) -> String:
+		if node == _root:
+			return "."
 		var parts: Array = []
 		var n: Node = node
 		while n != null and n != _root:
@@ -277,7 +303,7 @@ class WorkerCtx extends RefCounted:
 			n = n.get_parent()
 		if n != _root:
 			return str(node.name)  # fuera del root: nombre plano
-		return "/" + "/".join(parts)
+		return "./" + "/".join(parts)
 
 	func _find_by_name(node: Node, target: String, out: Array) -> void:
 		if str(node.name) == target:
@@ -479,6 +505,199 @@ func handle_list(args: Dictionary) -> Dictionary:
 	return {"ok": true, "directory": LIBRARY_DIR, "count": out.size(), "workers": out}
 
 
+## scene_script/inspect — W4b (§0.12) inspección READ-ONLY de la escena SIN
+## ejecutar un worker. Devuelve árbol recursivo (tier 1 por defecto) con
+## huesos, animaciones, materiales, luces y audio agregados para que el agente
+## sepa QUÉ hay antes de escribir un worker. PackedScene instanciadas son
+## opacas por defecto (sin expandir) — opt-in vía expand_scene (Array de
+## paths a expandir, ej ["res://character.tscn"]).
+##
+## Costo típico: 50-200 tok por nodo en tier 1; tier 3 añade dynamic state
+## (skeleton bones completos, animation tracks, light/audio params).
+##
+## Diferencia con mode="inspect" de handle_run: NO ejecuta código arbitrario;
+## es una vista estática, instantánea y pura.
+func handle_inspect(args: Dictionary) -> Dictionary:
+	var scene_path := str(args.get("scene_path", ""))
+	if scene_path == "":
+		var ei0 := _editor_interface()
+		var edited := ei0.get_edited_scene_root() if ei0 != null else null
+		if edited != null and edited.scene_file_path != "":
+			scene_path = edited.scene_file_path
+	if scene_path == "":
+		return {"ok": false, "error": "scene_path requerido (o escena abierta con scene_file_path)"}
+	if not ResourceLoader.exists(scene_path):
+		return {"ok": false, "error": "not_found: " + scene_path}
+	var packed: PackedScene = load(scene_path)
+	if packed == null:
+		return {"ok": false, "error": "invalid_scene: " + scene_path}
+	var root: Node = packed.instantiate()
+	if root == null:
+		return {"ok": false, "error": "instantiate_failed: " + scene_path}
+
+	var depth: int = int(args.get("depth", -1))  # -1 = ilimitado
+	var tier: int = int(args.get("tier", 1))
+	var expand_scenes: Array = args.get("expand_scene", [])
+	var expand_set: Dictionary = {}
+	for p in expand_scenes:
+		expand_set[str(p)] = true
+
+	# Tree recursivo (PackedScene como opacas salvo en expand_set).
+	# El root NUNCA es opaco (el usuario pidió esa escena; sí entra a sus hijos).
+	var tree: Array = []
+	var opaques: Array = []
+	tree.append(_inspect_walk(root, ".", tier, depth, 0, expand_set, opaques, true))
+
+	# Agregados (cruzados, no por nodo — para que el agente los vea sin expandir).
+	var aggr := _inspect_aggregates(root, tier)
+
+	# Liberar instancia detached.
+	root.free()
+
+	# Top-level: scene_node_count = aggregates.node_count (el motor vive en
+	# _inspect_aggregates; este campo es solo una alias para conveniencia).
+	return {
+		"ok": true,
+		"scene_path": scene_path,
+		"mode": "inspect",
+		"tier": tier,
+		"depth": depth,
+		"expand_scene": expand_scenes,
+		"opaque_packed_scenes": opaques,
+		"root": tree[0],
+		"aggregates": aggr,
+		"scene_node_count": int(aggr.get("node_count", 0)),
+	}
+
+
+## Walk recursivo de un nodo: coord + children. depth<0 = ilimitado.
+## Marca PackedScene como opacas salvo si su source está en expand_set.
+## El ROOT (is_root=true) NUNCA es opaco: el usuario pidió esa escena y quiere
+## ver sus hijos (los PackedScene que contiene son los que sí pueden ser opacos).
+static func _inspect_walk(node: Node, relpath: String, tier: int, depth: int, cur_depth: int, expand_set: Dictionary, opaques: Array, is_root: bool = false) -> Dictionary:
+	if node == null:
+		return {"kind": "None"}
+	var out: Dictionary = HerenCoordsScript.coords_of_node(node, relpath, tier)
+	# El nombre del nodo va inline para que el agente lo lea sin mirar parent_path.
+	out["name"] = str(node.name)
+	# PackedScene como opaca (no expandir) salvo opt-in. El root se exenta.
+	if not is_root and node.scene_file_path != "" and not expand_set.has(node.scene_file_path):
+		var child_count := node.get_child_count()
+		out["kind"] = "PackedScene"
+		out["source"] = node.scene_file_path
+		out["child_count"] = child_count
+		out["expanded"] = false
+		opaques.append(relpath)
+		return out
+	if depth >= 0 and cur_depth >= depth:
+		out["children_truncated"] = true
+		return out
+	var children: Array = []
+	var idx := 0
+	for child in node.get_children():
+		if child is Node:
+			var child_relpath: String = relpath + "/" + str(child.name) if relpath != "." else "./" + str(child.name)
+			children.append(_inspect_walk(child, child_relpath, tier, depth, cur_depth + 1, expand_set, opaques, false))
+			idx += 1
+	if children.size() > 0:
+		out["children"] = children
+	return out
+
+
+## Agregados cruzados: skeleton bones, animation tracks, materials, lights,
+## audio, cameras. Para que el agente vea QUÉ tiene la escena sin expandir.
+static func _inspect_aggregates(root: Node, tier: int) -> Dictionary:
+	var node_count := _count_nodes(root)
+	var skeletons_3d: Array = []
+	var skeletons_2d: Array = []
+	var animations: Array = []
+	var animation_trees: Array = []
+	var materials: Array = []
+	var lights: Array = []
+	var audios: Array = []
+	var cameras: Array = []
+	var tiled_maps: Array = []
+	_collect_into(root, ".", 0, -1, skeletons_3d, skeletons_2d, animations, animation_trees, materials, lights, audios, cameras, tiled_maps)
+	return {
+		"node_count": node_count,
+		"skeletons_3d": skeletons_3d,
+		"skeletons_2d": skeletons_2d,
+		"animations": animations,
+		"animation_trees": animation_trees,
+		"materials": materials,
+		"lights": lights,
+		"audios": audios,
+		"cameras": cameras,
+		"tilemaps": tiled_maps,
+	}
+
+
+## Walk no recursivo en agg (lo hace _collect_into).
+static func _collect_into(node: Node, relpath: String, depth: int, max_depth: int, sk3: Array, sk2: Array, anims: Array, trees: Array, mats: Array, lights: Array, auds: Array, cams: Array, tilemaps: Array) -> void:
+	if node == null:
+		return
+	if node is Skeleton3D:
+		var s: Skeleton3D = node
+		var bones: Array = []
+		var i := 0
+		while i < s.get_bone_count():
+			bones.append(str(s.get_bone_name(i)))
+			i += 1
+		sk3.append({"path": relpath, "bone_count": bones.size(), "bones": bones})
+	if node is Skeleton2D:
+		var s2: Skeleton2D = node
+		var bones2: Array = []
+		for b in s2.get_children():
+			if b is Bone2D:
+				bones2.append(str(b.name))
+		sk2.append({"path": relpath, "bone_count": bones2.size(), "bones": bones2})
+	if node is AnimationPlayer:
+		var ap: AnimationPlayer = node
+		var libs: Array = []
+		for lib_name in ap.get_animation_list():
+			var anim_res: Animation = ap.get_animation(lib_name)
+			var length: float = 0.0
+			if anim_res != null:
+				length = anim_res.length
+			libs.append({"name": lib_name, "length": length})
+		anims.append({"path": relpath, "libraries": libs})
+	if node is AnimationTree:
+		var at: AnimationTree = node
+		trees.append({
+			"path": relpath,
+			"anim_player": str(at.get_node_or_null(at.anim_player).name) if at.anim_player != NodePath("") and at.get_node_or_null(at.anim_player) != null else "",
+			"active": at.active,
+		})
+	if node is MeshInstance3D or node is Sprite2D or node is Sprite3D:
+		var mat_out: Array = []
+		var overrides: int = 0
+		if node is MeshInstance3D:
+			overrides = (node as MeshInstance3D).get_surface_override_material_count()
+		var mat_count: int = node.get_material_count() if node.has_method("get_material_count") else 0
+		for m_idx in range(mat_count):
+			var m_res: Material = null
+			if node.has_method("get_material"):
+				m_res = node.get_material(m_idx)
+			if m_res != null:
+				mat_out.append({"index": m_idx, "path": m_res.resource_path if m_res.resource_path != "" else "<inline>", "class": m_res.get_class()})
+		if mat_out.size() > 0:
+			mats.append({"path": relpath, "materials": mat_out, "override_count": overrides})
+	if node is Light3D:
+		var l: Light3D = node
+		lights.append({"path": relpath, "class": node.get_class(), "light_color": HerenCoordsScript.serialize_value(Color(l.light_color.r, l.light_color.g, l.light_color.b, l.light_color.a) if "light_color" in l else Color.WHITE, true), "light_energy": l.light_energy, "enabled": l.light_enabled if "light_enabled" in l else true})
+	if node is AudioStreamPlayer or node is AudioStreamPlayer2D or node is AudioStreamPlayer3D:
+		var stream = node.stream if "stream" in node else null
+		auds.append({"path": relpath, "class": node.get_class(), "stream_path": stream.resource_path if stream != null else "", "playing": node.playing})
+	if node is Camera3D or node is Camera2D:
+		cams.append({"path": relpath, "class": node.get_class(), "current": node.current if "current" in node else false})
+	if node is TileMap or node is TileMapLayer:
+		tilemaps.append({"path": relpath, "class": node.get_class()})
+	for child in node.get_children():
+		if child is Node:
+			var child_relpath: String = relpath + "/" + str(child.name) if relpath != "." else "./" + str(child.name)
+			_collect_into(child, child_relpath, depth + 1, max_depth, sk3, sk2, anims, trees, mats, lights, auds, cams, tilemaps)
+
+
 # ============================================================
 # Internals
 # ============================================================
@@ -494,17 +713,67 @@ func _node_coords(node: Node, parent_path: String, tier: int) -> Dictionary:
 
 
 ## Coords del receipt: root (tier completo) + nodos tocados (tier 1).
+## W4b: también agrega aggregates (skeleton bones, animations, materials, etc.)
+## y subtrees solicitados via ctx.snapshot_subtree(path, tier).
+## El tier efectivo sube a 3 automáticamente si el worker tocó un nodo
+## "dynamic" (Skeleton3D, AnimationPlayer, AnimationTree, Light3D, audio,
+## camera) — el agente ve los huesos/animaciones resultantes sin re-inspect.
 func _receipt_coords(ctx: WorkerCtx, tier: int) -> Dictionary:
 	var out := {}
-	if ctx._root != null and is_instance_valid(ctx._root):
-		out["root"] = HerenCoordsScript.coords_of_node(ctx._root, "", tier)
+	if ctx._root == null or not is_instance_valid(ctx._root):
+		return out
+	var effective_tier: int = tier
+	if _touched_dynamic(ctx):
+		effective_tier = maxi(effective_tier, 3)
+	# Root coord (tier efectivo).
+	out["root"] = HerenCoordsScript.coords_of_node(ctx._root, "", effective_tier)
+	# Touched (siempre tier 1 para no explotar tokens — el agente quiere saber QUÉ).
 	var touched: Array = []
 	for node in ctx._touched:
 		if is_instance_valid(node):
-			touched.append(HerenCoordsScript.coords_of_node(node, ctx._relpath(node), 1))
+			touched.append(ctx._relpath(node))
 	if touched.size() > 0:
 		out["touched"] = touched
+	# Agregados (skeleton bones, animations, materials, lights, audios, cameras).
+	out["aggregates"] = _inspect_aggregates(ctx._root, effective_tier)
+	# Subtrees solicitados via ctx.snapshot_subtree(path, tier).
+	if ctx._snapshots.size() > 0:
+		var subtrees: Array = []
+		var expand_set: Dictionary = {}
+		var opaques: Array = []
+		for s in ctx._snapshots:
+			var sp: String = str(s.get("path", ""))
+			var st: int = int(s.get("tier", 1))
+			var n: Node = ctx._root.get_node_or_null(NodePath(sp)) if sp != "" else ctx._root
+			if n == null:
+				continue
+			subtrees.append({
+				"path": sp,
+				"tier": st,
+				"tree": _inspect_walk(n, sp if sp != "" else ".", st, -1, 0, expand_set, opaques, sp == ""),
+			})
+		out["subtrees"] = subtrees
 	return out
+
+
+## Detecta si el worker tocó un nodo con estado dinámico (skeleton, anim,
+## light, audio, camera). True = sube el tier del receipt a 3 para que
+## el agente vea el estado resultante sin re-inspectar.
+static func _touched_dynamic(ctx: WorkerCtx) -> bool:
+	for n in ctx._touched:
+		if not is_instance_valid(n):
+			continue
+		if n is Skeleton3D or n is Skeleton2D:
+			return true
+		if n is AnimationPlayer or n is AnimationTree:
+			return true
+		if n is Light3D:
+			return true
+		if n is AudioStreamPlayer or n is AudioStreamPlayer2D or n is AudioStreamPlayer3D:
+			return true
+		if n is Camera3D or n is Camera2D:
+			return true
+	return false
 
 
 ## Save con el MISMO patrón que scene_handlers.handle_save (pack + ResourceSaver,
@@ -539,7 +808,7 @@ func _post_validate(scene_path: String) -> Dictionary:
 	return res
 
 
-func _count_nodes(node: Node) -> int:
+static func _count_nodes(node: Node) -> int:
 	var count := 1
 	for child in node.get_children():
 		if child is Node:

@@ -13,7 +13,7 @@ extends "res://addons/heren/handlers/heren_handler.gd"
 #   get_info      — anchors/offsets/size_flags/min_size de un Control
 #
 # 2026-09-09 (§0.12 W4 cleanup):
-#   - layout, theme: archivados a addons/heren/archive/handlers/ui_layout_theme_handlers.gd
+#   - layout, theme: archivados a archived_handlers/gd_source/handlers/ui_layout_theme_handlers.gd
 #   Reemplazados por scene_script workers.
 
 const HerenCoordsScript := preload("coords.gd")
