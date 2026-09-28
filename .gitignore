@@ -8,20 +8,7 @@
 # sin el .import, Godot reimporta con compresion VRAM y mipmaps, y la
 # cuantizacion a Tripofobia-32 deja de ser exacta. Ya habia 1074 versionados
 # de antes de esta regla; la regla solo bloqueaba los NUEVOS.
-*.uid
-.rid
-.scene
-.tscn
-.gd
-*.gdc
-*.gde
-# NOTA: `*.gd` y `*.res` estaban listados aca y ocultaban TODO script o recurso
-# nuevo que se creara: los scripts y los .res del ragdoll nunca llegaron a git.
-# El codigo fuente SI se versiona.
-*.tres
-# EXCEPCION: los materiales compartidos SI se versionan (regla de oro: los
-# materiales/shaders viven como .tres o como sub-recursos del .tscn, nunca
-# creados proceduralmente en GDScript).
+
 !src/**/materials/*.tres
 export_presets.cfg
 GodotSharp/
@@ -50,11 +37,6 @@ bin/
 
 # Logs
 *.log
-
-# Environment
-.env
-.env.local
-*.env.*
 
 # OS
 .DS_Store

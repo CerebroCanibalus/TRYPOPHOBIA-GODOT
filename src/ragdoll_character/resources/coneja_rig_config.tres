@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RagdollRigConfig" load_steps=2 format=3 uid="uid://coneja_rig_001"]
+
+[ext_resource type="Script" path="res://src/ragdoll_character/ragdoll_rig.gd" id="1_rig"]
+
+[resource]
+script = ExtResource("1_rig")
+body_bone_name = &"espina2"
+head_bone_name = &"cabeza"
+ik_arm_left = {"root": &"hombro_L", "mid": &"brazo1_L", "end": &"mano_L"}
+ik_arm_right = {"root": &"hombro_R", "mid": &"brazo1_R", "end": &"mano_R"}
+grab_bone_left_name = &"brazo2_L"
+grab_bone_right_name = &"brazo2_R"
+on_floor_left_bone_name = &"pie_L"
+on_floor_right_bone_name = &"pie_R"
+arm_name_token = "brazo"
+leg_name_token = "pierna"
+lean_body_suffix = "espina2"
+lean_head_suffix = "cabeza"
+clip_idle = &"idle"
+clip_walk = &"Walk"
+clip_grab_lower = &"grab_lower"
+clip_grab_middle = &"grab_middle"
+clip_grab_upper = &"grab_upper"
+clip_grab_hold = &"grab_hold"
+idle_filter_bones = PackedStringArray("Armature/Skeleton3D:espina2", "Armature/Skeleton3D:espina1", "Armature/Skeleton3D:espina", "Armature/Skeleton3D:cuello", "Armature/Skeleton3D:cabeza", "Armature/Skeleton3D:hombro_L", "Armature/Skeleton3D:hombro_R", "Armature/Skeleton3D:pierna1_L", "Armature/Skeleton3D:pierna1_R")
+grab_filter_bones = PackedStringArray("Armature/Skeleton3D:pierna1_L", "Armature/Skeleton3D:pierna2_L", "Armature/Skeleton3D:rodilla_L", "Armature/Skeleton3D:pie_L", "Armature/Skeleton3D:pierna1_R", "Armature/Skeleton3D:pierna2_R", "Armature/Skeleton3D:rodilla_R", "Armature/Skeleton3D:pie_R")
+body_shape = {"size": Vector3(0.95, 1.4, 0.55)}
+arm_capsule = {"radius": 0.13, "height": 0.32}
+forearm_capsule = {"radius": 0.11, "height": 0.30}
+thigh_capsule = {"radius": 0.16, "height": 0.42}
+calf_capsule = {"radius": 0.13, "height": 0.50}
+head_capsule = {"radius": 0.18, "height": 0.35}
+grab_sphere = {"radius": 0.16}
+mass_body = 10.0
+mass_head = 2.5
+mass_arm_root = 0.4
+mass_arm_mid = 0.4
+mass_arm_end = 0.4
+mass_leg_root = 2.0
+mass_leg_mid = 1.0
