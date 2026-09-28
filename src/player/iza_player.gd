@@ -71,8 +71,63 @@ func _physics_process(delta: float) -> void:
 		_try_push()
 	_update_held_object()
 	move_and_slide()
+	_subir_escalon(delta)
 	_update_fov(delta)
 	_rotate_rig(delta)
+
+# SUBIR ESCALONES, que es lo que hace explorable la Petrolera.
+#
+# Un CharacterBody3D no sube peldaños: move_and_slide desliza por rampas pero
+# choca de frente contra cualquier resalte vertical. Y el mapa esta lleno:
+#
+#   0,300 m  la brazola del vano de TOR-01 — el umbral de TODAS las puertas
+#   0,188 m  el peldaño del caracol (3,00 m de subida en 16 peldaños)
+#
+# Sin esto Iza se planta delante de cada puerta y no sube una sola escalera: la
+# medi llegando al porton del puerto y quedandose a 26 cm por debajo del umbral.
+# El tope sale de la brazola, que es el resalte mas alto que hay que pisar, con un
+# dedo de holgura.
+const ALTURA_ESCALON := 0.35
+
+
+func _subir_escalon(_delta: float) -> void:
+	if not is_on_floor():
+		return
+	var mov := Vector3(velocity.x, 0.0, velocity.z) * _delta
+	if mov.length() < 0.0001:
+		return
+	var par := PhysicsTestMotionParameters3D.new()
+	var res := PhysicsTestMotionResult3D.new()
+	par.from = global_transform
+	par.motion = mov
+	if not PhysicsServer3D.body_test_motion(get_rid(), par, res):
+		return                                  # no hay nada delante
+	if res.get_collision_normal().y > 0.7:
+		return                                  # es suelo o rampa: ya sube sola
+	# ¿pasaria empezando un escalon mas arriba?
+	var alto := Transform3D(global_transform.basis,
+			global_transform.origin + Vector3(0.0, ALTURA_ESCALON, 0.0))
+	par.from = alto
+	par.motion = mov
+	if PhysicsServer3D.body_test_motion(get_rid(), par, res):
+		return                                  # tambien bloqueado: es un muro
+	# hay hueco arriba: subir, AVANZAR LO QUE MIDE EL CUERPO y volver a pisar.
+	#
+	# Avanzar solo `mov` (un fotograma, ~8 cm) no basta: la capsula tiene 27 cm de
+	# radio, asi que su apoyo sigue sobre el suelo viejo y el sondeo hacia abajo
+	# encuentra ese, no el escalon. Medido con la brazola de 0,30: levantaba y
+	# volvia a caer al mismo sitio (+0.001 m) una y otra vez. Con un escalon de
+	# 0,1875 colaba de milagro, subiendo a trocitos.
+	var radio: float = ((get_node("CollisionShape3D") as CollisionShape3D).shape
+			as CapsuleShape3D).radius
+	var avance: Vector3 = mov.normalized() * maxf(mov.length(), radio * 1.25)
+	var arriba := Transform3D(alto.basis, alto.origin + avance)
+	par.from = arriba
+	par.motion = Vector3(0.0, -ALTURA_ESCALON * 1.5, 0.0)
+	if not PhysicsServer3D.body_test_motion(get_rid(), par, res):
+		return                                  # no hay suelo ahi: no es un escalon
+	global_position = arriba.origin + par.motion * res.get_collision_safe_fraction()
+
 
 func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():
