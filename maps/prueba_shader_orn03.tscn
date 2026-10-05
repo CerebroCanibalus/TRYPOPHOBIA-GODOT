@@ -1,0 +1,61 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://src/prueba_captura.gd" id="0_cap"]
+[ext_resource type="Shader" path="res://src/shaders/pixel_effects.gdshader" id="1_sh"]
+[ext_resource type="Texture2D" path="res://assets/sprites/palettes/tripofobia-32.png" id="2_pal"]
+[ext_resource type="PackedScene" path="res://assets/env/ORN-03/ORN-03_Arco_de_medio_punto.gltf" id="3_orn"]
+[ext_resource type="PackedScene" path="res://assets/env/TER-01/TER-01_Roca_de_marea_a.gltf" id="4_roca"]
+
+[sub_resource type="ShaderMaterial" id="mat_pixel"]
+render_priority = 100
+shader = ExtResource("1_sh")
+shader_parameter/TwixelAngle = 45.0
+shader_parameter/PixelSize = 5.0
+shader_parameter/Quantize = true
+shader_parameter/PaletteTexture = ExtResource("2_pal")
+shader_parameter/Posterize = false
+shader_parameter/ColorSteps = 16
+
+[sub_resource type="Environment" id="entorno"]
+background_mode = 1
+background_color = Color(0.13, 0.12, 0.17, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.45, 0.55, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 0
+
+[sub_resource type="QuadMesh" id="quad"]
+
+[sub_resource type="StandardMaterial3D" id="mat_muro"]
+albedo_color = Color(0.29, 0.31, 0.36, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="caja_muro"]
+size = Vector3(6, 3, 0.3)
+
+[node name="PruebaShaderORN03" type="Node3D"]
+script = ExtResource("0_cap")
+
+[node name="Entorno" type="WorldEnvironment" parent="."]
+environment = SubResource("entorno")
+
+[node name="Sol" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.551, 0, 0.835, 0.6705, 0.6016, 0.4425, -0.502, 0.803, -0.331, 0, 4, 0)
+light_energy = 3.0
+shadow_enabled = true
+
+[node name="Arco" parent="." instance=ExtResource("3_orn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Roca_escala" parent="." instance=ExtResource("4_roca")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9, 0, -1.2)
+
+[node name="Camara" type="Camera3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.8, -6.6)
+fov = 55.0
+
+[node name="PostProceso" type="MeshInstance3D" parent="Camara"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+extra_cull_margin = 16384.0
+mesh = SubResource("quad")
+surface_material_override/0 = SubResource("mat_pixel")
