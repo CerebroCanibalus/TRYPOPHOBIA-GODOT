@@ -1,22 +1,41 @@
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
+
+; La Petrolera con Iza dentro y lista para correr.
+;
+; EL MAPA YA NO TRAE JUGADOR. La version anterior de petrolera.tscn lo llevaba
+; escrito dentro (lo ponia el generador), y esta no; pero esta escena seguia
+; colgando la linterna de "Petrolera/Iza/CameraPivot/Camera3D", una ruta que ya no
+; existe. Asi que aqui se instancia a Iza y la linterna cuelga de ELLA.
+;
+; LA LINTERNA VA AQUI Y NO EN IzaPlayer.tscn: el jugador no monta ninguna luz, y
+; de los trece metros de agua para abajo eso es injugable. Se pone en la escena y
+; no en el prefab compartido para no tocar al jugador de los demas mientras esto
+; se decide. src/player/flashlight.tscn existe, pero su script pide un
+; $AnimationTree que esa escena no tiene, asi que va un SpotLight3D pelado con sus
+; mismos valores (alcance 21,33 · cono 15,28).
 
 [ext_resource type="PackedScene" uid="uid://bbppdxwbs524f" path="res://maps/misiones/petrolera_c1/petrolera.tscn" id="1_mapa"]
+[ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="2_iza"]
 
 [node name="PetroleraJugable" type="Node3D"]
 
 [node name="Petrolera" parent="." instance=ExtResource("1_mapa")]
 
-[node name="Linterna" type="SpotLight3D" parent="Petrolera/Iza/CameraPivot/Camera3D"]
+; SOBRE LA PLATAFORMA, que es casa. La cubierta de PUE-05 tiene su colision en
+; 15,30 y 5 m de radio; la pata mide 2,5. A 3,4 del eje la capsula de 0,23 no toca
+; ni la columna ni el borde.
+[node name="Iza" parent="." instance=ExtResource("2_iza")]
+transform = Transform3D(0.939282, 0, 0.343147, 0, 1, 0, -0.343147, 0, 0.939282, -3.1936, 15.6, 1.1667)
+
+[node name="Linterna" type="SpotLight3D" parent="Iza/CameraPivot/Camera3D"]
 shadow_enabled = true
 spot_range = 21.3291
 spot_angle = 15.2845
 
-; Para empezar en otro sitio, arrastrar a Petrolera/Iza a una de estas. Van
-; DESPLAZADAS DEL EJE del nudo a proposito: en el eje esta la columna, que mide 5 m
-; de diametro, y alli no hay suelo — el de la rotonda es un anillo alrededor de la
-; pata. Puesta en el centro, Iza cae al fondo del mar. La rotonda
-; de la plataforma esta en el origen con 16,70 de radio y su suelo en -12; las de
-; los extremos, en los pies de I0 e I6. (Blender -> Godot: x, z, -y.)
+; Para empezar en otro sitio, arrastrar a Iza a una de estas. Van DESPLAZADAS DEL
+; EJE del nudo a proposito: en el eje esta la columna, que mide 5 m de diametro, y
+; alli no hay suelo — el de la rotonda es un anillo alrededor de la pata. Puesta en
+; el centro, Iza cae al fondo del mar. (Blender -> Godot: x, z, -y.)
 [node name="SalidaBaseP" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, -11.9, 0)
 

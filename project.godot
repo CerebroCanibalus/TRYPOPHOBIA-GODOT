@@ -145,7 +145,7 @@ toggle_camera={
 
 [physics]
 
-3d/physics_engine="Box3D Physics"
+3d/physics_engine="DEFAULT"
 box3d/worker_count=4
 box3d/sub_step_count=2
 

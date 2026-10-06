@@ -1,0 +1,85 @@
+[gd_scene load_steps=7 format=3]
+
+; La Isla con Iza dentro, lista para recorrerla. Segundo nivel.
+;
+; SE INSTANCIA EL glTF DIRECTAMENTE y no un .tscn intermedio: la isla entera viaja en
+; un fichero (13 843 nodos sobre 83 mallas), asi que no depende de que los assets
+; esten exportados uno a uno en assets/env — de los 104 del catalogo, 32 todavia no
+; lo estan.
+;
+; LA COLISION VIAJA EN EL NOMBRE DEL NODO. El exportador marca con "-col" el terreno,
+; lo construido y las rocas: 1 271 nodos. La flora NO lleva, a proposito — trece mil
+; matas de hierba con malla de colision son trece mil cuerpos estaticos y 4,6 M de
+; triangulos de fisica para chocar con briznas.
+;
+; EL VERDE PASA POR UNA PALETA PROPIA DEL NIVEL. pixel_effects.gdshader recibe
+; PaletteTexture como uniform, asi que la isla lleva tripofobia-36-isla.png
+; (las 32 de siempre + la rampa verde) y la Petrolera sigue con las 32 exactas.
+; Con Tripofobia-32 la hierba se cuantizaba a piedra y sodio: #7FBF55 -> #8A7A14.
+; Los cuatro verdes estan MEDIDOS sobre los 73 atlas que la isla manda a Godot,
+; no elegidos. Para ver la isla sin cuantizar, borra el nodo PostProceso.
+;
+; IZA ENTRA POR EL PORTON DEL COMPLEJO BROTO, que es lo ultimo construido y el unico
+; sitio del mapa con interior, dos plantas y escalera. El suelo ahi esta medido, no
+; elegido.
+
+[ext_resource type="PackedScene" path="res://maps/misiones/isla_c2/isla.gltf" id="1_mapa"]
+[ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="2_iza"]
+[ext_resource type="Shader" path="res://src/shaders/pixel_effects_2d.gdshader" id="3_sh"]
+[ext_resource type="Texture2D" path="res://assets/sprites/palettes/tripofobia-36-isla.png" id="4_pal"]
+
+[sub_resource type="ShaderMaterial" id="mat_pixel"]
+shader = ExtResource("3_sh")
+shader_parameter/TwixelAngle = 45.0
+shader_parameter/PixelSize = 5.0
+shader_parameter/Quantize = true
+shader_parameter/PaletteTexture = ExtResource("4_pal")
+shader_parameter/Posterize = false
+shader_parameter/ColorSteps = 16
+shader_parameter/RemoveBlue = false
+
+[sub_resource type="Environment" id="entorno"]
+; EL REVELADO. Sin esto la isla llega a Godot QUEMADA: 52,3 % del fotograma
+; saturado y el terreno entero a blanco, asi que el verde moria antes de llegar
+; al cuantizador y ninguna paleta podia salvarlo. Blender revela la isla con AgX
+; (view_transform medido en isla.blend) y Godot sin Environment revela en Lineal.
+; Es el mismo fallo que ya documenta el exportador de la Petrolera.
+;
+; El color y la fuerza NO estan elegidos: son los del mundo de isla.blend
+; (0.2961, 0.3813, 0.4452) a 0.9. Sin niebla, porque la isla tiene mist apagado.
+tonemap_mode = 4
+tonemap_exposure = 1.0
+tonemap_white = 1.0
+background_mode = 1
+background_color = Color(0.2961, 0.3813, 0.4452, 1)
+background_energy_multiplier = 0.9
+ambient_light_source = 2
+ambient_light_color = Color(0.2961, 0.3813, 0.4452, 1)
+ambient_light_energy = 0.9
+
+[node name="IslaJugable" type="Node3D"]
+
+[node name="Entorno" type="WorldEnvironment" parent="."]
+environment = SubResource("entorno")
+
+[node name="Isla" parent="." instance=ExtResource("1_mapa")]
+
+[node name="Iza" parent="." instance=ExtResource("2_iza")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -75.0, 6.33, -81.7)
+
+[node name="Linterna" type="SpotLight3D" parent="Iza/CameraPivot/Camera3D"]
+light_energy = 3.0
+spot_range = 21.33
+spot_angle = 15.28
+
+[node name="PostProceso" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="Pixelado" type="ColorRect" parent="PostProceso"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("mat_pixel")
