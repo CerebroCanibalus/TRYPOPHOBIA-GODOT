@@ -1,0 +1,7 @@
+[gd_resource type="QuadMesh" format=3 uid="uid://dy6j4dhww13vu"]
+
+[ext_resource type="Material" uid="uid://dvrfr7v0mtjlt" path="res://src/weather/precipitacion_gota.tres" id="1_k3mxp"]
+
+[resource]
+material = ExtResource("1_k3mxp")
+size = Vector2(0.035, 0.6)

@@ -53,44 +53,8 @@
 [ext_resource type="PackedScene" uid="uid://c6u1gnxq15ys5" path="res://assets/env/MAR-03/MAR-03_Carguero_en_el_horizonte.gltf" id="51"]
 [ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="52_oimow"]
 [ext_resource type="Material" uid="uid://dbja1p0l4y85y" path="res://src/shaders/materials/ocean_stylized_mat.tres" id="52_vb28n"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vb28n"]
-sky_top_color = Color(0.02327777, 0.1227716, 0.19675368, 1)
-sky_horizon_color = Color(0.11191336, 0.41704106, 0.56165653, 1)
-ground_bottom_color = Color(0.046706058, 0.18735704, 0.26866648, 1)
-ground_horizon_color = Color(0.85511327, 0, 0.08077686, 1)
-ground_curve = 0.55715126
-ground_energy_multiplier = 0.97
-sun_angle_max = 23.93
-
-[sub_resource type="Sky" id="Sky_86ifm"]
-sky_material = SubResource("ProceduralSkyMaterial_vb28n")
-
-[sub_resource type="Environment" id="Environment_1"]
-background_mode = 2
-background_color = Color(0.42, 0.055, 0.058, 1)
-background_energy_multiplier = 1.1
-sky = SubResource("Sky_86ifm")
-ambient_light_source = 2
-ambient_light_color = Color(0.42, 0.055, 0.058, 1)
-ambient_light_energy = 1.1
-tonemap_mode = 4
-tonemap_exposure = 0.9
-fog_mode = 1
-fog_light_color = Color(0.42, 0.055, 0.058, 1)
-fog_light_energy = 0.9
-fog_density = 1.0
-fog_sky_affect = 0.0
-volumetric_fog_enabled = true
-volumetric_fog_density = 0.02
-volumetric_fog_albedo = Color(0.31342387, 0.07480901, 0.011168127, 1)
-volumetric_fog_emission = Color(0.3668608, 0.031290494, 0.022811353, 1)
-volumetric_fog_emission_energy = 1.05
-volumetric_fog_gi_inject = 1.3
-volumetric_fog_anisotropy = 0.12
-volumetric_fog_length = 62.81
-volumetric_fog_detail_spread = 1.189207
-volumetric_fog_sky_affect = 0.77
+[ext_resource type="PackedScene" uid="uid://inov0wudkrct" path="res://src/weather/ambientacion.tscn" id="54_uchfo"]
+[ext_resource type="Resource" uid="uid://d1bgdyxrhj2uq" path="res://resources/clima/petrolera.tres" id="56_xsbve"]
 
 [sub_resource type="PlaneMesh" id="Mar_lejano_malla"]
 material = ExtResource("52_vb28n")
@@ -98,29 +62,7 @@ size = Vector2(1800, 1800)
 subdivide_width = 192
 subdivide_depth = 192
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1vivr"]
-emission_shape_scale = Vector3(10, 31.04, 10)
-emission_shape = 3
-emission_box_extents = Vector3(1, 1, 1)
-gravity = Vector3(0, -50, 0)
-
-[sub_resource type="QuadMesh" id="QuadMesh_86ifm"]
-size = Vector2(0.095, 1)
-
 [node name="Petrolera" type="Node3D" unique_id=651008535]
-
-[node name="Cielo" type="WorldEnvironment" parent="." unique_id=174863093]
-environment = SubResource("Environment_1")
-
-[node name="Sol" type="DirectionalLight3D" parent="." unique_id=1490426099]
-transform = Transform3D(0.62161, -0.38976094, 0.6794759, 0, 0.8674232, 0.49757117, -0.783327, -0.3092952, 0.5391988, 57.962566, 60, 0)
-light_color = Color(0.2277121, 0.3620918, 0.35361135, 1)
-light_energy = 1.26
-light_indirect_energy = 0.968
-light_volumetric_fog_energy = 1.485
-shadow_enabled = true
-shadow_blur = 2.06
-directional_shadow_max_distance = 120.0
 
 [node name="Columnas" type="Node3D" parent="." unique_id=1604271719]
 
@@ -2256,7 +2198,7 @@ transform = Transform3D(0.955336, 0, 0.29552, 0, 1, 0, -0.29552, 0, 0.955336, -4
 transform = Transform3D(0.22174, 0, 0.975106, 0, 1, 0, -0.975106, 0, 0.22174, -0.9535, 15.5, 4.193)
 
 [node name="ORN-07_Farol_de_sodio_006" parent="Plataforma" unique_id=1024314637 instance=ExtResource("36")]
-transform = Transform3D(-0.733596, 0, 0.679586, 0, 1, 0, -0.679586, 0, -0.733596, 3.1545, 15.5, 2.9222)
+transform = Transform3D(-0.733596, 0, 0.679586, 0, 1, 0, -0.679586, 0, -0.733596, 3.1508782, 15.501734, 2.9231112)
 
 [node name="Puentes" type="Node3D" parent="." unique_id=1777851825]
 
@@ -2960,13 +2902,19 @@ cast_shadow = 0
 mesh = SubResource("Mar_lejano_malla")
 skeleton = NodePath("../..")
 
-[node name="GPUParticles3D" type="GPUParticles3D" parent="Mar/MarLejano" unique_id=501318282]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000007, 0, 122.65606, 0.5532884)
-amount = 5000
-lifetime = 4.3999999999999995
-randomness = 1.0
-process_material = SubResource("ParticleProcessMaterial_1vivr")
-draw_pass_1 = SubResource("QuadMesh_86ifm")
-
 [node name="Character" parent="." unique_id=94893202 instance=ExtResource("52_oimow")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 19.384409, 28.365288, -15.590954)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 3.7379074, 16.85762, -0.11458635)
+
+[node name="Sol" type="DirectionalLight3D" parent="." unique_id=683004891]
+transform = Transform3D(0.62161, -0.38976055, 0.67947614, 0, 0.8674234, 0.49757075, -0.7833269, -0.30929494, 0.53919905, 57.962566, 60, 0)
+light_color = Color(0.21044019, 0.2831393, 0.67310107, 1)
+light_energy = 0.25
+light_indirect_energy = 0.968
+light_volumetric_fog_energy = 1.485
+shadow_enabled = true
+shadow_blur = 2.06
+directional_shadow_max_distance = 120.0
+
+[node name="Ambientacion" parent="." unique_id=1587442147 instance=ExtResource("54_uchfo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.595291, 58.995846, 0)
+preset = ExtResource("56_xsbve")

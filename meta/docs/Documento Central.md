@@ -51,6 +51,29 @@ La amenaza del juego. Una **entidad colonial viva** compuesta por billones de mi
 - Se propaga como una niebla rojiza que consume todo lo que toca
 - Es parcialmente inteligente: puede usar formas de vida asimiladas como vehículos
 
+### Las Brasas
+
+La manifestación más visible del cielo del planeta: una **aurora que desciende hasta tocar la superficie del mar**. En la Tierra las auroras se quedan arriba; aquí la corona de luz baja hasta el agua, como una cortina que se sumerge. Cada descenso visible es **una Brasa** — de ahí el nombre del fenómeno: el cielo soltando ascuas al océano.
+
+**Por qué importa para el lore:**
+
+- El planeta tiene una magnetosfera débil y dos soles que echan viento sin parar; las partículas cargadas no se desvían arriba y golpean el aire pegado al agua. El aire baja cargado como un cable pelado: rayos que rebotan entre la niebla y el mar, St. Elmo ardiendo en cada mástil, el agua levantando espuma ácida que quema la piel, y cualquier bote con persona viva metido en medio.
+- Cruzar en superficie un mar así es casi seguro morir: electrocución, quemaduras, tripulación que enloquece por los rayos. Por eso **el único muelle naval que funciona son los submarinos sumamente blindados**, que cruzan debajo de la corona donde el aire deja de doler.
+- La zona del océano más agitada por Las Brasas es justo la que separa los antiguos continentes íberos de **Mérita**. Esto explica por qué Mérita se descubrió mucho más tarde, como pasó en la realidad con América: no es que fuera desconocida por los sabios — es que su mar directo te colgaba un cielo cargado de ascuas por encima. Las carabelas se quedaron siglos estirando el cuello desde el horizonte antes de que existiera un buque que sobreviviera su agua.
+
+**Lo que vive y muere en Las Brasas:**
+
+- Cuando la descarga sube en el agua se forman **farolillos** — esferas de luz que bajan un segundo antes de apagarse. El cuento de las marineras los convierte en advertencia de que cruzar en superficie es buscar el fin.
+- La fosforescencia del agua excitada dura minutos tras el paso de una Brasa: la estela que deja un buque brilla atrás. Todo rastro ilumina — y todo lo que ilumina se ve.
+- Los supervivientes de una Brasa intensa a bordo de un bote vuelven con ronchas de violeta y dicen que el cielo "habla". La Carabela tiene un protocolo para los regresados; los técnicos llaman al fenómeno plasma y abren el motor.
+
+**Cultura que deja:**
+
+- La Carabela se concibió como misión católica porque vio en Las Brasas una corona sobre el agua: la coronación donde el icono cruza la historia del imperio. Creyentes que ven la gracia bajar y escépticos que miden densidad de plasma conviven sin resolver.
+- "Que tu fondo sea oscuro" es el saludo al zarpar: que la ruta te toque en agua fría, sin luz pendiente.
+- El acero de Las Brasas (la pátina violeta del hierro expuesto al arco) es marca de calidad y de barco de guerra; los astilleros ganan porque ese acero no se oxida igual.
+- Mérita descubierto tarde no fue culpa de los ojos: fue culpa del cielo. Sus mapas son afilados como los farolillos.
+
 ### La Carabela
 
 El grupo de jugadores. Una de las tantas expediciones militares enviadas por Gran Iberia a destruir las Colmenas. Nombre que evoca las naves de exploración ibéricas del pasado — ahora adaptadas para combatir una amenaza biológica en un mundo acuático.

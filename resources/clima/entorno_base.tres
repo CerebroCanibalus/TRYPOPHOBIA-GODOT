@@ -1,0 +1,5 @@
+[gd_resource type="Environment" format=3 uid="uid://bh0b7pnexw0is"]
+
+[resource]
+resource_local_to_scene = true
+background_mode = 2

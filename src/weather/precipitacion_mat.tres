@@ -1,0 +1,9 @@
+[gd_resource type="ParticleProcessMaterial" format=3 uid="uid://cmm13tho0u5kj"]
+
+[resource]
+emission_shape = 3
+emission_box_extents = Vector3(15, 20, 15)
+initial_velocity_min = 8.0
+initial_velocity_max = 14.0
+gravity = Vector3(0, -30, 0)
+color = Color(0.75, 0.82, 0.9, 1)

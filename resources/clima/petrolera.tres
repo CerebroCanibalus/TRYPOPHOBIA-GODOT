@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="AmbientacionPreset" format=3 uid="uid://d1bgdyxrhj2uq"]
+
+[ext_resource type="Script" uid="uid://egu3ub86lokd" path="res://src/weather/AmbientacionPreset.gd" id="1_7ifae"]
+
+[resource]
+script = ExtResource("1_7ifae")
+day_bottom_color = Color(0.030291233, 0.03479734, 0.26860878, 1)
+sunset_top_color = Color(0.22960687, 0.13392103, 0.028820224, 1)
+night_top_color = Color(0, 0, 0, 1)
+sol_a_color = Color(7.104531, 0.7169171, 1.8535252, 1)
+sol_a_sunset_color = Color(5.101909, 5.0809155, 6.241756, 1)
+sol_a_size = 0.28600000000000003
+sol_a_blur = 5.109999999999999
+sol_a_energy = 0.4
+sol_b_color = Color(3.8141747, 1.1485147, 1.9368274, 1)
+sol_b_blur = 4.109999999999999
+sol_b_energy = 0.85
+luna_size = 0.295
+nubes_borde = Color(0.49394077, 0.69115037, 0.4688744, 1)
+nubes_cima = Color(0.33312884, 0.28250638, 1, 1)
+nubes_media = Color(0.34798053, 0.54339474, 0.53475404, 1)
+nubes_base = Color(0.5786387, 0.5041994, 0.4143756, 1)
+nubes_altura = 1330.0
+nubes_periodo = 2560.0
+nubes_rollo = 1.25
+nubes_radio = 1500.0
+nubes_direccion = 0.58
+nubes_corte = 0.2
+nubes_difuminado = 0.86
+nubes_peso = 0.43
+estrellas_escala = 1.57
+fondo_color = Color(0.32508665, 0.13648006, 0.46795648, 1)
+fondo_energia = 0.2
+ambiente_color = Color(0.0062463367, 0.19884104, 0.48357207, 1)
+ambiente_energia = 0.05
+niebla_vol_densidad = 0.0336
+niebla_vol_albedo = Color(0.18094909, 0.028859848, 0.00405652, 1)
+niebla_vol_emision_energia = 0.35

@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://inov0wudkrct"]
+
+[ext_resource type="Script" uid="uid://c35lpmuw0ia38" path="res://src/weather/ambientacion.gd" id="1_gg5bw"]
+[ext_resource type="Material" uid="uid://cmm13tho0u5kj" path="res://src/weather/precipitacion_mat.tres" id="2_6e3ki"]
+[ext_resource type="QuadMesh" uid="uid://dy6j4dhww13vu" path="res://src/weather/precipitacion_malla.tres" id="3_wc3oy"]
+[ext_resource type="Environment" uid="uid://bh0b7pnexw0is" path="res://resources/clima/entorno_base.tres" id="4_wc3oy"]
+
+[node name="Ambientacion" type="Node3D" unique_id=1587442147]
+script = ExtResource("1_gg5bw")
+
+[node name="Precipitacion" type="GPUParticles3D" parent="." unique_id=2118916969]
+visible = false
+emitting = false
+amount = 2000
+lifetime = 2.0
+preprocess = 2.0
+process_material = ExtResource("2_6e3ki")
+draw_pass_1 = ExtResource("3_wc3oy")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1485860326]
+environment = ExtResource("4_wc3oy")

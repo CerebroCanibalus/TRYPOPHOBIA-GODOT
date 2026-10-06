@@ -240,7 +240,14 @@ func _pull_from_environment() -> void:
 	# background ni el de la niebla: hay que sacarlo del ProceduralSkyMaterial.
 	# Sin esto el agua reflejaba el rojo de la niebla contra un cielo turquesa
 	# y el horizonte no casaba.
-	var sky_mat: SkyMaterial = null
+	# OJO: el tipo es `Material`, no `SkyMaterial`. Esa clase NO EXISTE en
+	# Godot 4.7 (ProceduralSkyMaterial hereda directo de Material), y con ella
+	# aqui el script entero dejaba de parsear: Godot lo descartaba con
+	# "Failed to load script ... Parse error" y el nodo Ocean quedaba SIN
+	# script. Consecuencia real e invisible: `_bind_material()` nunca metia
+	# agua1.png en el material y `_pull_from_environment()` nunca actualizaba
+	# el reflejo. Un solo tipo inexistente mataba el script entero (:v
+	var sky_mat: Material = null
 	if env.sky != null:
 		sky_mat = env.sky.sky_material
 	if sky_mat is ProceduralSkyMaterial:
@@ -248,12 +255,104 @@ func _pull_from_environment() -> void:
 		# Mezcla horizonte y cenit: el agua refleja la franja baja del cielo,
 		# pero con algo del color de arriba aporta algo de variacion.
 		_reflect_color = psm.sky_horizon_color.lerp(psm.sky_top_color, 0.25)
+	elif sky_mat is ShaderMaterial and _es_cielo_alien(sky_mat as ShaderMaterial):
+		# CIelo del sistema canonico (`sky_alien.gdshader`).
+		#
+		# OJO: aqui NO se puede leer el COLOR final del shader — eso se
+		# evalua en la GPU. Lo que se hace es REPLICAR la aritmetica del
+		# horizonte (EYEDIR.y = 0) con los mismos uniforms, que es una
+		# operacion deterministica. Sin esto el agua se quedaba en el
+		# hardcode (0.42, 0.055, 0.058) y dejaba de reflejar el cielo:
+		# el mar ponia rojo niebla contra un cielo teal.
+		_reflect_color = _color_horizonte_cielo_alien(sky_mat as ShaderMaterial)
 	elif env.background_mode == Environment.BG_COLOR:
 		_reflect_color = env.background_color
 	elif env.fog_enabled:
 		# Si el cielo es un shader que no sabemos leer, la niebla es lo mas
 		# parecido que queda.
 		_reflect_color = env.fog_light_color
+
+
+## Detecta si el material usa `sky_alien.gdshader`, el cielo del sistema
+## canonico. Se comprueba por un uniform propio suyo (`sun_a_direction`) y no
+## por `resource_path`, para que funcione aunque el shader se cargue con otro
+## nombre o se duplique el recurso.
+func _es_cielo_alien(mat: ShaderMaterial) -> bool:
+	if mat.shader == null:
+		return false
+	return mat.shader.get_shader_uniform_list().any(
+		func(p: Dictionary) -> bool: return String(p.name) == "sun_a_direction"
+	)
+
+
+## Replica el COLOR que el sky shader produce en el horizonte (EYEDIR.y = 0).
+##
+## No se puede leer el resultado del shader desde GDScript: se ejecuta en la
+## GPU. Pero en el horizonte toda la aritmetica se vuelve deterministica y
+## depende solo de uniforms, asi que se puede recomputar aqui. Es la misma
+## cadena que `sky_alien.gdshader::sky()`, en el mismo orden (:v
+##
+## Devuelve el color YA en el espacio que el shader esperaba, igual que hacia
+## la rama de ProceduralSkyMaterial que sustituye.
+func _color_horizonte_cielo_alien(mat: ShaderMaterial) -> Color:
+	# En EYEDIR.y = 0, `_eyedir_y = abs(sin(0)) = 0`, asi que todas las
+	# mezclas zenit/horizonte caen al TERMINO DE ABAJO.
+	var day_bottom := _pcol(mat, "day_bottom_color", Color(0.4, 0.8, 1.0))
+	var sunset_bottom := _pcol(mat, "sunset_bottom_color", Color(1.0, 0.5, 0.7))
+	var sunset_top := _pcol(mat, "sunset_top_color", Color(0.7, 0.75, 1.0))
+	var night_bottom := _pcol(mat, "night_bottom_color", Color(0.1, 0.0, 0.2))
+	var clouds_cutoff := _pfloat(mat, "clouds_cutoff", 0.3)
+	var clouds_weight := _pfloat(mat, "clouds_weight", 0.0)
+
+	var c := day_bottom
+	# Cielo oscurecido por tormenta, igual que en el shader.
+	c = c.lerp(Color(0, 0, 0), clampf((0.7 - clouds_cutoff) * clouds_weight, 0.0, 1.0))
+
+	# ---- Atardecer: los dos soles suman, con el primario pesando mas ------
+	var dir_a := _pvec3(mat, "sun_a_direction", Vector3.UP)
+	var dir_b := _pvec3(mat, "sun_b_direction", Vector3.UP)
+	var e_a := _pfloat(mat, "sun_a_energy", 1.0)
+	var e_b := _pfloat(mat, "sun_b_energy", 0.6)
+	var b_on := _pfloat(mat, "sun_b_enabled", 1.0)
+
+	var sunset_a := clampf(0.5 - absf(dir_a.y), 0.0, 0.5) * 2.0 * e_a
+	var sunset_b := clampf(0.5 - absf(dir_b.y), 0.0, 0.5) * 2.0 * b_on * e_b
+	var sunset := clampf(maxf(sunset_a, sunset_b), 0.0, 1.0)
+
+	# `_sunset_distance` depende de EYEDIR, que aqui no tenemos: es la
+	# direccion hacia la que mira la camara. Como el reflejo es UN solo color
+	# para todo el mar, se usa 0.5, el valor neutro entre "atrasado" y "al
+	# lado del sol". Es una aproximacion deliberada, no un descuido.
+	var sunset_col := sunset_bottom.lerp(sunset_top, 0.5).lerp(sunset_bottom, sunset * 0.5)
+	c = c.lerp(sunset_col, sunset)
+
+	# ---- Noche: los DOS soles por debajo del horizonte ---------------------
+	# Con la binaria, si uno sigue arriba NO es de noche. Igual que el shader:
+	# se toma el MINIMO de "cuanto bajo esta cada uno".
+	var bajo_a := clampf(-dir_a.y + 0.7, 0.0, 1.0)
+	var bajo_b := clampf(-dir_b.y + 0.7, 0.0, 1.0)
+	var bajo_b_enc := lerpf(1.0, bajo_b, b_on)
+	var night := minf(bajo_a, bajo_b_enc)
+	c = c.lerp(night_bottom, night)
+
+	return c
+
+
+## Uniform Color con default si falta. Los defaults coinciden con los del
+## shader, para que un .tres sin esa clave se comporte igual que con ella.
+func _pcol(mat: ShaderMaterial, nombre: String, dflt: Color) -> Color:
+	var v = mat.get_shader_parameter(nombre)
+	return dflt if v == null else (v as Color)
+
+
+func _pfloat(mat: ShaderMaterial, nombre: String, dflt: float) -> float:
+	var v = mat.get_shader_parameter(nombre)
+	return dflt if v == null else float(v)
+
+
+func _pvec3(mat: ShaderMaterial, nombre: String, dflt: Vector3) -> Vector3:
+	var v = mat.get_shader_parameter(nombre)
+	return dflt if v == null else (v as Vector3)
 
 
 ## Resuelve un NodePath explicito; si esta vacio, busca el primer nodo de

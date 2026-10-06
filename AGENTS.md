@@ -653,6 +653,72 @@ siguen ignorados a proposito (los regenera Godot).
 (`git status --short`): un `.gitignore` que ignora `*.gd` rompe el repo en
 silencio.
 
+## 🌤️ AMBIENTACION — cielo, soles y nubes (2026-09-28)
+
+Sistema canonico de clima, **preconfigurado por nivel** (sin ciclo dia/noche ni
+transiciones). Todo el cielo y toda la niebla de un mapa viven DENTRO de un nodo:
+
+`src/weather/ambientacion.tscn` → `Ambientacion` (`ambientacion.gd`, `@tool`)
+├── `WorldEnvironment`  ← HIJO: este nodo es el DUEÑO UNICO del cielo
+└── `Precipitacion`     ← GPUParticles3D, emisor que sigue a la camara
+
+**NO dejar el `WorldEnvironment` del mapa**: Godot se queda con el PRIMERO
+REGISTRADO (`world_environment.cpp` → `get_first_node_in_group`) — quien manda
+depende del orden del arbol, silenciosamente. `_avisar_competicion()` lo detecta
+y avisa una sola vez (NO lo borra: quitarle la Environment a un mapa es destructivo).
+
+- Preset: `AmbientacionPreset` → `resources/clima/petrolera.tres`
+- Cielo: `src/shaders/sky_alien.gdshader` (dos soles + KH)
+- La `DirectionalLight3D` la pone el MAPA (`Sol` en la raiz). El script solo la
+  LEE (`basis.z`) para pintar el disco del sol primario → disco y sombras casan
+  sin sincronizar dos cosas a mano.
+- `maps/misiones/c1/c1.tscn` tiene su cielo viejo embebido, pero **se va a
+  eliminar** → no migrar.
+
+### GOTA — `PROPERTY_USAGE_SCRIPT_VARIABLE` da 0 aciertos en Godot 4.7
+
+Enumerar las propiedades de un `Resource` con script filtrando por
+`int(p.usage) & PROPERTY_USAGE_SCRIPT_VARIABLE` (4096) **no funciona**: las
+exportadas vienen con `STORAGE|EDITOR` (6) y ese bit no aparece por ningun sitio.
+Usar `PROPERTY_USAGE_STORAGE` (2) + denylist (`script`, `resource_*`).
+
+**Bug medido:** la firma de refresco salia con solo la direccion de la luz
+(34 chars en vez de 2467) → tocar el preset **no refrescaba nada** y habia que
+correr el juego para verlo. Ante una firma VACIA se re-aplica igual: mejor gastar
+que dejar el cielo muerto.
+
+### GOTA — `sun_a_direccion` NO existe: es `sun_a_direction`
+
+El script escribia `sun_a_direccion`; el shader declara `sun_a_direction` (ingles).
+El guard `_tiene()` lo descartaba **sin avisar** → disco del sol primario clavado
+en el default `(0,1,0)`, a plomo, mientras la luz venia de `Sol`.
+`get_shader_parameter()` de una clave inexistente devuelve `null`, **no** error.
+
+### Refresco en vivo del EDITOR
+
+`_aplicar()` solo se llamaba en `_ready` (una vez al abrir) y en el setter de
+`preset` (solo si se REASIGNABA el recurso). Ahora `_process` en editor, cada
+`REFREJO_EDITOR = 0.1 s`, compara una firma (73 props del preset + props del
+nodo + direccion de la luz) y re-aplica SOLO si ha cambiado. En editor **no se
+sigue la camara** — moveria el emisor cada frame y dejaria la escena sin guardar.
+
+### Nubes — UN SOLO sistema Kelvin-Helmholtz
+
+Antes convivian KH + nubes de referencia en el MISMO shader, con tres familias de
+nombres (`clouds_*`, `kh_*`, `nubes_*`). `clouds_weight = 0` solo las OSCURECIA,
+no las apagaba, y `_clouds_amount *= 1 - _kh_amount` las dejaba enteras donde la
+KH no cubria (sobre todo cerca del horizonte) → **dos estilos en un cielo**.
+
+Ahora: **15 uniforms `nubes_*` en espanol**, iguales en shader, preset y script.
+Borrados `clouds_*` y `kh_*`. `petrolera.tres` traia `nubes_direccion = -0.255`
+(rango viejo de la referencia) y `nubes_velocidad = 0` (congelaba la capa KH):
+reseteados a `0.13` / `2.0`.
+
+**Pendiente:** `petrolera.tres` tiene `precipitacion = 0` (NINGUNA) — el
+anti-culling esta, pero no hay nada que se vea hasta que se active.
+
+---
+
 ## 🌍 WORLDBUILDING — Reglas del universo
 
 ### El Planeta
