@@ -116,24 +116,26 @@ ese prop a sistema:
 ## Arquitectura
 
 ### Singletons Autoload
-- `scripts/NetworkingManager.gd` — Multijugador ENet (servidor en puerto 7777, descubrimiento UDP en 7778, máximo 8 jugadores)
-- `scripts/GameSettings.gd` — Configuración persistente (idioma, volumen); accesible desde cualquier script
+- `src/autoload/NetworkingManager.gd` — Multijugador ENet (servidor en puerto 7777, descubrimiento UDP en 7778, máximo 8 jugadores). **Único autoload** (`project.godot [autoload]`; ruta actualizada por MCP en la limpieza 2026-10-09).
+- ~~`GameSettings.gd`~~ — **ya no existe**: figuraba en esta doc como autoload pero nunca estuvo en `[autoload]` ni tenía una sola referencia; borrado como código muerto (2026-10-09).
 
-### Sistema de Jugador (Dos Implementaciones)
-Existen dos controladores de jugador distintos — no consolidar sin entender ambos:
-1. **`src/player/characterbody_jugador.gd`** — Movimiento básico (5 m/s, sin stamina)
-2. **`src/interactibles/player.gd`** — Controlador FPS completo: agarrar/lanzar objetos, sprint, head bob, cambios de FOV, sistema de stamina; usa `RayCast3D` para interacción
+### Sistema de Jugador
+Dos personajes jugables, y los controladores viejos YA NO existen:
+1. **`src/player/IzaPlayer.tscn` + `iza_player.gd`** — Iza: FPS completo, stamina (recursos CharacterStat — ver `README_MOVEMENT_SYSTEM.md`), agarrar/lanzar, nado.
+2. **`src/ragdoll_character/`** — ragdoll de prueba (doble skeleton PiCode9560), FP, IK de brazos, nado; es el personaje de test de las mecánicas.
 
-El sistema de stamina usa recursos CharacterStat — ver `README_MOVEMENT_SYSTEM.md` para configuración.
+Borrados el 2026-10-09 por tener **0 referencias** (medido en escenas, scripts ni uid): `src/player/characterbody_jugador.gd`, `src/interactibles/player.gd`, `pause_screen.gd`, `src/ui/ui_barraVida.gd` y `src/import/luces_fotometricas.gd`.
 
 ### IA de Enemigos
 `src/enemy/Enemy.gd` (extiende `CharacterBody3D`) usa `NavigationAgent3D` para pathfinding. Los enemigos navegan hacia objetos `SoundArea` (`src/sounds/Sound.gd`, extiende `Area3D`) — esta es la mecánica central de sigilo. Velocidad: 2 m/s.
 
 ### Organización de Escenas
-- `main_menu.tscn` — Punto de entrada con efectos shader de horror y browser de servidores multijugador
-- `src/world/World.tscn` — Mundo principal del juego
-- `maps/lobby.tscn` — Lobby multijugador
-- `maps/misiones/c1.tscn` — Misión 1 de campaña
+- `main_menu.tscn` — Punto de entrada con efectos shader de horror y explorador de servidores (la UI está; **falta `src/menu/ServerBrowser.gd`**, nunca existió en el repo — ver Pendientes)
+- `maps/lobbyv2.tscn` — Lobby actual (SM-13 + ragdoll) · `maps/lobby.tscn` — lobby antiguo (el menú aún apunta a este)
+- `maps/misiones/c1/c1.tscn` — Misión 1 · `maps/misiones/isla_c2/isla_jugable.tscn` — Isla (segundo nivel) · `maps/misiones/petrolera_c1/petrolera_jugable.tscn` — wrapper jugable de la Petrolera (mapa + Iza + linterna + spawns)
+- `src/water/demo/demo_agua.tscn` — demo/prueba del sistema de agua
+- `tests/escenas/` — escenas de prueba sueltas (`prueba_assets`, `prueba_shader_orn01/03`)
+- **NO existe `src/world/World.tscn`**: era una referencia vieja de esta doc; el "mundo" hoy son los mapas.
 
 ### Addons
 - **`addons/godot-box3d/`** — **Physics engine ACTIVO** (Box3D v2 parchado: M2 + M3). Build custom en `addons/godot-box3d/bin/`.
@@ -142,7 +144,7 @@ El sistema de stamina usa recursos CharacterStat — ver `README_MOVEMENT_SYSTEM
 - **`addons/csg_toolkit/`** — Herramientas CSG para diseño de niveles
 
 ### Shaders y Efectos Visuales
-Post-proceso de horror (viñeta, estática, scan lines, glitch) en `src/shaders/` y `assets/shaders/`. El fondo interactivo del menú usa `scripts/MouseTracker.gd` con shader de paralaje. Globales de viento (`wind_intensity`, `wind_direction`) en project settings.
+Post-proceso de horror (viñeta, estática, scan lines, glitch) en `src/shaders/` y `assets/shaders/`. El fondo interactivo del menú usa `src/menu/MouseTracker.gd` con shader de paralaje. Globales de viento (`wind_intensity`, `wind_direction`) en project settings.
 
 ### Acciones de Input (project.godot)
 `WASD`/flechas: moverse · `Espacio`: saltar · `Ctrl`: agacharse · `Shift`: sprint · `E`: interactuar/lanzar · `Ratón`: mirar · `Escape`: menú/soltar ratón
@@ -158,6 +160,13 @@ Post-proceso de horror (viñeta, estática, scan lines, glitch) en `src/shaders/
 
 **Decisión final:** usar **Box3D con patches propios (Box3D v2)** como motor. Jolt = referencia.
 
+> **📂 El código de Box3D ya NO vive en este repo** (limpieza 2026-10-09). Fuente
+> parcheada, `patches/`, build script y PR upstream: **https://github.com/CerebroCanibalus/godot-box3d-engine**
+> (README con posicionamiento, GPL-3.0, release `v1.0.0` con DLL de Windows x64).
+> Aquí solo queda el addon runtime `addons/godot-box3d/` (`.gdextension` + DLL) y el
+> benchmark in-game `tests/physics_benchmark/`. Rutas viejas `tools/box3d/...` de
+> esta doc = `<repo-dedicado>/...`.
+
 | Aspecto | Box3D v1 (medido) | **Box3D v2 + M2/M3** | Jolt (medido) |
 |---|---|---|---|
 | Throughput peak | OK al inicio | OK al inicio | OK al inicio |
@@ -170,7 +179,7 @@ Post-proceso de horror (viñeta, estática, scan lines, glitch) en `src/shaders/
 **Fix M2 (SUB_STEP_COUNT configurable):** `SUB_STEP_COUNT` estaba hardcoded en 4 (240
 sub-pasos/s a 60 Hz). Ahora es `physics/box3d/sub_step_count` (default 1). Con M2, Box3D supera
 a Jolt en toda la ventana 50-100s (a 80s: 72 vs 32 FPS). Cambio trivial en C++ (~30 líneas).
-Patch listo para PR: `tools/box3d/patches/M2-sub-step-count.patch`.
+Patch listo para PR: `godot-box3d-engine/patches/M2-sub-step-count.patch`.
 
 **Fix M3 (degenerate normal guard):** ver `## FIX M3`.
 
@@ -198,7 +207,7 @@ Box3D expone contact points/impulses y force integration (sirve para validación
 pero NO snapshot/replay determinista vía plugin. La red la provee Godot 4 vía
 `MultiplayerSpawner`/`MultiplayerSynchronizer` (no el motor físico).
 
-**Falta en World.tscn:** `MultiplayerSpawner`, `MultiplayerSynchronizer` en RigidBody3D,
+**Falta en el escenario de red (hoy no existe World.tscn; serán los mapas/lobby):** `MultiplayerSpawner`, `MultiplayerSynchronizer` en RigidBody3D,
 `OS.has_feature("dedicated_server")`, predicción cliente, interpolación remota, validación
 server-side, caps de bandwidth.
 
@@ -220,7 +229,7 @@ un Vector3 normalizado → crash `ERROR: The normal Vector3 (0.0, 0.0, 0.0) must
 
 **Fix aplicado** (código nuestro, no upstream patch).
 
-**Archivo:** `tools/box3d/godot-box3d-src/src/spaces/box3d_physics_direct_space_state_3d.cpp`
+**Archivo:** `godot-box3d-engine/godot-box3d-src/src/spaces/box3d_physics_direct_space_state_3d.cpp`
 
 1. Helper `safe_normal(b3Vec3)` en namespace anónimo:
    ```cpp
@@ -235,7 +244,7 @@ un Vector3 normalizado → crash `ERROR: The normal Vector3 (0.0, 0.0, 0.0) must
    ```
 2. Aplicado en 4 lugares: `cast_result_fcn()`, `_intersect_ray()`, `_rest_info()`, `test_body_motion()`.
 
-**Archivo:** `tools/box3d/godot-box3d-src/CMakeLists.txt` — flag MSVC `/Zc:forScope- /permissive-`.
+**Archivo:** `godot-box3d-engine/godot-box3d-src/CMakeLists.txt` — flag MSVC `/Zc:forScope- /permissive-`.
 
 **Build:** recompilado (cmake + MSVC + ninja). DLL en `addons/godot-box3d/bin/godot-box3d.dll`.
 **Resultado:** ✅ no más crashes de normal `(0,0,0)`.
@@ -460,7 +469,7 @@ limites sin convertir (correcto).
   `Math_PI * 0.25` (45deg, igual que Godot) + comentarios de unidades.
 
 **Resultado:** ✅ ragdoll ARTICULADO en Box3D (playground: camina ~13.8m en 6s, erguido
-pos_y 1.0-1.67, angvel 4-13 rad/s, sin crashes). Build: `tools/box3d/build-and-install.bat`.
+pos_y 1.0-1.67, angvel 4-13 rad/s, sin crashes). Build: `D:\Mis Juegos\Tripofobia\godot-box3d-engine\build-and-install.bat`.
 `project.godot` ahora en `3d/physics_engine="Box3D Physics"`.
 
 ### FIX H2 — Limites cone/twist con softness propia (2026-09-10)
@@ -646,8 +655,10 @@ se volvia invisible**. Consecuencias reales (corregidas en `0943c36`, `2fa84c9`)
   `tests/physics_benchmark` -> **175 `.gd` recuperados de una**.
 
 Se quitaron `*.gd` y `*.res`; queda la excepcion `!src/**/materials/*.tres`
-para que los materiales compartidos SI se versionen. `*.uid` e `*.import`
-siguen ignorados a proposito (los regenera Godot).
+para que los materiales compartidos SI se versionen. `*.import` sigue sin
+ignorarse (es la convención de Godot); **`.uid` TAMBIÉN se versionan** — el
+`.gitignore` nunca tuvo regla `*.uid` y hay 253 trackeados: mover un `.gd`
+exige mover su `.uid` junto (si no, los `uid://` de las escenas se rompen).
 
 **Antes de crear cualquier archivo nuevo, verificar que git lo vea**
 (`git status --short`): un `.gitignore` que ignora `*.gd` rompe el repo en
@@ -900,6 +911,62 @@ captura visual **idéntica** a la de antes de refactorizar.
 - Red: volumen/superficie/oxígeno deben volverse server-authoritative.
 
 ---
+
+## 🧹 LIMPIEZA Y REORGANIZACIÓN DEL REPO (2026-10-09)
+
+Encargo: *"el repositorio es un desastre — ayúdame a organizarlo y propón basura
+para borrar"* + *"sacar todo el código de Box3D a un repo dedicado"*. Todo medido
+antes de borrar (**0 referencias = escenas + scripts + uid + `load()` + git history**),
+commit por fase, tests entre fases. Resultado: 674 MB/16.309 ficheros →
+estructura limpia, 5 commits de orden y 2 repos con escaneo de secretos activo.
+
+### Qué se borró (`505b8da`, `2c274c4`)
+
+| Basura de raíz (trackeada) | Código muerto (0 refs) | One-shots |
+|---|---|---|
+| `.DS_Store` · `battery.mtl` · `character_body_3d.gd` · `new_gd_script.gd` · `cyclops_settings.config` (0 B) · `test_capture.png` · `world.gltf`+`world0.bin` · 4 `.tmp` | Los 2 controladores viejos (`characterbody_jugador`, `interactibles/player`) · `GameSettings` (autoload fantasma: nunca estuvo en `[autoload]`) · `pause_screen` · `ui_barraVida` · `luces_fotometricas` (`src/import/` entero) · `c1_geo.tscn` · `src/ui/main_menu.tscn` (escena huérfana) · `src/shaders/agua1.gdshader` (**las texturas `agua1.png`/`agua1_nm.png` SÍ las usa el océano**) | 31 scripts `coneja`/fbx de `tools/` · `_bmad/` · `escenarios/` (vacía) |
+
+**NO se tocó (parece muerto pero es feature SIN CABLEAR):** `Enemy.tscn`,
+`DistractionSound.tscn`, `MetalImpactSound.tscn`, `post_process.tscn`,
+`path_3d_rope.tscn` — 0 refs porque ningún mapa los instancia. Tampoco
+`petrolera_jugable.tscn` (wrapper jugable del 6/10) ni `MiningFacility.map`
+(hammerforge **sí** lee `.map`).
+
+### Estructura nueva
+
+- `scripts/` desapareció → `src/autoload/NetworkingManager.gd` + `src/menu/{MouseTracker,BackgroundManager,MenuAudioManager,MenuLanguageSystem}.gd` (`.uid` movidos junto, así los `uid://` sobreviven).
+- `maps/prueba_*.tscn` → `tests/escenas/` · sueltos de `tools/` → `tools/diagnostico/`.
+- `.gitignore`: fuera la regla obsoleta `AGENTS.md` (**SI se versiona**), dentro `.heren/` `.opencode/` `.hammerforge/` `*.orig`. Des-trackeados **55 ficheros** de caché/estado (`.godot/*`, autosaves de hammerforge, jsons de heren, memoria de opencode).
+- Doc corregida: `World.tscn` no existe, `GameSettings` nunca fue autoload, los 2 controladores ya no existen, y los `.uid` **sí** se versionan (253 trackeados).
+
+### 📂 Box3D → repo dedicado (decisión del General)
+
+**Todo el código de Box3D fuera de Tripofobia** → **https://github.com/CerebroCanibalus/godot-box3d-engine** (público · GPL-3.0 · README con el posicionamiento *"no es un plugin simplón: instrumentaliza el motor entero"* · CONTRIBUTING/SECURITY/CoC (Contributor Covenant 2.1) · issue forms YAML + `config.yml` · secret scanning + push protection · tag anotado **`v1.0.0`** + release con la DLL de Windows x64).
+
+- **Se movió:** `godot-box3d-src/` (172 trackeados), `patches/` (M2, M3), `PR_UPSTREAM/`, `build-and-install.bat` (ruta del addon actualizada → `..\Repositorio\addons\godot-box3d\bin`) y el `build/` de 416 MB (así **no hay que recompilar**).
+- **Se queda aquí:** `addons/godot-box3d/` (runtime: `.gdextension` + DLL) y `tests/physics_benchmark/` (benchmark in-game).
+- Ambos repos con **secret scanning + push protection activados** (estaban apagados).
+
+### Bugs encontrados de paso
+
+- **El menú cargaba un script que nunca existió:** `ServerBrowser.gd` no está en ningún commit de la historia → `load()` lanzaba SCRIPT ERROR en `setup_modules` y mataba el módulo. Guard con `FileAccess.file_exists` (`main_menu.gd`, commit `e56563c`) + warning explícito.
+- **`isla_jugable.tscn` venía re-guardada de sesiones anteriores:** perdió sus `;` comentarios (recuperables con `git show 3027724:maps/misiones/isla_c2/isla_jugable.tscn`), ganó uids y **quitó la linterna inline**. Commit separado `0737723` por si hay que revertir.
+
+### Gotchas nuevos (medidos)
+
+- **`project.godot` por MCP = worker de heren con `ProjectSettings.set_setting` + `ProjectSettings.save()`** — heren NO tiene acción de escritura de settings (solo `autoload` de LECTURA y `shader_global`). El save deja exactamente 1 línea cambiada; verificar con `git diff`.
+- **`heren.filesystem` solo implementa `action:"exists"`** — no lee ni escribe. Enumerar las tools disponibles con `Object.keys(tools.heren)` (animation, debug, filesystem, health, node, node_props, node_query, project, resource, scene, scene_script, shader, signal, ui, validate, visual).
+- **El test del agua puede fallar 1 vez tras cambios grandes de disco** (ancla en `y=-9.92` en vez de hundirse): es **flaky de timing** — re-ejecutar antes de concluir regresión. Reintento → `TODO OK (7 fases, 17 comprobaciones)`.
+- **Los `;` de un `.tscn` mueren en cada guardado** del editor/heren: la documentación de una escena no puede vivir solo dentro del `.tscn`.
+- **Borrar `.godot/` obliga a re-importar ANTES de testear:** sin `global_script_class_cache.cfg` y sin `.imported/*.ctex`, los `class_name` (`WaterBody`, `Oxygen`, `RagdollRigConfig`…) no resuelven y sale una **cascada de Parse Errors** (45 en el playground) que NO es regression real. Fix: `Godot --headless --path <proj> --editor --quit-after 12000` (escanea + reimporta) y re-ejecutar. Medido el 2026-10-09.
+
+### Pendientes que dejó la limpieza
+
+- [ ] **`src/menu/ServerBrowser.gd`**: crear el módulo del explorador (la UI ya está en `main_menu.tscn`; conecta contra `NetworkingManager`, descubrimiento UDP 7778). El guard avisa en cada arranque del menú.
+- [ ] Audio del menú que falta: `audio/sfx/ui/dark_ambient.ogg` y `heavy_breath.ogg` (los pide `MenuAudioManager.gd`) + animación `horror_idle` inexistente en el AnimationPlayer del menú.
+- [ ] `rigid_body_3d.tscn` apunta a `res://scripts/projectile.gd` (ruta inexistente de siempre): el nodo corre **sin script**; decidir si se re-apunta a `src/interactibles/projectile.gd`.
+- [ ] ¿La linterna de la Isla era descartable? Revisar el diff de `0737723`.
+- [ ] Compactar AGENTS.md (pasa de 10k tokens — pedir permiso).
 
 ## 🌤️ AMBIENTACION — cielo, soles y nubes (2026-09-28)
 
