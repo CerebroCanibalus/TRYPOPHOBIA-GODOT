@@ -34,6 +34,7 @@ bin/
 *.swp
 *.swo
 *.tmp
+*.orig
 
 # Logs
 *.log
@@ -47,7 +48,10 @@ Thumbs.db
 *.cache
 
 # AI / Agents
-AGENTS.md
+# OJO: AGENTS.md NO se ignora — es la memoria viva del proyecto y SI se
+# versiona. Lo que se ignora aqui es el estado local de las herramientas.
+.opencode/
+.hammerforge/
 
 # Box3D development (FASE 2 — plugin recompilation)
 # Source clone IS committed (snapshot for PR reproducibility)
@@ -59,7 +63,4 @@ tools/box3d/godot-box3d-src/bin/
 tools/active_ragdoll_reference/
 
 # Heren MCP: estado de RUNTIME (cambia en cada arranque del editor; no es codigo)
-.heren/backup/
-.heren/tmp/
-.heren/server_port.json
-.heren/session.json
+.heren/
