@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://c1a3o2f86ahhp"]
+
+[ext_resource type="Script" uid="uid://et55guu2ajas" path="res://src/shaders/ocean.gd" id="1_ycui1"]
+[ext_resource type="Material" uid="uid://dbja1p0l4y85y" path="res://src/shaders/materials/ocean_stylized_mat.tres" id="2_6of4u"]
+[ext_resource type="PackedScene" uid="uid://cwfyexxw7e7yy" path="res://src/water/nodos/superficie_agua.tscn" id="3_jyntf"]
+[ext_resource type="PackedScene" uid="uid://b8ra5jddtmm6t" path="res://src/water/nodos/volumen_agua.tscn" id="5_ai1xv"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_i0sie"]
+material = ExtResource("2_6of4u")
+size = Vector2(200, 200)
+subdivide_width = 96
+subdivide_depth = 96
+
+[node name="Mar" type="Node3D" unique_id=1076130989]
+
+[node name="Ocean" type="Node3D" parent="." unique_id=163645777]
+script = ExtResource("1_ycui1")
+
+[node name="MarLejano" type="MeshInstance3D" parent="." unique_id=252956485]
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_i0sie")
+
+[node name="Superficie" parent="." unique_id=537853154 instance=ExtResource("3_jyntf")]
+
+[node name="Volumen" parent="." unique_id=346157 instance=ExtResource("5_ai1xv")]
+superficie = NodePath("../Superficie")

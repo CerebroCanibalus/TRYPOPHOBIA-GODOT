@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://ddprcjomj5o2b"]
+
+[ext_resource type="PackedScene" uid="uid://d2qwmw3sfhjcp" path="res://assets/env/Submarino/SM-13_Sumergible.gltf" id="1_0wncm"]
+[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="2_qnryo"]
+
+[node name="SM-13_Sumergible" unique_id=1413797161 instance=ExtResource("1_0wncm")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+
+[node name="Character" parent="." index="5" unique_id=94893202 instance=ExtResource("2_qnryo")]
+transform = Transform3D(0.33333334, 0, 0, 0, 0.33333334, 0, 0, 0, 0.33333334, 3.2828045, -0.5070533, 0.4663517)

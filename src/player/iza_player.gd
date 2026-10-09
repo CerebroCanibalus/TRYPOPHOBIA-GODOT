@@ -13,11 +13,26 @@ extends CharacterBody3D
 @export var acceleration: float = 14.0   # Qué tan rápido llega a la velocidad objetivo
 @export var friction: float = 10.0       # Qué tan rápido frena al soltar teclas
 
+@export_group("Nado")
+## Escala de velocidad horizontal dentro del agua (el arrastre del WaterBody
+## se encarga del resto). :v
+@export_range(0.1, 1.0, 0.05) var escala_nado := 0.55
+## Velocidad vertical de nado sosteniendo las teclas, en m/s. :v
+@export_range(0.5, 10.0, 0.5) var velocidad_nado := 3.0
+## Aceleracion del nado en m/s2. Tiene que superar el empuje del agua
+## (rho_fluido/rho_cuerpo * g ~ 4 m/s2 con densidad 700) o bucear es
+## imposible: el personaje solo subiria. :v
+@export_range(2.0, 40.0, 0.5) var aceleracion_nado := 14.0
+
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/Camera3D
 @onready var push_ray: RayCast3D = $CameraPivot/Camera3D/PushRay
 @onready var grab_cast: ShapeCast3D = $CameraPivot/Camera3D/GrabCast
 @onready var iza_rig: Node3D = $iza_rig
+## Componente de agua (sumergido/fraccion/corriente). null en mapas sin agua.
+@onready var agua: WaterBody = WaterBody.buscar_en(self)
+## Oxigeno/ahogo. null si la escena no lo trae. :v
+@onready var oxigeno: Oxygen = Oxygen.buscar_en(self)
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var current_stamina: float = 0.0
@@ -65,6 +80,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_handle_jump()
 	_handle_movement(delta)
+	_handle_nado(delta)
 	_update_sprint_cooldown(delta)
 	_regen_stamina(delta)
 	if Input.is_action_just_pressed("push"):
@@ -143,7 +159,8 @@ func _handle_movement(delta: float) -> void:
 	var input_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 
-	var can_sprint := not on_cooldown and current_stamina > 0.0
+	var en_agua := agua != null and agua.sumergido
+	var can_sprint := not on_cooldown and current_stamina > 0.0 and not en_agua
 	is_sprinting = Input.is_action_pressed("sprint") and can_sprint and direction.length() > 0.0
 
 	var current_speed: float
@@ -156,10 +173,31 @@ func _handle_movement(delta: float) -> void:
 	else:
 		current_speed = stats.walk_speed
 
-	var target_vel := direction * current_speed
+	# Dentro del agua nada de sprint: nadar cuesta control, no stamina. :v
+	var factor := escala_nado if en_agua else 1.0
+	var target_vel := direction * current_speed * factor
 	var lerp_factor := acceleration if direction.length() > 0.0 else friction
 	velocity.x = lerp(velocity.x, target_vel.x, lerp_factor * delta)
 	velocity.z = lerp(velocity.z, target_vel.z, lerp_factor * delta)
+
+
+## Nado: mientras la cabeza este sumergida, `jump` sube y `crouch` baja
+## sosteniendo la tecla. El WaterBody (hijo, corre DESPUES de este script)
+## aplica encima el empuje y el arrastre del fluido, asi que esta funcion
+## solo pone el objetivo y el agua lo frena sola. :v
+func _handle_nado(delta: float) -> void:
+	if agua == null:
+		return
+	if not agua.sumergido:
+		agua.empuje_suprimido = false
+		return
+	# Ctrl anula el empuje: sin eso el hundimiento no le gana nunca a los
+	# 14 m/s2 de empuje con densidad 700. :v
+	agua.empuje_suprimido = Input.is_action_pressed("crouch")
+	if Input.is_action_pressed("jump"):
+		velocity.y = move_toward(velocity.y, velocidad_nado, aceleracion_nado * delta)
+	elif Input.is_action_pressed("crouch"):
+		velocity.y = move_toward(velocity.y, -velocidad_nado, aceleracion_nado * delta)
 
 func _update_sprint_cooldown(delta: float) -> void:
 	if on_cooldown:

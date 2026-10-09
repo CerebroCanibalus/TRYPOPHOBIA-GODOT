@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://m2evartsnon3"]
+
+[ext_resource type="Script" uid="uid://bbnq46jr84w7j" path="res://src/water/oxygen.gd" id="1_4snus"]
+
+[node name="Oxigeno" type="Node" unique_id=1873921473]
+script = ExtResource("1_4snus")

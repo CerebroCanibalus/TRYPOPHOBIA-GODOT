@@ -105,6 +105,13 @@ uniform float chop_chop   : hint_range(0.0, 1.5, 0.01)   = 0.0;
 
 uniform float wave_spread : hint_range(0.0, 1.5, 0.01) = 0.7;
 
+// Reloj del oleaje en segundos. -1 = usa TIME (arranque, y quien no monte un
+// WaterSurface). Con >= 0 manda ESTE, y lo empuja src/water/water_surface.gd:
+// la buoyancy en CPU mide la misma ola que se pinta, con el mismo reloj. TIME
+// no es legible desde GDScript y ademas rueda cada 3600 s, lo que desfalaria
+// la flotacion respecto a la cresta visible. :v
+uniform float wave_time = -1.0;
+
 // ---------------------------------------------------------------------------
 //  AGUA
 // ---------------------------------------------------------------------------
@@ -225,10 +232,10 @@ varying vec3 world_pos;
 //  OLAS — Gerber analiticas, resueltas POR PIXEL
 // ===========================================================================
 void add_wave(inout vec3 nrm, inout float height, inout vec2 push,
-        vec2 p, vec2 dir, float amp, float len, float spd, float chop) {
+        vec2 p, vec2 dir, float time, float amp, float len, float spd, float chop) {
     float k = TAU / max(len, 0.01);
     float w = k * spd;
-    float th = dot(p, dir) * k + TIME * w;
+    float th = dot(p, dir) * k + time * w;
     float s = sin(th);
     float c = cos(th);
 
@@ -248,6 +255,9 @@ void solve_waves(vec2 p, float detail, out float height, out vec2 push, out vec3
     push = vec2(0.0);
     nrm = vec3(0.0, 1.0, 0.0);
 
+    // Reloj del oleaje: wave_time si alguien lo manda, TIME si no. :v
+    float t = wave_time >= 0.0 ? wave_time : TIME;
+
     // Guarda anti-NaN: wind_direction llega (0,0,0) si nadie escribe el
     // global, y normalize(vec3(0)) = 0/0 = NaN, que se come el pixel entero.
     float wd_len = length(wind_direction.xz);
@@ -257,17 +267,17 @@ void solve_waves(vec2 p, float detail, out float height, out vec2 push, out vec3
     float calm = 1.0 - clamp(wind_intensity, 0.0, 1.0) * 0.55;
     float spread = wave_spread * (0.35 + 0.65 * clamp(wind_intensity, 0.0, 1.0));
 
-    add_wave(nrm, height, push, p, wd,
+    add_wave(nrm, height, push, p, wd, t,
             swell_height * detail * calm, swell_length, swell_speed, swell_chop);
 
     float ang1 = spread * 0.9;
     vec2 d1 = normalize(wd * cos(ang1) + wperp * sin(ang1));
-    add_wave(nrm, height, push, p, d1,
+    add_wave(nrm, height, push, p, d1, t,
             ripple_height * detail * calm, ripple_length, ripple_speed, ripple_chop);
 
     float ang2 = -spread * 1.4;
     vec2 d2 = normalize(wd * cos(ang2) + wperp * sin(ang2));
-    add_wave(nrm, height, push, p, d2,
+    add_wave(nrm, height, push, p, d2, t,
             chop_height * detail * calm, chop_length, chop_speed, chop_chop);
 
     // ---- RADAR DE SONIDO -------------------------------------------------

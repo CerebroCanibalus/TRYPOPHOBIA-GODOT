@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dd68y8pgfdjhg"]
+
+[ext_resource type="Script" uid="uid://b5k642usxvsnv" path="res://src/water/underwater_fx.gd" id="1_5agql"]
+
+[node name="DistorsionSubmarina" type="CanvasLayer" unique_id=1177056358]
+script = ExtResource("1_5agql")

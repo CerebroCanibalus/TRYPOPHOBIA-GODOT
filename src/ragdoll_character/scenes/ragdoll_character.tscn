@@ -7,6 +7,12 @@
 [ext_resource type="Script" uid="uid://cq3kyg42vhqt5" path="res://src/ragdoll_character/ragdoll_pointer.gd" id="5_e7a7b"]
 [ext_resource type="Script" uid="uid://d3ijx5ksw4r4x" path="res://src/ragdoll_character/pointer_reticle.gd" id="6_mn3uv"]
 [ext_resource type="Resource" path="res://src/ragdoll_character/resources/character_rig_config.tres" id="7_rig"]
+[ext_resource type="Script" uid="uid://88vu47dp35rj" path="res://src/water/water_body.gd" id="8_fsyer"]
+[ext_resource type="PackedScene" uid="uid://b7fw2u78j642r" path="res://src/water/nodos/cuerpo_agua.tscn" id="8_pvqtf"]
+[ext_resource type="Script" uid="uid://bbnq46jr84w7j" path="res://src/water/oxygen.gd" id="9_hfnht"]
+[ext_resource type="Script" uid="uid://b5k642usxvsnv" path="res://src/water/underwater_fx.gd" id="10_hfnht"]
+[ext_resource type="PackedScene" uid="uid://m2evartsnon3" path="res://src/water/nodos/oxigeno.tscn" id="10_hgyt7"]
+[ext_resource type="PackedScene" uid="uid://dd68y8pgfdjhg" path="res://src/water/nodos/distorsion_submarina.tscn" id="12_evo3e"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l0mvc"]
 resource_name = "Character"
@@ -14,7 +20,7 @@ cull_mode = 2
 albedo_color = Color(0.906332, 0.906332, 0.906332, 1)
 roughness = 0.5
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_e7a7b"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_lafby"]
 resource_local_to_scene = true
 resource_name = "Character_Cube_002"
 _surfaces = [{
@@ -127,7 +133,7 @@ fp_clip_radius = 0.55
 [node name="Physical" parent="." unique_id=1317213108 instance=ExtResource("1_nfcse")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 
-[node name="Skeleton3D" parent="Physical/Armature" parent_id_path=PackedInt32Array(1317213108, 1053074085) index="0" unique_id=1848521969]
+[node name="Skeleton3D" parent="Physical/Armature" parent_id_path=PackedInt32Array(1317213108, 1177064062) index="0" unique_id=39539149]
 bones/1/rotation = Quaternion(-2.66925e-08, -2.66925e-08, -0.707107, 0.707107)
 bones/4/rotation = Quaternion(2.66925e-08, 2.66925e-08, 0.707107, 0.707107)
 bones/5/rotation = Quaternion(0.5, -0.5, 0.5, 0.5)
@@ -140,9 +146,9 @@ bones/14/rotation = Quaternion(0.6808317, 7.128458e-08, -1.11100064e-07, 0.73243
 bones/15/rotation = Quaternion(0.012708797, -5.3507927e-09, -8.914672e-10, 0.99991924)
 bones/16/rotation = Quaternion(7.549791e-08, -1.0203723e-14, 1, 1.995658e-15)
 
-[node name="Character" parent="Physical/Armature/Skeleton3D" index="0" unique_id=743253205]
+[node name="Character" parent="Physical/Armature/Skeleton3D" index="0" unique_id=289683732]
 material_override = ExtResource("3_k507y")
-mesh = SubResource("ArrayMesh_e7a7b")
+mesh = SubResource("ArrayMesh_lafby")
 
 [node name="Physical Bone Body" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="1" unique_id=120557714]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.1333157e-11, 0.5, 0)
@@ -211,12 +217,12 @@ transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, -0.06)
 shape = SubResource("CapsuleShape3D_kselr")
 
 [node name="Physical Bone RArm1" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="4" unique_id=1131522590]
-transform = Transform3D(8.5716607e-07, -1.996755e-06, 1, -6.289031e-07, -1, -1.9967542e-06, 1, -6.289014e-07, -8.571673e-07, -0.9158143, 0.9999973, 5.967348e-08)
+transform = Transform3D(8.573815e-07, -1.996755e-06, 1, -6.289031e-07, -1, -1.9967542e-06, 1, -6.289014e-07, -8.5738276e-07, -0.9158143, 0.9999973, 5.972734e-08)
 collision_layer = 2
 collision_mask = 7
 joint_type = 2
-joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1365327e-07, -3.3189233e-06, 0.31887457)
-body_offset = Transform3D(1, -6.408263e-07, -8.5716727e-07, -8.571661e-07, 1.9967551e-06, -1.0000001, 6.40828e-07, 1, 1.9967542e-06, 5.967344e-08, 0.3188746, 2.682209e-06)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.136681e-07, -3.3189233e-06, 0.31887457)
+body_offset = Transform3D(1, -6.408263e-07, -8.573827e-07, -8.5738156e-07, 1.9967551e-06, -1.0000001, 6.40828e-07, 1, 1.9967542e-06, 5.97273e-08, 0.3188746, 2.682209e-06)
 friction = 0.2
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -232,12 +238,12 @@ transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, -0.095)
 shape = SubResource("CapsuleShape3D_qknsb")
 
 [node name="Physical Bone RArm2" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="5" unique_id=701835395]
-transform = Transform3D(8.5716607e-07, -1.996755e-06, 1, -6.289031e-07, -1, -1.9967542e-06, 1, -6.289014e-07, -8.571673e-07, -1.6208036, 1.0000045, 0.0001899386)
+transform = Transform3D(8.573815e-07, -1.996755e-06, 1, -6.289031e-07, -1, -1.9967542e-06, 1, -6.289014e-07, -8.5738276e-07, -1.6212554, 1.0000045, 0.0001899714)
 collision_layer = 2
 collision_mask = 7
 joint_type = 2
-joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00018960754, 3.7588811e-06, 0.3862235)
-body_offset = Transform3D(1, -6.408263e-07, -8.5716727e-07, -8.571661e-07, 1.9967551e-06, -1.0000001, 6.40828e-07, 1, 1.9967542e-06, 0.0001899386, 0.38622355, -4.529953e-06)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00018963988, 3.757979e-06, 0.3866753)
+body_offset = Transform3D(1, -6.408263e-07, -8.573827e-07, -8.5738156e-07, 1.9967551e-06, -1.0000001, 6.40828e-07, 1, 1.9967542e-06, 0.0001899714, 0.38667536, -4.529953e-06)
 friction = 0.2
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -261,12 +267,12 @@ transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, -0.06)
 shape = SubResource("CapsuleShape3D_kselr")
 
 [node name="Physical Bone LLeg1" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="6" unique_id=1480120445]
-transform = Transform3D(9.48753e-08, 0.999677, -0.025415732, -8.378667e-07, 0.025415732, 0.999677, 1, -7.3549664e-08, 8.4000743e-07, 0.38654283, -0.28480175, -6.517836e-06)
+transform = Transform3D(9.48753e-08, 0.999677, -0.025415732, -8.378667e-07, 0.025415732, 0.999677, 1, -7.3549664e-08, 8.4000743e-07, 0.38654283, -0.28480175, -6.5161125e-06)
 collision_layer = 2
 collision_mask = 7
 joint_type = 2
-joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.293734e-06, 0.00010882222, 0.26679608)
-body_offset = Transform3D(1, 8.391069e-09, 7.748477e-07, 7.748475e-07, -2.235174e-07, -0.9999998, -8.39097e-09, 0.9999998, -1.6391292e-07, -6.500461e-06, 0.26679605, -0.00010877848)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2920103e-06, 0.00010882222, 0.26679608)
+body_offset = Transform3D(1, 8.391069e-09, 7.748477e-07, 7.748475e-07, -2.235174e-07, -0.9999998, -8.39097e-09, 0.9999998, -1.6391292e-07, -6.4987375e-06, 0.26679605, -0.00010877848)
 friction = 0.2
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -309,12 +315,12 @@ target_position = Vector3(0, 0, -0.4)
 max_results = 10
 
 [node name="Physical Bone RLeg1" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="8" unique_id=1165846391]
-transform = Transform3D(-7.097284e-06, 0.999677, 0.025416572, -3.1697724e-05, -0.025416572, 0.999677, 1, 6.2893446e-06, 3.1867876e-05, -0.38666973, -0.28484443, -2.2389546e-05)
+transform = Transform3D(-7.097284e-06, 0.999677, 0.025416572, -3.1697724e-05, -0.025416572, 0.999677, 1, 6.2893446e-06, 3.1867876e-05, -0.38666973, -0.28484443, -2.239644e-05)
 collision_layer = 2
 collision_mask = 7
 joint_type = 2
-joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3840416e-05, 1.679154e-05, 0.26684207)
-body_offset = Transform3D(1, 6.2346994e-06, 3.1881205e-05, 3.1886306e-05, 9.4622385e-07, -0.99999994, -6.2231206e-06, 1, 9.573989e-07, -2.2347767e-05, 0.26684204, -1.7046928e-05)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.384731e-05, 1.679154e-05, 0.26684207)
+body_offset = Transform3D(1, 6.2346994e-06, 3.1881205e-05, 3.1886306e-05, 9.4622385e-07, -0.99999994, -6.2231206e-06, 1, 9.573989e-07, -2.2354661e-05, 0.26684204, -1.7046928e-05)
 friction = 0.2
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -357,12 +363,12 @@ target_position = Vector3(0, 0, -0.4)
 max_results = 10
 
 [node name="Physical Bone Head" type="PhysicalBone3D" parent="Physical/Armature/Skeleton3D" index="10" unique_id=1145602256]
-transform = Transform3D(1, 2.3845257e-07, 1.2931877e-12, 1.2931877e-12, 0, -1, -2.3845257e-07, 1, -3.083639e-19, -4.7819526e-12, 1.7905433, -8.940697e-08)
+transform = Transform3D(1, 2.3845257e-07, 1.2931877e-12, 1.2931877e-12, 0, -1, -2.3845257e-07, 1, -3.083639e-19, -4.7819526e-12, 1.7909951, -8.940697e-08)
 collision_layer = 2
 collision_mask = 7
 joint_type = 2
-joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.176923e-12, 8.940697e-08, 0.45137292)
-body_offset = Transform3D(1, 3.3992364e-11, 1.2931877e-12, 1.2931878e-12, 0, -1.0000001, -3.3992364e-11, 1, -4.394397e-23, -4.7606363e-12, 0.45137298, -8.940697e-08)
+joint_offset = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.176339e-12, 8.940697e-08, 0.45182472)
+body_offset = Transform3D(1, 3.3992364e-11, 1.2931877e-12, 1.2931878e-12, 0, -1.0000001, -3.3992364e-11, 1, -4.394397e-23, -4.7606363e-12, 0.45182478, -8.940697e-08)
 friction = 0.2
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -377,7 +383,7 @@ joint_constraints/relaxation = 1.0
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, -0.105)
 shape = SubResource("CapsuleShape3D_b8vb3")
 
-[node name="AnimationPlayer" parent="Physical" index="1" unique_id=980040350]
+[node name="AnimationPlayer" parent="Physical" index="1" unique_id=562073547]
 autoplay = &"idle"
 
 [node name="GrabJointRight" type="PinJoint3D" parent="Physical" unique_id=1107612648]
@@ -390,7 +396,7 @@ one_shot = true
 [node name="Animated" parent="." unique_id=373221833 instance=ExtResource("1_nfcse")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 
-[node name="Skeleton3D" parent="Animated/Armature" parent_id_path=PackedInt32Array(373221833, 1053074085) index="0" unique_id=1848521969]
+[node name="Skeleton3D" parent="Animated/Armature" parent_id_path=PackedInt32Array(373221833, 1177064062) index="0" unique_id=39539149]
 visible = false
 bones/1/rotation = Quaternion(-2.66925e-08, -2.66925e-08, -0.707107, 0.707107)
 bones/2/rotation = Quaternion(0.7044813, -0.06196084, -0.060878064, 0.70438683)
@@ -448,6 +454,15 @@ script = ExtResource("6_mn3uv")
 [node name="HandTargetL" type="Node3D" parent="." unique_id=2119855374]
 
 [node name="HandTargetR" type="Node3D" parent="." unique_id=445777183]
+
+[node name="Agua" type="Node" parent="." unique_id=1395001899 instance=ExtResource("8_pvqtf")]
+script = ExtResource("8_fsyer")
+
+[node name="Oxigeno" type="Node" parent="." unique_id=1873921473 instance=ExtResource("10_hgyt7")]
+script = ExtResource("9_hfnht")
+
+[node name="DistorsionAgua" type="CanvasLayer" parent="." unique_id=1177056358 instance=ExtResource("12_evo3e")]
+script = ExtResource("10_hfnht")
 
 [connection signal="skeleton_updated" from="Physical/Armature/Skeleton3D" to="." method="_on_skeleton_3d_skeleton_updated"]
 [connection signal="body_entered" from="Physical/Armature/Skeleton3D/Physical Bone LArm2/LGrabArea" to="." method="_on_l_grab_area_body_entered"]

@@ -653,6 +653,254 @@ siguen ignorados a proposito (los regenera Godot).
 (`git status --short`): un `.gitignore` que ignora `*.gd` rompe el repo en
 silencio.
 
+## 💧 AGUA FÍSICA — buoyancy, ahogo y zonas secas (2026-10-08)
+
+Encargo: *"parte del juego ocurre en instalaciones bajo el agua; ahora el agua
+es solo una mesh visual — necesita buoyancy, que los personajes se puedan
+ahogar y zonas bajo el agua donde no entre el agua"*. Sistema **genérico** en
+`src/water/` + demo medible en `src/water/demo/`. Nada de esto existía (búsqueda
+`swim|ahog|oxygen|buoy|buoyancy` → 0 aciertos).
+
+### Arquitectura
+
+| Archivo | Clase | Papel |
+|---|---|---|
+| `water_surface.gd` | `WaterSurface` (Node3D) | Réplica CPU de `solve_waves()` + marea. **Dueño del reloj**: empuja `wave_time` al shader |
+| `water_volume.gd` | `WaterVolume` (Area3D) | Dónde hay agua (XZ + fondo), densidad, corriente. El TOPE lo da la superficie, no el shape |
+| `air_volume.gd` | `AirVolume` (Area3D) | Zona SECA sumergida (sala, túnel, burbuja). **Manda sobre el agua** |
+| `water_query.gd` | `WaterQuery` | Fachada: `volumen_en(p)` = aire → agua → nada |
+| `water_shape_test.gd` | `WaterShapeTest` | Test de punto, **sección real** de la forma, AABB propio |
+| `water_body.gd` | `WaterBody` (Node) | Componente universal de empuje/arrastre. Cuelga del cuerpo |
+| `oxygen.gd` | `Oxygen` (Node) | Oxígeno, apnea, ahogo, señales para HUD |
+| `demo/demo_agua.gd` + `.tscn` | — | Demo jugable + HUD + **prueba automática** (`AGUA_TEST=1`) |
+
+### Decisiones (y por qué)
+
+1. **Reloj compartido con el shader.** `ocean_stylized.gdshader` ganó un
+   `uniform float wave_time = -1.0` (si es <0 usa `TIME`). `WaterSurface` lo
+   empuja con `Time.get_ticks_msec()/1000`. Sin esto, la física CPU y la ola
+   visible viven en relojes distintos (TIME no es legible desde GDScript y
+   rueda cada 3600 s) y los cuerpos flotarían a otra altura que la cresta.
+2. **Muestreo estratificado ponderado por SECCIÓN REAL.** Cada capa mide la
+   sección (box/cylinder/sphere/capsule) y cada punto pesa
+   `area * alto_capa / puntos`. Muestrear las esquinas del AABB da puntos
+   FUERA de una cápsula: fracción inflada, equilibrio a ρ=700 resultaba
+   "cabeza bajo el agua" (bug medido, corregido).
+3. **Empuje solo por densidades**: `a = fraccion * (ρ_fluido/ρ_cuerpo) * g`.
+   La masa se cancela → el mismo código sirve para huesos de 2 kg y cajas de
+   60 kg ("distinta complexión").
+4. **Aplicación por tipo**: RigidBody3D recibe `apply_force` por muestra (una
+   sonda = un punto de volumen → rueda con la ola); CharacterBody3D y
+   PhysicalBone3D reciben `velocity`/`linear_velocity` (no aceptan fuerzas de
+   fuera de su script).
+5. **Sin empuje apoyado**: si no, un cuerpo apoyado "salta" (el
+   CharacterBody3D no tiene reacción normal). `is_on_floor()` para Iza;
+   `WaterBody.apoyado` lo escribe el ragdoll con sus raycasts.
+6. **Sin sistema de vida aún** (decisión del General): `Oxygen` llama
+   `apply_damage(delta)` SOLO si el cuerpo lo entiende y emite `ahogado()`;
+   enchufa el día que exista salud, sin inventarla hoy.
+
+### Gotchas medidos (no volver a tropezar)
+
+- `Shape3D` **no tiene `get_aabb()`** en Godot 4.7 → `var x := sh.get_aabb()`
+  ni compila ("Cannot infer the type"). Por eso existe `WaterShapeTest.aabb_de()`.
+- `AABB.transformed()` **tampoco existe** → se envuelven los 8 vértices.
+- `CharacterBody3D` se llama **`velocity`** (`get/set_velocity`); `linear_velocity`
+  es de RigidBody3D y PhysicalBone3D. El error en runtime es raro:
+  "Invalid access to property 'linear_velocity' on CharacterBody3D".
+- `CollisionObject3D` **no tiene `get_shape_owner_count()`** → `get_shape_owners()`.
+- `RenderingServer.global_shader_parameter_get()` es **editor-only**: en runtime
+  emite ERROR por frame. El viento sale de `Ocean.wind_intensity_actual()` /
+  `wind_direction_actual()` (getters nuevos en `ocean.gd`).
+- Compilar un GDScript sin abrir el editor:
+  `Godot --headless --path <proj> --check-only -s res://ruta.gd` (imprime el
+  Parse Error con línea). Sin esto, `heren.validate` solo da `reload_err=43`.
+- Un worker de `scene_script` para escena **nueva** no sirve: el handler guarda
+  con su variable local `root`, que sigue null aunque `ctx.set_scene_root()`
+  funcione. Primero `heren.scene action=create`, despues el worker.
+
+### Prueba automática (medida, no a ojo)
+
+```
+$env:AGUA_TEST="1"; & "D:\Mis Juegos\Godot\Godot_v4.7.1-stable_win64_console.exe" --headless --path "D:\Mis Juegos\Tripofobia\Repositorio" --quit-after 40000 "res://src/water/demo/demo_agua.tscn"
+```
+**Resultado 2026-10-08: `RESULTADO: TODO OK (3 fases)` — 10/10 comprobaciones,
+exit 0.** Cubre: flota con cabeza fuera · no gasta oxígeno al flotar · bucea →
+gasta oxígeno → `ahogado()` · dentro de la bolsa de aire `fraccion=0`, respira
+y recupera. La telemetría confirma el equilibrio teórico: se hunde a -2,5 m,
+sube a 0,98 m/s y se estabiliza en `fraccion ≈ 0,70` (= 700/1000).
+
+Captura visual: `AGUA_SHOT=1` (sin `--headless`) guarda el viewport a los 5 s
+(`OS.get_environment("AGUA_SHOT_RUTA")` para cambiar la ruta).
+
+### Integración hecha
+
+- `IzaPlayer.tscn` y `ragdoll_character/scenes/ragdoll_character.tscn` traen
+  ya los nodos **`Agua`** (WaterBody) y **`Oxigeno`** (Oxygen).
+- `iza_player.gd`: nado (Espacio sube / Ctrl baja, sostenido), velocidad ×0,55
+  en agua, sin sprint bajo el agua, refs `agua`/`oxigeno`.
+- `ragdoll_character.gd`: `agua.fijar_cuerpo(physical_bone_body)` en `_ready`
+  (los huesos se reparentan, su ruta no existe al montar), `agua.apoyado =
+  is_on_floor`, nado con `NADO_EMPUJE`.
+- Shader: +1 uniform `wave_time` (validate: 0 errores, 55 uniforms).
+
+### Iteración 2 — ragdoll como personaje de prueba + Box3D + distorsión (2026-10-08)
+
+Decisiones del General: **el ragdoll `Character` es el personaje de prueba, no
+Iza**; y **el motor de física es Box3D** (`project.godot [physics]
+3d/physics_engine="Box3D Physics"` — commit `65aae14` lo había puesto en
+DEFAULT, ahora vuelve a Box3D).
+
+**Por qué el ragdoll no flotaba (medido, no supuesto):**
+
+1. **Solo flotaba 1 de 10 cuerpos.** El ragdoll son 10 `PhysicalBone3D` con
+   ~21 kg repartidos (body 10, head 2, brazos 0,5×6, piernas 2+1 ×2). El
+   componente muestreaba SOLO el hueso Body ⇒ 140 N de empuje contra 206 N de
+   peso del total ⇒ **neto −3,15 m/s²**, que es EXACTAMENTE lo que marcaba la
+   telemetría. Y encima se quedaba clavado en y=−6,98 porque el punto de caída
+   era (0,3,−6) — **justo sobre el techo de la instalación** (top en −8,6 con
+   las piernas colgando): el contacto lo sujetaba y `is_on_floor` seguía en
+   false (los ShapeCast de los pies no lo veían).
+   → Fixes: `WaterBody` ahora es **MULTI-CUERPO** (`fijar_cuerpos_extra()` y
+   cada cuerpo muestrea y flota por su cuenta), y las posiciones de prueba
+   pasan a x=20 (agua abierta).
+2. **Punto de respiración = hueso `Head` + 0,45 m hacia arriba** (en cada
+   tick, vía `WaterBody.fijar_cabeza()`). El origen del hueso Head es el
+   centro de su cápsula y en flotación ese centro queda bajo el agua: marcaba
+   "ahogado" con la cara fuera.
+3. **La raíz del ragdoll NO sigue al ragdoll** (solo se mueven los huesos):
+   por eso `altura_cuerpo()`, `velocidad_cuerpo()` y `teletransportar()`
+   (raíz + `PhysicsServer3D.body_set_state` de cada hueso) viven en
+   `ragdoll_character.gd`. Medir `global_position` de la raíz daba siempre
+   el mismo número.
+
+**Resultado: `RESULTADO: TODO OK (3 fases)` — 13/13 comprobaciones bajo
+Box3D** (ahora incluye: la caja de madera flota en la superficie y el ancla
+se hunde al lecho — eso valida `apply_force`/`apply_torque` DEL MOTOR, que es
+lo único dependiente de Box3D).
+
+**Distorsión submarina (para saber cuándo el juego te considera bajo el agua):**
+- `src/shaders/underwater_distortion.gdshader` (canvas_item): dos senos por
+  eje desplazan la `hint_screen_texture`, + tinte azul + viñeta; `alpha =
+  fuerza` así entrar/salir es un fundido.
+- `src/water/underwater_fx.gd` (`DistorsionAgua extends CanvasLayer`): cuelga
+  del personaje, se auto-monta el ColorRect, y traduce el estado del
+  WaterBody: `sumergido` → 0,45 (tinte), `cabeza_sumergida` → 0,7..1,0 según
+  `profundidad`. Fundido exponencial estable a cualquier FPS.
+- **Regla de capas: `DistorsionAgua` va en capa 1, TODO HUD en capa ≥ 10**
+  (si no, el HUD se distorsiona: medido en captura).
+
+**Gotchas nuevos de esta iteración:**
+- `heren.shader action=create` **añade el `shader_type X;` él solo**: no
+  repetirlo en el código o el fichero sale doble y no parsea.
+- `heren.shader create` **rechaza ficheros que ya existen** → borrar antes con
+  `heren.resource action=delete` (deja backup en `.heren/backup/`).
+- Un `` ` `` dentro del código que envuelves en template literal de JS rompe
+  la llamada ("Unterminated template").
+
+**Capturas (para VER sin abrir el editor):**
+```
+AGUA_SHOT=1                -> agua_shot.png a los 5 s
+AGUA_SHOT=1 AGUA_SHOT_HONDA=1   -> cámara DENTRO del agua (muestra la distorsión)
+AGUA_SHOT=1 AGUA_SHOT_FLOTA=1   -> suelta al ragdoll en agua abierta (lo ve flotando)
+AGUA_SHOT_RUTA=<ruta>      -> cambia la salida
+```
+
+### Iteración 3 — controles de nado: Ctrl hunde, Espacio saca del agua (2026-10-08)
+
+Quejas del General: *"con control no me puedo hundir"* y *"con espacio al estar
+en la superficie debería impulsarme hacia afuera para volver a reincorporarme
+en tierra"*. Las dos eran ciertas, y las dos estaban medidas antes de tocar nada:
+
+1. **Ctrl no hundía**: el empuje llega a 14 m/s² (rho 700) y el tirito de
+   hundimiento (12 m/s²) con el arrastre encima quedaba en velocidad terminal
+   de balance → solo cabeceabas. Fix: **`WaterBody.empuje_suprimido`** (var
+   pública que escribe el host cada tick) — con Ctrl el empuje se ANULA, así
+   que manda la gravedad y te hundes a ~5,4 m/s. Mismo flag en Iza.
+2. **Espacio no sacaba del agua**: el empuje sostenido topa en ~1,5-3 m/s
+   (arrastre 4/s) y con eso no clearas el agua. Fix: **impulso ÚNICO de
+   `SALIDA_AGUA = 8 m/s`** con la cabeza FUERA, capturado por EVENTO en
+   `_input()` (un `is_action_just_pressed` en `_physics_process` se pierde si
+   el tick no cae en el frame del pulso). Dos gotchas medidas:
+   - El pulso **no se borra a ciegas**: un tick con la cabeza hundida (ola a
+     la baja) se lo comía. Vive hasta usarse / soltar la tecla / un tick fuera
+     del agua (ahí sí era un salto normal de tierra).
+   - **`impulso_vertical()` lanza TODOS los cuerpos**: aplicado solo al hueso
+     Body, los otros 9 huesos (11 kg) se quedan quietos y las articulaciones
+     se comen el impulso en un par de ticks (medido: vy=8 aplicado y a los
+     0,5 s el cuerpo seguía en la superficie). Ahora `WaterBody` lanza el
+     conjunto entero.
+3. **Bug de teletransporte encontrado de paso**: `teletransportar()` calculaba
+   el desplazamiento contra la RAÍZ, que no sigue al ragdoll y ya estaba en el
+   destino → `d = (0,0,0)` y el personaje no se movía (la fase 6 del test
+   empezaba en y=−6,47 en vez de 0,8). El ancla ahora es el **hueso Body** y
+   la raíz se mueve el MISMO `d` (así el esqueleto animado conserva su
+   desfase con el físico).
+
+**Resultado: `RESULTADO: TODO OK — 17 comprobaciones, exit 0`** (fases 1..7):
+flota con cabeza fuera · no gasta oxígeno flotando · caja flota / ancla se
+hunde · bucea → gasta oxígeno → `ahogado()` · sala seca `fraccion=0` respira y
+recupera · **vuelve a flotar tras teletransportar** · **Ctrl lo HUNDE** ·
+**Espacio en superficie lo SACA del agua**.
+
+Test de controles: input simulado con `Input.parse_input_event(InputEventKey)`
+(tecla REAL — los `InputEventAction` sintéticos no llegan a `_input()` de los
+nodos, medido) e `Input.action_press/crouch` para el estado mantenido.
+
+### Iteración 4 — formalización en prefabs reutilizables (2026-10-08)
+
+Todo el sistema ya funciona → se convirtió en **prefabs de escena** bajo
+`src/water/nodos/` (arrastrables desde el FileSystem a cualquier nivel) +
+guía de uso en **`src/water/README.md`**.
+
+| Prefab | Raíz | Qué resuelve |
+|---|---|---|
+| `mar.tscn` | Node3D | **Océano completo de una instancia**: `Ocean` + `MarLejano` + `Superficie` + `Volumen` enlazado (`superficie = ../Superficie`) |
+| `superficie_agua.tscn` | Node3D | Réplica CPU de olas + marea, dueña del reloj `wave_time` |
+| `volumen_agua.tscn` | Area3D | Dónde hay agua (BoxShape 200×80×200, tapa en y=+2) |
+| `volumen_aire.tscn` | Area3D | Zona seca sumergida (8×4×8 = sala del demo) |
+| `cuerpo_agua.tscn` | Node | Empuje/arrastre multi-cuerpo |
+| `oxigeno.tscn` | Node | Apnea + ahogo + señales |
+| `distorsion_submarina.tscn` | CanvasLayer | Post-proceso "estoy bajo el agua" |
+
+**Adopción (con verificación, no a ciegas):**
+- `ragdoll_character.tscn` → `Agua`/`Oxigeno`/`DistorsionAgua` ahora son
+  **instancias** de los prefabs (mismos nombres, así no se rompe ninguna ruta).
+- `IzaPlayer.tscn` → idem, y de paso gana `DistorsionSubmarina` (no la tenía).
+- `demo_agua.tscn` → `Mar` entero es una instancia de `mar.tscn`;
+  `Instalacion/Aire` es `volumen_aire.tscn` (posición (0,−11,−6)); los tres
+  flotantes usan `cuerpo_agua.tscn` con **override de `densidad_cuerpo`**.
+
+**Verificado:** `RESULTADO: TODO OK (7 fases, 17 comprobaciones)`, exit 0 ·
+10 escenas `validate: valid:true` · playground del ragdoll sin errores ·
+captura visual **idéntica** a la de antes de refactorizar.
+
+**Gotchas de la formalización:**
+- Un **override de propiedad en la RAÍZ de una instancia sí se guarda**
+  (`densidad_cuerpo`, `position`, `superficie`); los HIJOS de una instancia no
+  se pueden tocar desde el worker de heren (rechaza `own()` dentro de
+  instancias a propósito) → para personalizar formas hay que usar *editable
+  children* desde el editor. Por eso los defaults de los prefabs ya valen para
+  el demo (8×4×8 = la sala, 200×80×200 = el mar).
+- El código NO debe buscar estos nodos por nombre: siempre
+  `WaterBody.buscar_en()` / `Oxygen.buscar_en()` (clase), así los prefabs se
+  pueden renombrar al instanciar.
+- Orden de hijos en `mar.tscn`: **`Ocean` antes que `Superficie`** — ella lee
+  los shader globals (viento) que él empuja en el mismo tick.
+
+### Pendiente
+
+- **Cablear los prefabs en los mapas reales**: `maps/lobbyv2.tscn` (SM-13 +
+  ragdoll) y la petrolera **siguen sin `mar.tscn` ni `volumen_aire.tscn`** —
+  ahí no hay agua física. Con la formalización hecho, es arrastrar
+  `src/water/nodos/mar.tscn` a la escena y colocar `volumen_aire.tscn` dentro
+  del sumergible (aire del interior).
+- Clip FP del rig de Iza (`fp_body_clip` solo está en el ragdoll) — ya no
+  importa mientras Iza no sea el personaje.
+- Red: volumen/superficie/oxígeno deben volverse server-authoritative.
+
+---
+
 ## 🌤️ AMBIENTACION — cielo, soles y nubes (2026-09-28)
 
 Sistema canonico de clima, **preconfigurado por nivel** (sin ciclo dia/noche ni

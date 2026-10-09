@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://b8ra5jddtmm6t"]
+
+[ext_resource type="Script" uid="uid://tv8w1tjvgxu6" path="res://src/water/water_volume.gd" id="1_c1uid"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sgf5m"]
+size = Vector3(200, 80, 200)
+
+[node name="VolumenAgua" type="Area3D" unique_id=346157]
+script = ExtResource("1_c1uid")
+
+[node name="Forma" type="CollisionShape3D" parent="." unique_id=1833147931]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -38, 0)
+shape = SubResource("BoxShape3D_sgf5m")

@@ -70,6 +70,13 @@ var _ripple_center := Vector3.ZERO
 var _ripple_strength := 0.0
 var _tide_override := INF  ## si != INF, manda la red y el ciclo local se ignora
 
+# --- viento del ULTIMO frame, tal cual se empujo a los shader globals -------
+# RenderingServer.global_shader_parameter_get() da ERROR en runtime
+# ("nunca usarse fuera del editor"): este par de getters es la forma legal de
+# que WaterSurface replique la direccion de las olas sin leer globals. :v
+var _wind_actual := 0.0
+var _wind_dir_actual := Vector3(0.0, 0.0, 1.0)
+
 ## Color del cielo reflejado en el agua. Lo unico que el shader no saca de la
 ## Environment. La niebla y el sol los pone la ESCENA, no el material.
 var _reflect_color := Color(0.42, 0.055, 0.058)
@@ -78,8 +85,23 @@ var _mat: ShaderMaterial
 
 func _ready() -> void:
 	_time = randf() * TAU
+	# Estado inicial del viento para que WaterSurface no arranque con (0,0,1)
+	# mientras este _ready no haya corrido su primer _push_globals. :v
+	_wind_actual = clampf(wind_intensity, 0.0, 1.0)
+	var h0 := deg_to_rad(wind_heading_deg)
+	_wind_dir_actual = Vector3(sin(h0), 0.0, cos(h0))
 	_pull_from_environment()
 	_bind_material()
+
+
+## Intensidad de viento real (con racha) empujada a los shader globals. :v
+func wind_intensity_actual() -> float:
+	return _wind_actual
+
+
+## Direccion de viento real empujada a los shader globals. :v
+func wind_direction_actual() -> Vector3:
+	return _wind_dir_actual
 
 
 ## Resuelve el material y le empuja las texturas. Idempotente: se puede
@@ -166,6 +188,8 @@ func _push_globals() -> void:
 		heading = deg_to_rad(wind_heading_deg + sin(_time * 0.021) * 12.0)
 	var wind := clampf(wind_intensity * gust, 0.0, 1.0)
 	var dir := Vector3(sin(heading), 0.0, cos(heading))
+	_wind_actual = wind
+	_wind_dir_actual = dir
 	# wind_intensity / wind_direction SI son shader_globals de project.godot: se
 	# comparten con agua1.gdshader y con cualquier otro shader de viento.
 	# RenderingServer.global_shader_parameter_set() sobre un nombre inexistente

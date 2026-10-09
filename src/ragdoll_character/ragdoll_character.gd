@@ -21,6 +21,20 @@ extends Node3D
 const JUMP_STRENGTH = 70
 const SPEED = 50
 const DAMPING = 0.9
+## === NADO ==============================================================
+## Escala de velocidad horizontal dentro del agua. :v
+const NADO_ESCALA = 0.5
+## Empuje vertical de nado en m/s2 sosteniendo `jump` (arriba) o `crouch`
+## (abajo). Con arrastre 4/s el techo de velocidad es ~empuje/4, asi que 12
+## da ~3 m/s de nado: suficiente para ganarle a ~4 m/s2 de empuje neto
+## (rho 1000/700 * g - g) y poder BUCEAR, no solo flotar. :v
+const NADO_EMPUJE = 12.0
+## Impulso UNICO de salida del agua (m/s hacia arriba). Se dispara con `jump`
+## con la cabeza FUERA: el empuje sostenido topa en ~3 m/s (arrastre 4/s) y
+## con eso nunca sales del agua para reincorporarte en tierra. Medido: 8 m/s
+## dan ~1,4 m de subida neta desde la flotacion, suficiente para clear el
+## agua y caer en el muelle. :v
+const SALIDA_AGUA = 8.0
 
 @onready var physical_bone_body : PhysicalBone3D
 @onready var body_mesh : MeshInstance3D
@@ -31,6 +45,17 @@ const DAMPING = 0.9
 var can_jump := true
 var is_on_floor := false
 var walking := false
+## === AGUA (componentes, null en mapas sin agua) ========================
+## El WaterBody se engancha al hueso Body en _ready (su ruta no existe al
+## montar la escena: los bones se reparentan al simulator). :v
+var agua: WaterBody = null
+var oxigeno: Oxygen = null
+## Hueso fisico de la cabeza: de el sale el punto de respiracion. :v
+var _cabeza_fisica: PhysicalBone3D = null
+## Pulso de salto capturado por EVENTO. `is_action_just_pressed` dentro de
+## _physics_process se pierde si el tick no cae en el frame del pulso — el
+## impulso de salida del agua se dispararia a ratos. :v
+var _salto_evento := false
 
 # === SPRING / RAGDOLL ==================================================
 @export var angular_spring_stiffness: float = 4000.0
@@ -146,6 +171,40 @@ func _ready() -> void:
 			rig_config.clip_walk, rig_config.clip_grab_lower, rig_config.clip_grab_middle,
 			rig_config.clip_grab_upper, rig_config.clip_idle])
 
+	# === AGUA =============================================================
+	# El WaterBody es HIJO, asi que su _ready ya corrio y no encontro cuerpo
+	# (la raiz es Node3D, no un PhysicsBody3D). El cuerpo real es el hueso
+	# Body, recien resuelto por _ensure_node_refs: se le entrega aqui. :v
+	agua = WaterBody.buscar_en(self)
+	if agua != null and physical_bone_body != null:
+		agua.fijar_cuerpo(physical_bone_body)
+		# TODOS los huesos flotan, no solo el Body: con 21 kg repartidos en 10
+		# cuerpos, dejar 11 kg sin empuje hunde al personaje entero. :v
+		agua.fijar_cuerpos_extra(physics_bones)
+	# La cabeza del oxigeno es el HUESO HEAD, no el tope de la caja del Body
+	# (body_shape mide 1,2 m: el default de WaterBody caeria en el pecho y te
+	# ahogarias con la nariz fuera del agua). :v
+	if physical_skel != null and rig_config != null:
+		_cabeza_fisica = physical_skel.find_child(
+				"Physical Bone " + String(rig_config.head_bone_name),
+				true, false) as PhysicalBone3D
+	oxigeno = Oxygen.buscar_en(self)
+
+
+## Y de mundo del hueso Body — el "cuerpo real". La raiz NO sigue al ragdoll:
+## solo se mueven los huesos, asi que medir la raiz da siempre la misma. :v
+func altura_cuerpo() -> float:
+	if physical_bone_body != null:
+		return physical_bone_body.global_position.y
+	return global_position.y
+
+
+## Velocidad lineal del hueso Body, para telemetria de pruebas. :v
+func velocidad_cuerpo() -> Vector3:
+	if physical_bone_body != null:
+		return physical_bone_body.linear_velocity
+	return Vector3.ZERO
+
 
 ## Resuelve las refs que el .tscn cablea y, si faltan, las busca por nombre
 ## y convencion (Animated/Physical son la estructura fija del sistema).
@@ -252,7 +311,56 @@ func _configure_animation_clips() -> void:
 			print("[ragdoll_character] clip '%s' -> LOOP_LINEAR (%.2fs)" % [anim_name, a.length])
 
 
+## Teletransporta el personaje: raiz + TODOS los cuerpos fisicos.
+##
+## Mover solo la raiz no sirve: el PhysicalBoneSimulator escribe los huesos
+## desde los cuerpos del physics server, asi que lo que no se mueva ahi se
+## queda donde estaba (y el personaje vuelve a saltar a su sitio). :v
+func teletransportar(destino: Vector3) -> void:
+	# El ancla es el HUESO BODY, no la raiz. La raiz NO sigue al ragdoll: se
+	# queda donde se la dejo el teletransporte anterior, asi que calcular el
+	# desplazamiento con ella daba d=(0,0,0) y el personaje no se movia (medido
+	# en el test: fase 6 empezaba en y=-6.47 en vez de 0.8). :v
+	var ancla := global_position
+	if physical_bone_body != null:
+		ancla = physical_bone_body.global_position
+	var d := destino - ancla
+	if d.length_squared() < 1e-10:
+		return
+	var viejos: Array[Transform3D] = []
+	viejos.resize(physics_bones.size())
+	for i in physics_bones.size():
+		viejos[i] = physics_bones[i].global_transform
+	# La raiz se mueve LO MISMO que los huesos: asi el esqueleto animado (hijo
+	# de la raiz) y el fisico conservan su desfase y el PD no pelea. :v
+	global_position += d
+	for i in physics_bones.size():
+		var xf := viejos[i]
+		xf.origin += d
+		PhysicsServer3D.body_set_state(physics_bones[i].get_rid(),
+				PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+		PhysicsServer3D.body_set_state(physics_bones[i].get_rid(),
+				PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY, Vector3.ZERO)
+		PhysicsServer3D.body_set_state(physics_bones[i].get_rid(),
+				PhysicsServer3D.BODY_STATE_ANGULAR_VELOCITY, Vector3.ZERO)
+
+
+## Corta toda la velocidad (para pruebas y para frenar al aterrizar). :v
+func parar() -> void:
+	if physical_bone_body == null:
+		return
+	physical_bone_body.linear_velocity = Vector3.ZERO
+	physical_bone_body.angular_velocity = Vector3.ZERO
+
+
 func _input(event: InputEvent) -> void:
+	# Captura del pulso de salto por DOS caminos: el evento real (fiable en
+	# gameplay) y is_action_just_pressed (para input sintetizado). El impulso
+	# de salida del agua se aplica una sola vez: el flag lo consume el tick. :v
+	if event.is_action_pressed("jump") and not event.is_echo():
+		_salto_evento = true
+	if Input.is_action_just_pressed("jump"):
+		_salto_evento = true
 	if Input.is_action_just_pressed("ragdoll"):
 		ragdoll_mode = not ragdoll_mode
 		print("[ragdoll_character] MODO RAGDOLL = %s" % ragdoll_mode)
@@ -303,8 +411,41 @@ func _physics_process(delta: float) -> void:
 		dir -= animated_skel.global_transform.basis.z; walking = true
 	dir = dir.normalized()
 	if physical_bone_body:
-		physical_bone_body.linear_velocity += dir * SPEED * delta
+		# En el agua se nada: mas lento, y el arrastre del WaterBody (hijo,
+		# corre DESPUES de este script) se encarga del resto. :v
+		var en_agua := agua != null and agua.sumergido
+		var vel := SPEED * (NADO_ESCALA if en_agua else 1.0)
+		physical_bone_body.linear_velocity += dir * vel * delta
 		physical_bone_body.linear_velocity *= Vector3(DAMPING, 1, DAMPING)
+		# Empuje de nado sostenido. Importante: `crouch` es lo que permite
+		# BUCEAR, porque con densidad 700 el empuje neto solo sube. :v
+		if en_agua:
+			# Salida del agua: `jump` con la cabeza FUERA da un impulso
+			# UNICO hacia arriba. Sin esto solo flotarias — el empuje sostenido
+			# topa en ~3 m/s por el arrastre (4/s) y nunca sales del agua. :v
+			var pulso := _salto_evento or Input.is_action_just_pressed("jump")
+			if pulso and not agua.cabeza_sumergida:
+				# A TODOS los huesos, no solo al Body: las articulaciones se
+				# comen el impulso si los otros 9 se quedan quietos. :v
+				agua.impulso_vertical(SALIDA_AGUA)
+			if Input.is_action_pressed("jump"):
+				physical_bone_body.linear_velocity.y += NADO_EMPUJE * delta
+			elif Input.is_action_pressed("crouch"):
+				physical_bone_body.linear_velocity.y -= NADO_EMPUJE * delta
+		# El pulso NO se borra a ciegas: si un tick cae con la cabeza hundida
+		# (ola a la baja) se lo comia y el salto no hacia nada — medido. Vive
+		# hasta usarse, hasta soltar la tecla, o hasta un tick FUERA del agua
+		# (ai si era un salto normal de tierra). :v
+		if _salto_evento:
+			if en_agua and not agua.cabeza_sumergida:
+				_salto_evento = false
+			elif not en_agua or not Input.is_action_pressed("jump"):
+				_salto_evento = false
+		if agua != null:
+			# Ctrl = BUCEAR de verdad: anula el empuje. Con rho 700 el empuje
+			# llega a 14 m/s2 y el tirito de hundimiento no le gana nunca —
+			# por eso antes "con control no me podia hundir". :v
+			agua.empuje_suprimido = en_agua and Input.is_action_pressed("crouch")
 
 	is_on_floor = false
 	if on_floor_left and on_floor_left.is_colliding():
@@ -315,6 +456,20 @@ func _physics_process(delta: float) -> void:
 		for i in on_floor_right.get_collision_count():
 			if on_floor_right.get_collision_normal(i).y > 0.5:
 				is_on_floor = true; break
+
+	# El WaterBody (hijo, corre despues) necesita saberlo: sin esto, el
+	# ragdoll apoyado en el fondo del mar flotaria hacia arriba y no
+	# podria caminar por el lecho. :v
+	if agua != null:
+		agua.apoyado = is_on_floor
+		# El punto de respiracion sigue al hueso Head en cada pose, MEDIO
+		# METRO por encima de su origen: el origen del hueso Head es el centro
+		# de su capsula y en flotacion ese centro cae bajo el agua, lo que
+		# marcaria "ahogado" con la cara fuera. :v
+		if _cabeza_fisica != null and physical_bone_body != null:
+			var cabeza_pos := _cabeza_fisica.global_position + Vector3.UP * 0.45
+			agua.fijar_cabeza(physical_bone_body.global_transform
+					.affine_inverse() * cabeza_pos)
 
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
 		physical_bone_body.linear_velocity.y += JUMP_STRENGTH

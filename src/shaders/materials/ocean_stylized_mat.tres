@@ -35,6 +35,7 @@ shader_parameter/chop_height = 0.055
 shader_parameter/chop_speed = 4.0
 shader_parameter/chop_chop = 0.0
 shader_parameter/wave_spread = 1.499999966472
+shader_parameter/wave_time = -1.0
 shader_parameter/scatter_color = Color(0.21404877, 0.1897243, 0.27089152, 1)
 shader_parameter/scatter_density = 0.0
 shader_parameter/max_view_depth = 174.0

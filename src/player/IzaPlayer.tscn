@@ -5,6 +5,12 @@
 [ext_resource type="Shader" uid="uid://bqpi3gls0yr4d" path="res://src/player/postprocess.gdshader" id="2_25kiw"]
 [ext_resource type="PackedScene" uid="uid://s6hcxc3wyigt" path="res://assets/players/zorrillo/iza_rig.tscn" id="2_wfc3i"]
 [ext_resource type="Shader" uid="uid://ircrmsbekoxg" path="res://src/player/outline.gdshader" id="3_hk1ip"]
+[ext_resource type="PackedScene" uid="uid://b7fw2u78j642r" path="res://src/water/nodos/cuerpo_agua.tscn" id="6_2f4re"]
+[ext_resource type="Script" uid="uid://88vu47dp35rj" path="res://src/water/water_body.gd" id="6_lrg87"]
+[ext_resource type="Script" uid="uid://bbnq46jr84w7j" path="res://src/water/oxygen.gd" id="7_b2csr"]
+[ext_resource type="PackedScene" uid="uid://m2evartsnon3" path="res://src/water/nodos/oxigeno.tscn" id="8_u1hqa"]
+[ext_resource type="PackedScene" uid="uid://dd68y8pgfdjhg" path="res://src/water/nodos/distorsion_submarina.tscn" id="10_asry7"]
+[ext_resource type="Script" uid="uid://b5k642usxvsnv" path="res://src/water/underwater_fx.gd" id="11_nrg6t"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hcfog"]
 radius = 0.228261
@@ -88,3 +94,12 @@ metadata/_edit_use_anchors_ = true
 [node name="GroundRay" type="RayCast3D" parent="." unique_id=1790073500]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.005812, 0, -0.001983)
 target_position = Vector3(0, -0.1, 0)
+
+[node name="Agua" type="Node" parent="." unique_id=1395001899 instance=ExtResource("6_2f4re")]
+script = ExtResource("6_lrg87")
+
+[node name="Oxigeno" type="Node" parent="." unique_id=1873921473 instance=ExtResource("8_u1hqa")]
+script = ExtResource("7_b2csr")
+
+[node name="DistorsionAgua" type="CanvasLayer" parent="." unique_id=1177056358 instance=ExtResource("10_asry7")]
+script = ExtResource("11_nrg6t")

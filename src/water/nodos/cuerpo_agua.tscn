@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b7fw2u78j642r"]
+
+[ext_resource type="Script" uid="uid://88vu47dp35rj" path="res://src/water/water_body.gd" id="1_in800"]
+
+[node name="CuerpoAgua" type="Node" unique_id=1395001899]
+script = ExtResource("1_in800")
