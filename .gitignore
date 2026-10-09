@@ -53,12 +53,9 @@ Thumbs.db
 .opencode/
 .hammerforge/
 
-# Box3D development (FASE 2 — plugin recompilation)
-# Source clone IS committed (snapshot for PR reproducibility)
-# But build artifacts and internal .git are excluded
-tools/box3d/build/
-tools/box3d/godot-box3d-src/.git/
-tools/box3d/godot-box3d-src/bin/
+# Box3D: el codigo fuente, patches y build viven en su propio repositorio
+# (D:\Mis Juegos\Tripofobia\godot-box3d-engine). Aqui solo queda el addon
+# runtime en addons/godot-box3d/ (gdextension + dll compilada).
 
 tools/active_ragdoll_reference/
 
