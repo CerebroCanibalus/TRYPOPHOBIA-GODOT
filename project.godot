@@ -23,7 +23,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-NetworkingManager="*res://scripts/NetworkingManager.gd"
+NetworkingManager="*res://src/autoload/NetworkingManager.gd"
 
 [display]
 

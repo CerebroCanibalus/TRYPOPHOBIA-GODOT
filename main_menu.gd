@@ -65,13 +65,13 @@ func setup_modules():
 	print("Configurando módulos del sistema...")
 	
 	# Crear módulo de audio
-	audio_manager = load("res://scripts/ui/MenuAudioManager.gd").new()
+	audio_manager = load("res://src/menu/MenuAudioManager.gd").new()
 	add_child(audio_manager)
 	audio_manager.setup_audio_system(ui_sounds, ambient_audio, breath_audio)
 	audio_manager.horror_shake_triggered.connect(_on_horror_shake_triggered)
 	
 	# Crear módulo de idiomas
-	language_system = load("res://scripts/ui/MenuLanguageSystem.gd").new()
+	language_system = load("res://src/menu/MenuLanguageSystem.gd").new()
 	add_child(language_system)
 	var language_elements = {
 		"title_label": title_label,
@@ -97,17 +97,17 @@ func setup_modules():
 	language_system.setup_language_system(language_elements)
 	
 	# Crear módulo de efectos visuales
-	background_manager = load("res://scripts/ui/BackgroundManager.gd").new()
+	background_manager = load("res://src/menu/BackgroundManager.gd").new()
 	add_child(background_manager)
 	background_manager.setup_background_system(background_texture, background_animation, title_label)
 	
 	# Crear módulo del explorador de servidores
-	# FALTA: res://scripts/ui/ServerBrowser.gd NUNCA existió en el repo (ni en el
+	# FALTA: res://src/menu/ServerBrowser.gd NUNCA existió en el repo (ni en el
 	# historial de git). Sin él el menú arranca igual, pero no hay búsqueda de
 	# servidores: el guard evita tumbar setup_modules con un null. Pendiente de
 	# implementar contra NetworkingManager (descubrimiento UDP 7778). :v
-	if FileAccess.file_exists("res://scripts/ui/ServerBrowser.gd"):
-		var server_script: Variant = load("res://scripts/ui/ServerBrowser.gd")
+	if FileAccess.file_exists("res://src/menu/ServerBrowser.gd"):
+		var server_script: Variant = load("res://src/menu/ServerBrowser.gd")
 		server_browser = server_script.new()
 		add_child(server_browser)
 		var server_elements = {
@@ -122,7 +122,7 @@ func setup_modules():
 		server_browser.setup_server_browser(server_elements)
 		server_browser.back_to_multiplayer_requested.connect(_on_back_to_multiplayer)
 	else:
-		push_warning("main_menu: falta res://scripts/ui/ServerBrowser.gd — explorador de servidores desactivado")
+		push_warning("main_menu: falta res://src/menu/ServerBrowser.gd — explorador de servidores desactivado")
 	
 	print("✅ Módulos configurados correctamente")
 

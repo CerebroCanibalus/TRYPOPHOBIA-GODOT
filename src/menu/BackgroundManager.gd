@@ -128,7 +128,7 @@ func setup_mouse_tracker():
 	print("--- Configurando rastreador de mouse ---")
 	
 	# Verificar si el archivo MouseTracker existe
-	var mouse_tracker_exists = FileAccess.file_exists("res://scripts/MouseTracker.gd")
+	var mouse_tracker_exists = FileAccess.file_exists("res://src/menu/MouseTracker.gd")
 	print("MouseTracker.gd existe: ", mouse_tracker_exists)
 	
 	if not mouse_tracker_exists:
@@ -137,7 +137,7 @@ func setup_mouse_tracker():
 		return
 	
 	# Intentar cargar MouseTracker
-	var mouse_tracker_script = load("res://scripts/MouseTracker.gd")
+	var mouse_tracker_script = load("res://src/menu/MouseTracker.gd")
 	if mouse_tracker_script:
 		mouse_tracker = mouse_tracker_script.new()
 		get_parent().add_child(mouse_tracker)
