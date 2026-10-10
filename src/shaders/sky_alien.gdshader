@@ -7,12 +7,12 @@ render_mode use_quarter_res_pass;
 // `Shader_tdx3t`), que a su vez viene de:
 //   https://godotshaders.com/shader/stylized-sky-with-procedural-sun-and-moon/
 // La referencia original usa LIGHT0 = sol y LIGHT1 = luna. AQUI ESO NO APLICA:
-// este shader recibe los soles por uniforms que empuja `ambientacion.gd`, porque el
+// este shader recibe los soles por uniforms que empuja `atmosfera.gd`, porque el
 // orden de LIGHT0..LIGHT3 NO esta garantizado (Godot los rellena recorriendo
 // `p_render_data->lights` en orden de registro, sin contrato de orden por
 // arbol — ver servers/rendering/renderer_rd/environment/sky.cpp).
 //
-// Ver `src/weather/ambientacion.gd` para quien empuja cada uniform (:v
+// Ver `src/weather/atmosfera.gd` para quien empuja cada uniform (:v
 
 group_uniforms sky;
 	uniform vec3 day_top_color : source_color = vec3( 0.1, 0.6, 1.0 );
@@ -28,7 +28,7 @@ group_uniforms horizon;
 
 group_uniforms sun_a;
 	// Sol primario — el que SI proyecta sombra en el escenario.
-	// `ambientacion.gd` empuja estos 4 desde la DirectionalLight3D "SolA".
+	// `atmosfera.gd` empuja estos 4 desde la DirectionalLight3D "SolA".
 	uniform vec3 sun_a_direction = vec3( 0.0, 1.0, 0.0 );
 	uniform vec3 sun_a_color : source_color = vec3( 10.0, 8.0, 1.0 );
 	uniform vec3 sun_a_sunset_color : source_color = vec3( 10.0, 0.0, 0.0 );
@@ -99,6 +99,48 @@ group_uniforms nubes;
 	uniform float nubes_peso : hint_range( 0.0, 1.0, 0.01 ) = 0.0;
 	// 0 = cielo limpio. 1 = KH a full.
 	uniform float nubes_intensidad : hint_range( 0.0, 1.0, 0.01 ) = 1.0;
+
+	// Capas de la formacion. 1 = la KH sola. 2 = una capa DETRAS, mas alta,
+	// mas laxa y con menos detalle: es lo que da sensacion de campo con
+	// profundidad. Cada capa extra cuesta ruido, por eso es opt-in.
+	uniform int nubes_capas : hint_range( 1, 2, 1 ) = 2;
+	// Altura de la capa trasera RELATIVA a la principal. Tambien baja su
+	// escala y su velocidad: eso ES el parallax, y es lo que hace que las dos
+	// capas se separen entre si al mirar al horizonte.
+	uniform float nubes_capa2_altura : hint_range( 1.0, 3.0, 0.01 ) = 1.35;
+	// Ancho del tramo en que el rizo cambia de sentido, como fraccion de
+	// `nubes_radio`. Antes eso lo hacia un `sign()`, que es un SALTO DE CARA:
+	// a traves del centro de cada cresta el angulo pasaba de +rollo a -rollo
+	// de golpe y el enrollado se leia como un pliegue cortado a cuchillo. Con
+	// `tanh` el paso por cero es suave y el rizo sigue leyendose.
+	uniform float nubes_rizo_ancho : hint_range( 0.001, 0.5, 0.001 ) = 0.06;
+	// Distancia sobre el plano de la capa a partir de la cual las nubes se
+	// funden con la niebla del horizonte, en metros. ANTES el fundido era
+	// angular (`smoothstep( 0.0, 0.09, EYEDIR.y )`) y cortaba en cinco grados
+	// secos; ademas a esa altura el plano ya esta a casi 9 km y las UV se iban
+	// a infinito. Fundiendo por DISTANCIA el ultimo escalon se disuelve en el
+	// color del horizonte en vez de desaparecer de golpe.
+	uniform float nubes_fundido_horizonte : hint_range( 500.0, 40000.0, 100.0 ) = 7000.0;
+	// Sombreado interno: si HACIA EL SOL hay mas masa, esta nube esta a la
+	// sombra de la de delante. Beer-Powder en su forma mas barata — un solo
+	// muestreo extra del ruido, desplazado en la direccion del sol.
+	uniform float nubes_sombra : hint_range( 0.0, 1.0, 0.01 ) = 0.55;
+
+group_uniforms rayos;
+	// Destello de tormenta DENTRO de la nube. No es una luz: es la masa
+	// encendiendose desde dentro, y por eso se pondera por la cobertura — una
+	// nube rala no puede alojar un trueno, solo puede dejarlo pasar.
+	//
+	// Los empuja `src/weather/relampago.gd` con la envoltura de pulsos. En 0
+	// el sistema esta apagado y el bloque entero se salta.
+	uniform float rayos_intensidad : hint_range( 0.0, 8.0, 0.01 ) = 0.0;
+	// Hacia donde mirar para ver el destello: direccion UNITARIA del rayo
+	// respecto al observador, en coordenadas de mundo.
+	uniform vec3 rayos_direccion = vec3( 0.0, 1.0, 0.0 );
+	uniform vec3 rayos_color : source_color = vec3( 0.8, 0.88, 1.0 );
+	// Radio ANGULAR del halo, en radianes.
+	uniform float rayos_radio : hint_range( 0.005, 2.0, 0.005 ) = 0.22;
+group_uniforms;
 
 group_uniforms stars;
 	// Stars should be at black background
@@ -208,15 +250,19 @@ vec2 rot2( vec2 p, float ang )
     return vec2( p.x * c - p.y * s, p.x * s + p.y * c );
 }
 
-// Interseccion del rayo con el plano de la capa KH, a `nubes_altura` sobre el
+// Interseccion del rayo con el plano de la capa KH, a `altura` sobre el
 // suelo. Devuelve UV en metros. Devuelve vec2( 1e9 ) si el rayo no alcanza la
 // capa (mira por debajo o muy rasante), que es la condicion normal del horizonte.
-vec2 nubes_plano_uv( vec3 eyedir )
+//
+// La altura va como PARAMETRO y no sale del uniform porque ahora hay DOS
+// capas: la trasera vive por encima de la principal y esa diferencia de altura
+// es exactamente lo que produce el parallax al mirar al horizonte (:v
+vec2 nubes_plano_uv( vec3 eyedir, float altura )
 {
     if ( eyedir.y < 0.001 ) {
         return vec2( 1e9 );
     }
-    float t = nubes_altura / eyedir.y;
+    float t = altura / eyedir.y;
     return eyedir.xz * t;
 }
 
@@ -246,18 +292,30 @@ vec2 nubes_rizo( vec2 uv, vec2 dir, vec2 perp, float desfase )
 
     // El giro apunta "hacia delante" en la interfaz: riza hacia arriba y por
     // encima, igual que una ola que rompe en la direccion del viento.
-    float ang = nubes_rollo * peso * sign( dot( rel, perp ) + 0.0001 );
+    //
+    // ANTES esto era `sign( dot( rel, perp ) + 0.0001 )`, y ese signo era un
+    // SALTO DE CARA: al cruzar el centro de la cresta el angulo pasaba de
+    // +rollo a -rollo SIN pasar por cero, justo ahi donde `peso` esta cerca de
+    // su maximo. Salia un pliegue cortado a cuchillo en mitad del rizo. Con
+    // `tanh` el paso por cero es continuo y el enrollado se deshace solo (:v
+    float corte = max( nubes_rizo_ancho * nubes_radio, 1e-3 );
+    float ang = nubes_rollo * peso * tanh( dot( rel, perp ) / corte );
     return centro + rot2( rel, ang );
 }
 
 // Silueta de la capa: 1 en el centro de la interfaz, 0 fuera. Se le suma el
 // ruido de rompimiento para que el borde se quiebre en filamentos en vez de
 // quedar una linea cortada a navaja.
-float nubes_capa( vec3 eyedir, vec2 uv, float ruido )
+//
+// El GROSOR viene de fuera y no del uniform: `nubes_peso` no puede limitarse
+// a oscurecer el cielo, una tormenta tiene que ENGORDAR la formacion. Ese es
+// el cambio que hace que un preset de tormenta se lea tormenta y no un cielo
+// limpio pintado de gris (:v
+float nubes_capa( vec3 eyedir, float grosor, float ruido )
 {
     float y = eyedir.y;
-    float pico = 1.0 - nubes_grosor * 0.5;
-    float banda = 1.0 - smoothstep( pico - nubes_grosor, pico + nubes_grosor * 0.4, abs( y - pico ) );
+    float pico = 1.0 - grosor * 0.5;
+    float banda = 1.0 - smoothstep( pico - grosor, pico + grosor * 0.4, abs( y - pico ) );
     return clamp( banda + ( ruido - 0.5 ) * 0.55, 0.0, 1.0 );
 }
 
@@ -416,16 +474,72 @@ void sky()
 		float _cobertura = 0.0;
 		if( nubes_intensidad > 0.001 )
 		{
-			vec2 _nubes_uv = nubes_plano_uv( EYEDIR );
+			// Direccion de arrastre en el plano. El perp es lo que marca
+			// "hacia arriba" en la interfaz: contra el signo de ese eje se
+			// decide si el rizo va a favor o en contra del viento.
+			float _ang = nubes_direccion * TAU;
+			vec2 _dir = vec2( cos( _ang ), sin( _ang ));
+			vec2 _perp = vec2( -_dir.y, _dir.x );
+
+			// TORMENTA: `nubes_peso` no solo oscurece, ENGORDA. Baja el umbral
+			// de densidad — asi hay mas cobertura — y ensancha la banda de la
+			// capa. Antes solo hacia `mix( _lit, vec3( 0.0 ), nubes_peso )`, o
+			// sea: un cielo limpio pintado de gris. Eso no se lee tormenta.
+			float _umbral = nubes_corte - nubes_peso * 0.18;
+			float _grosor = nubes_grosor * ( 1.0 + nubes_peso * 1.6 );
+
+			// Distancia a lo largo del rayo hasta el plano de la capa, en
+			// metros. El fundido al horizonte se mide AQUI y no por angulo: a
+			// cinco grados el plano ya esta a casi nueve kilometros, y cortar
+			// por angulo dejaba un escalon visible con las UV yendose a
+			// infinito justo encima (:v
+			float _dist = nubes_altura / max( EYEDIR.y, 1e-4 );
+
+			// ---- Capa TRASERA: parallax -------------------------------------
+			// Barata a proposito: sin warp de rompimiento y con pocas octavas.
+			// Su mision es dar FONDO, no detalle, y no hace falta que lo de
+			// porque esta detras y se acaba fundiendo con la niebla.
+			if( nubes_capas > 1 )
+			{
+				vec2 _uv2 = nubes_plano_uv( EYEDIR, nubes_altura * nubes_capa2_altura );
+				if( _uv2.x < 1e8 )
+				{
+					// Deriva mas LENTA que la principal. Esa diferencia de
+					// velocidad entre capas es lo que hace que se deslicen
+					// una sobre otra: si viajaran pegadas no hay parallax.
+					vec2 _base2 = _uv2 - _dir * time * nubes_velocidad * 3.6;
+					float _n2 = gen_fractal_ping_pong( _base2 * 0.0011, 3, 1.0 );
+					float _capa2 = nubes_capa( EYEDIR, _grosor * 1.9, _n2 );
+					float _dens2 = smoothstep( _umbral + 0.05, _umbral + 0.05 + nubes_difuminado, _n2 );
+					float _cob2 = clamp( _capa2 * _dens2, 0.0, 1.0 ) * nubes_intensidad;
+					// Se funde ANTES y mas que la principal: esta mas lejos.
+					_cob2 *= 1.0 - smoothstep( nubes_fundido_horizonte * 0.4, nubes_fundido_horizonte, _dist );
+
+					vec3 _col2 = mix( nubes_base, nubes_media, _n2 ) * ( 0.42 + 0.18 * sun_a_energy );
+					// PERSPECTIVA ATMOSFERICA: una nube lejana no desaparece,
+					// se le lavan los contrastes hasta que acaba fundiendose
+					// con el cielo que hay detras.
+					//
+					// El `smoothstep` va de 0 (nube CERCA) a 1 (nube lejos).
+					// Escrito al reves (`1.0 - smoothstep`) daba el color del
+					// horizonte a las nubes CERCANAS y el cielo salia enteramente
+					// rojo — medido en captura, no supuesto. Y se disuelve hacia
+					// `_sky_color`, no hacia `horizon_color`: esta ultima es un
+					// uniform que no tiene por que ser el color del aire (:v
+					_col2 = mix( _col2, _sky_color,
+							smoothstep( nubes_fundido_horizonte * 0.15, nubes_fundido_horizonte, _dist ));
+					_col2 = mix( _col2, _sky_color, clamp( _night_amount, 0.0, 0.98 ));
+					_col2 = mix( _col2, vec3( 0.0 ), nubes_peso * 0.75 );
+
+					COLOR = mix( COLOR, _col2, _cob2 );
+					_cobertura = max( _cobertura, _cob2 );
+				}
+			}
+
+			// ---- Capa PRINCIPAL ---------------------------------------------
+			vec2 _nubes_uv = nubes_plano_uv( EYEDIR, nubes_altura );
 			if( _nubes_uv.x < 1e8 )
 			{
-				// Direccion de arrastre en el plano. El perp es lo que marca
-				// "hacia arriba" en la interfaz: contra el signo de ese eje se
-				// decide si el rizo va a favor o en contra del viento.
-				float _ang = nubes_direccion * TAU;
-				vec2 _dir = vec2( cos( _ang ), sin( _ang ));
-				vec2 _perp = vec2( -_dir.y, _dir.x );
-
 				// Deriva temporal de la capa entera: el campo viaja, las
 				// crestas no estan quietas.
 				vec2 _arrastre = _dir * time * nubes_velocidad * 6.0;
@@ -456,12 +570,13 @@ void sky()
 				);
 				_n_mix = clamp( _n_mix + ( _warp.x + _warp.y ) * 0.24, 0.0, 1.0 );
 
-				float _capa = nubes_capa( EYEDIR, _nubes_uv, _n_mix );
-				// Corte duro estilo referencia: mismos uniforms que las nubes
-				// normales, asi un preset sirve para las dos formaciones.
-				float _dens = smoothstep( nubes_corte, nubes_corte + nubes_difuminado, _n_mix );
+				float _capa = nubes_capa( EYEDIR, _grosor, _n_mix );
+				// Umbral con la tormenta incorporada (`_umbral`, arriba).
+				float _dens = smoothstep( _umbral, _umbral + nubes_difuminado, _n_mix );
 				_cobertura = clamp( _capa * _dens, 0.0, 1.0 );
-				_cobertura *= smoothstep( 0.0, 0.09, EYEDIR.y );
+				// Fundido al horizonte POR DISTANCIA, no por angulo. Ver el
+				// comentario de `_dist`: es el fix del corte abrupto (:v
+				_cobertura *= 1.0 - smoothstep( nubes_fundido_horizonte * 0.25, nubes_fundido_horizonte, _dist );
 				_cobertura *= nubes_intensidad;
 
 				// ---- Sombreado con DOS soles --------------------------------
@@ -477,22 +592,78 @@ void sky()
 				float _dota = clamp( dot( _n3, sun_a_dir ), 0.0, 1.0 );
 				float _dotb = clamp( dot( _n3, sun_b_dir ), 0.0, 1.0 ) * sun_b_enabled;
 
-				vec3 _base_col = mix( nubes_base, nubes_cima, _n_mix );
+				// Rampa de TRES paradas. `nubes_media` estaba declarada en el
+				// shader, empujada por el script y guardada en el preset… pero
+				// la linea de abajo la IGNORABA y mezclaba solo base->cima. Los
+				// cuatro colores de la paleta se estaban reduciendo a dos.
+				vec3 _base_col = _n_mix < 0.5
+						? mix( nubes_base, nubes_media, _n_mix * 2.0 )
+						: mix( nubes_media, nubes_cima, ( _n_mix - 0.5 ) * 2.0 );
+
+				// ---- Sombreado interno direccional --------------------------
+				// Si HACIA EL SOL hay mas masa, esta nube esta a la sombra de la
+				// de delante. Un solo muestreo extra del ruido, desplazado en
+				// la direccion del sol dentro del plano: es la ley de Beer en su
+				// forma mas barata, y es lo que convierte un plano ruidoso en
+				// una masa con crestas delante y detras de verdad.
+				vec2 _hacia_sol = normalize( sun_a_dir.xz + vec2( 1e-5, 1e-5 ));
+				float _n_sol = gen_fractal_ping_pong( ( _uvs + _hacia_sol * 140.0 ) * 0.0016, 7, 1.0 );
+				float _acum = max( _n_mix, _n_sol );
+				float _sombra = smoothstep( _umbral, _umbral + nubes_difuminado, _acum ) * nubes_sombra;
+
 				vec3 _lit = _base_col * ( 0.30 + _dota * sun_a_energy );
 				_lit += _base_col * clamp( sun_b_color * 0.34, 0.0, 0.7 ) * _dotb * sun_b_energy;
+				_lit *= mix( 1.0, 0.22, _sombra );
+
+				// PERSPECTIVA ATMOSFERICA en la capa principal: al alejarse no
+				// se APAGA, se LAVA. Antes el fundido era solo alfa, y el
+				// resultado era un borde que se cortaba en seco contra el
+				// cielo en vez de disolverse en la niebla del horizonte.
+				//
+				// OJO CON EL SENTIDO: el `smoothstep` va de 0 (nube CERCA) a 1
+				// (nube al limite del fundido). La primera vez lo escribi como
+				// `1.0 - smoothstep(...)`, que es lo contrario — las nubes
+				// CERCANAS recibian el color del horizonte entero y el cielo
+				// salia rojo llano. Se disuelve hacia el COLOR DEL CIELO y no
+				// hacia `horizon_color`: esa vive dentro del bloque del
+				// horizonte y ademas meteria un rojo que nadie pidio.
+				_lit = mix( _lit, _sky_color,
+						smoothstep( nubes_fundido_horizonte * 0.15, nubes_fundido_horizonte, _dist ));
 
 				// Contorno: la cresta mas iluminada por el primario, que es
 				// donde el ojo agarra la forma de la ola.
 				float _borde = smoothstep( 0.74, 0.99, _n_mix ) * _dota;
 				_lit = mix( _lit, nubes_borde, _borde * 0.5 );
 
-				// Noche y tormenta bajan todo, igual que en las nubes normales.
+				// Noche y tormenta bajan todo.
 				_lit = mix( _lit, _sky_color, clamp( _night_amount, 0.0, 0.98 ));
 				_lit = mix( _lit, vec3( 0.0 ), nubes_peso * 0.9 );
 				_lit = mix( _lit, sunset_bottom_color, _sunset_amount * 0.55 );
 
+				// ---- Destello de tormenta DENTRO de la masa ----------------
+				// Se pondera por la cobertura: una nube rala no puede alojar un
+				// trueno, solo dejarlo pasar. Va el ULTIMO, por encima del
+				// oscurecimiento de tormenta, porque un rayo tiene que ATRAVESAR
+				// la tormenta y no apagarse dentro de ella.
+				if( rayos_intensidad > 0.001 )
+				{
+					float _dd = distance( normalize( EYEDIR ), normalize( rayos_direccion ));
+					float _halo = exp( -pow( _dd / max( rayos_radio, 1e-4 ), 2.0 ));
+					_lit += rayos_color * rayos_intensidad * _halo * ( 0.25 + _cobertura * 0.75 );
+				}
+
 				_nubes_color = _lit;
 				COLOR = mix( COLOR, _nubes_color, _cobertura );
+
+				// El resplandor se escapa tambien por los HUECOS de la capa.
+				// Sin este termino el destello solo se ve donde hay nube y
+				// parece un sticker pegado encima del cielo.
+				if( rayos_intensidad > 0.001 )
+				{
+					float _dd = distance( normalize( EYEDIR ), normalize( rayos_direccion ));
+					float _fuera = exp( -pow( _dd / max( rayos_radio * 2.6, 1e-4 ), 2.0 ));
+					COLOR += rayos_color * rayos_intensidad * _fuera * 0.22 * ( 1.0 - _cobertura );
+				}
 			}
 		}
 	}

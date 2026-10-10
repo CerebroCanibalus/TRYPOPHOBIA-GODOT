@@ -3,7 +3,11 @@
 [resource]
 emission_shape = 3
 emission_box_extents = Vector3(15, 20, 15)
-initial_velocity_min = 8.0
-initial_velocity_max = 14.0
-gravity = Vector3(0, -30, 0)
+direction = Vector3(0.5466831, -0.8099009, 0.21259896)
+spread = 6.0
+initial_velocity_min = 24.3
+initial_velocity_max = 37.5
+gravity = Vector3(0, -19.5, 0)
+scale_min = 0.45
+scale_max = 0.62
 color = Color(0.75, 0.82, 0.9, 1)

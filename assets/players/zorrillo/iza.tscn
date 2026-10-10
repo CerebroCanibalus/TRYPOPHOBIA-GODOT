@@ -1,5 +1,3 @@
-[gd_scene format=3 uid="uid://cahj06dalv8rx"]
+[gd_scene format=3 uid="uid://bwqofiai14w7o"]
 
-[ext_resource type="PackedScene" uid="uid://djqlcm1hl610i" path="res://assets/players/zorrillo/Iza.gltf" id="1_cyf27"]
-
-[node name="Iza" unique_id=1817322717 instance=ExtResource("1_cyf27")]
+[node name="Iza" unique_id=1817322717]

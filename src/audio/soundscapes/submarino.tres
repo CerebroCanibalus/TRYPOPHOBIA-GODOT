@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SoundScape" format=3 uid="uid://2cfoy7bwu0tr"]
+
+[ext_resource type="Script" uid="uid://7p3p2mauqkgw" path="res://src/audio/sound_capa.gd" id="1_6tg1f"]
+[ext_resource type="AudioStream" uid="uid://dvl4j7pubt0cy" path="res://audio/music/ambience/submarino/oxido.ogg" id="2_k60fg"]
+[ext_resource type="Script" uid="uid://cg6hf1poiq41p" path="res://src/audio/sound_scape.gd" id="3_35rdu"]
+
+[sub_resource type="Resource" id="Resource_u35y3"]
+script = ExtResource("1_6tg1f")
+nombre = "oxido"
+streams = Array[AudioStream]([ExtResource("2_k60fg")])
+volumen_base = -6.0
+nivel_min = null
+nivel_max = null
+
+[resource]
+script = ExtResource("3_35rdu")
+nombre = "submarino"
+capas = Array[ExtResource("1_6tg1f")]([SubResource("Resource_u35y3")])

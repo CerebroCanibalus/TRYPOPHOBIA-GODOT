@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="AmbientacionPreset" format=3 uid="uid://d1bgdyxrhj2uq"]
+[gd_resource type="Resource" script_class="AtmosferaPreset" format=3 uid="uid://d1bgdyxrhj2uq"]
 
-[ext_resource type="Script" uid="uid://egu3ub86lokd" path="res://src/weather/AmbientacionPreset.gd" id="1_7ifae"]
+[ext_resource type="Script" uid="uid://egu3ub86lokd" path="res://src/weather/AtmosferaPreset.gd" id="1_7ifae"]
 
 [resource]
 script = ExtResource("1_7ifae")
@@ -26,8 +26,8 @@ nubes_rollo = 1.25
 nubes_radio = 1500.0
 nubes_direccion = 0.58
 nubes_corte = 0.2
-nubes_difuminado = 0.86
-nubes_peso = 0.43
+nubes_difuminado = 0.42
+nubes_peso = 0.92
 estrellas_escala = 1.57
 fondo_color = Color(0.32508665, 0.13648006, 0.46795648, 1)
 fondo_energia = 0.2
@@ -36,3 +36,14 @@ ambiente_energia = 0.05
 niebla_vol_densidad = 0.0336
 niebla_vol_albedo = Color(0.18094909, 0.028859848, 0.00405652, 1)
 niebla_vol_emision_energia = 0.35
+precipitacion = 1
+precipitacion_intensidad = 3.6
+precipitacion_velocidad = 24.0
+precipitacion_viento = 0.75
+rayos_activos = true
+rayos_frecuencia_media = 5.5
+rayos_variacion = 0.9
+rayos_distancia_min = 250.0
+rayos_distancia_max = 2500.0
+rayos_pantalla_fuerza = 0.5
+rayos_pantalla_umbral = 1500.0

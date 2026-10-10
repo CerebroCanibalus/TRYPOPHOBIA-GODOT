@@ -122,6 +122,7 @@ ese prop a sistema:
 ### Sistema de Jugador
 Dos personajes jugables, y los controladores viejos YA NO existen:
 1. **`src/player/IzaPlayer.tscn` + `iza_player.gd`** — Iza: FPS completo, stamina (recursos CharacterStat — ver `README_MOVEMENT_SYSTEM.md`), agarrar/lanzar, nado.
+   ⚠️ **SU RIG `assets/players/zorrillo/iza_rig.tscn` ESTÁ DESECHADO** (2026-10-09): sus 14 `PhysicalBone3D` con `joint_type=5` (Generic6DOF) hacen que Box3D escupa `Generic6DOFJoint3D is not supported` al cargar. Reemplazar por rig nuevo con `joint_type=2`. Detalles y restricciones: sección **🛑 RIG DE IZA DESECHADO** más abajo.
 2. **`src/ragdoll_character/`** — ragdoll de prueba (doble skeleton PiCode9560), FP, IK de brazos, nado; es el personaje de test de las mecánicas.
 
 Borrados el 2026-10-09 por tener **0 referencias** (medido en escenas, scripts ni uid): `src/player/characterbody_jugador.gd`, `src/interactibles/player.gd`, `pause_screen.gd`, `src/ui/ui_barraVida.gd` y `src/import/luces_fotometricas.gd`.
@@ -642,6 +643,68 @@ por delante y en un choque la camara giraria sola (mareo).
 - **SIEMPRE comillas** en `--path`: sin comillas se corta en `D:\Mis` y aborta.
 - Bash es **PowerShell**: sin `||`, usar `cmd.exe /c`, `Select-String`, `Select-Object`.
 
+## 🛑 RIG DE IZA DESECHADO — error Box3D "Generic6DOFJoint3D not supported" (2026-10-09)
+
+**Síntoma (consola, con Box3D activo):**
+```
+ERROR: Box3D: Generic6DOFJoint3D is not supported;
+       use PinJoint3D, HingeJoint3D, or SliderJoint3D instead.
+```
+
+**Causa raíz (medida, no supuesta):** el rig actual de Iza,
+`assets/players/zorrillo/iza_rig.tscn`, trae **14 `PhysicalBone3D` con
+`joint_type = 5` = Generic6DOF** (líneas 80, 154, 228, 302, 378, 452, 526, 600,
+675, 749, 823, 897, 971, 1045). Se identifican por sus `joint_constraints/x/y/z/*`
+(límites lineal + angular **por eje**: firma inequívoca de 6DOF). Box3D implementa
+Pin, Hinge, Slider y **ConeTwist/Cone (fix H2)**, pero **NO el 6DOF genérico** →
+rechaza la creación del joint. Es el **único** origen del repo (medido):
+`Generic6DOFJoint3D` = 0 nodos; `joint_type = 5` solo en este archivo; los ragdolls
+válidos (`ragdoll_character.tscn`, `coneja_player.tscn`) usan `joint_type = 2`.
+Ref: [godot-proposals#13392](https://github.com/godotengine/godot-proposals/issues/13392)
+confirma que `PhysicalBone3D` usa internamente un 6DOF joint.
+
+**Cadena de propagación:** `iza_rig.tscn` → instanciado en
+`src/player/IzaPlayer.tscn` (l. 6, 52) → presente en los 3 mapas jugables
+(`petrolera_jugable`, `isla_jugable`, `c1`). Por eso aparece al probar cualquier mapa.
+
+**Por qué el error es "raro":** los `PhysicalBone3D` crean su joint **al entrar al
+scene tree**, no al activar el solver. `iza_player.gd` (l. 63-65) pone
+`simulator.active = false`, que desactiva la **simulación** pero **no** la
+**creación** del joint → el error salta con solo cargar a Iza, sin tocar ragdoll.
+*(Certeza de la causa: 100%. Del momento exacto de creación: inferido con certeza muy
+alta; prueba empírica pendiente = aplicar el fix y confirmar que desaparece.)*
+Impacto real hoy: solo spam en consola (Iza no hace ragdoll); bloquearía un ragdoll futuro.
+
+**Decisión del General (2026-10-09):** ❌ **NO** se aplica el fix rápido
+(`joint_type 5 → 2`). ✅ El rig **`iza_rig.tscn` se DESECHA entero** y se reemplaza
+por uno completamente nuevo.
+
+**Bugs latentes del rig viejo (a NO repetir):**
+- `assets/players/skeleton_3d.gd` llama `physical_bones_start_simulation()` sobre el
+  `Skeleton3D`: **deprecado desde Godot 4.3, no hace nada**. El válido es
+  `PhysicalBoneSimulator3D.physical_bones_start_simulation()` (fix #4 de este doc;
+  godot#100843, #94831).
+- Contradicción de intención: `skeleton_3d.gd` **quiere** iniciar la simulación y
+  `iza_player.gd` la **desactiva**. Definir una sola.
+
+**⚠️ RESTRICCIÓN DURA para el rig NUEVO de Iza (Box3D):**
+1. `joint_type` de cada `PhysicalBone3D` = **`2` (ConeJoint)**. **NUNCA `5`**
+   (Generic6DOF, no soportado); evitar `1/3/4` salvo verificación. Es el patrón
+   validado en `ragdoll_character.tscn` (Box3D + fix H2).
+2. `PhysicalBoneSimulator3D` **PADRE** de los `PhysicalBone3D`, y arrancar con
+   `simulator.physical_bones_start_simulation()` (el método del `Skeleton3D` está muerto).
+3. Física a **60 Hz** para ragdolls estables (`physics_ticks_per_second=60`, ya OK).
+4. Si el jugable no necesita ragdoll siempre, `simulator.active=false` está bien, pero
+   con joints **válidos (tipo 2)** para que el ragdoll de muerte futuro (D16) funcione
+   sin tocar nada.
+
+**Estado (2026-10-09):** ⏳ rig nuevo pendiente de crear. Los assets del rig viejo
+**YA están borrados del disco / working tree** (medido con `git status`:
+`iza_rig.tscn`, `iza_rig.fbx`, `iza.tscn`, `Iza.gltf` y sus `.import`/png figuran como
+`D`, sin commitear); **solo queda** `assets/players/skeleton_3d.gd` (a borrar al crear el
+reemplazo). Iza sigue usable como personaje FPS (el error es cosmético mientras el
+simulator esté inactivo).
+
 ## GOTCHA DE REPO — el .gitignore ocultaba el codigo fuente (2026-09-10)
 
 `.gitignore` listaba **`*.gd` y `*.res`**. Git no re-aplica ignore a lo ya
@@ -968,12 +1031,117 @@ estructura limpia, 5 commits de orden y 2 repos con escaneo de secretos activo.
 - [ ] ¿La linterna de la Isla era descartable? Revisar el diff de `0737723`.
 - [ ] Compactar AGENTS.md (pasa de 10k tokens — pedir permiso).
 
-## 🌤️ AMBIENTACION — cielo, soles y nubes (2026-09-28)
+---
+
+## 🎵 AUDIO AMBIENTAL POR ZONAS — `AmbienteAudio` (2026-10-09)
+
+Encargo: *"sistema de audio ambiental configurable por mapa, encapsulado en un solo
+nodo, muy modular — por zona soundscapes enteros, variación, fade in/out entre tracks;
+y que se puedan poner varios nodos en la misma escena (ej. tormenta sobre el ambiente)"*.
+
+### Decisiones del General
+
+| # | Decisión |
+|---|---|
+| A1 | Zonas por **math puro** (sin `Area3D`) **con visualización en el editor** (gizmos propios) |
+| A2 | Ducking **manual** vía API (`atenuar(db, s)`), sin sidechain ni compresor |
+| A3 | Audio **solo `.ogg`**, usar los que ya hay en el repo |
+| A4 | Primer mapa: **submarino** = `maps/misiones/lobby/lobbyV2.tscn` (SM-13) + `audio/music/ambience/submarino/oxido.ogg` |
+
+### Contexto medido (2026-10-09)
+
+Cero audio en mapas: 0 buses (solo `Master`), 0 nodos de audio en `maps/**`, 0
+soundscapes. 3 `.ogg` existen (`oxido`, `la edad dorada`, `el mar rojo`) con **0
+referencias**; `rugosis.flp` y `negro-corazon.flp` sin exportar. `MenuAudioManager`
+pide 2 `.ogg` inexistentes. El patrón zona-`Area3D` más cercano es el del agua (sin cablear).
+
+### Arquitectura — `src/audio/`
+
+Prefab `ambiente_audio.tscn` (Node3D + script; los hijos se generan en runtime, la
+escena es solo raíz):
+
+| Archivo | Clase | Papel |
+|---|---|---|
+| `ambiente_audio.gd` | `AmbienteAudio` | Motor: buses, pool de players, mezcla por zonas, gizmos, overlay F3 |
+| `sound_capa.gd` | `SoundCapa` | 1 capa: pool de `.ogg` + pitch/vol aleatorio + fades |
+| `sound_scape.gd` | `SoundScape` | Paisaje completo = `Array[SoundCapa]` |
+| `sound_zona.gd` | `SoundZona` | Forma (esfera/caja) + `Curve` + caída → peso 0..1 |
+| `demo/demo_audio.gd` | — | Test headless automático (PASS/FAIL por fase) |
+
+**Modelo de mezcla (sin zona "dominante"):** TODAS las zonas aportan peso
+simultáneamente. Peso = distancia fuera de la forma → muestrea la `Curve` a lo largo
+de `caida` (0 = dentro, 1 = final de caída). Cada `SoundScape` activo es un *handle*
+con sus capas moviéndose a `objetivo = base × peso × duck × volumen_instancia` con
+fade exponencial `1 - exp(-delta/tau)`, `tau = fade/3` (estable a cualquier FPS).
+Crossfade entre soundscapes = dos handles vivos con pesos opuestos. **Multi-instancia:**
+mismo `grupo` comparte bus agrupador; grupos distintos se **apilan aditivamente** (la
+tormenta nunca corta el ambiente del mapa).
+
+**Buses (runtime, `@tool` NO toca AudioServer):** `Master ← <grupo> ← <nombre-nodo>`,
+creados en `_ready`, destruidos en `_exit_tree` con refcount `static var` por grupo.
+
+**Gizmos:** hijo `GizmosZonas` con `ImmediateMesh` (círculos/cubo de aristas, 2 tonos:
+forma + caída), regenerados con throttle 0.25 s comparando firma de las zonas.
+**Sin `owner`** → nunca se guardan dentro del `.tscn`.
+
+### Fases
+
+| Fase | Contenido | Estado |
+|---|---|---|
+| A+B | buses + recursos + motor (capas, fades, zonas math, curvas) + gizmos + overlay F3 + demo headless | ✅ **30/30 comprobaciones** (2026-10-09) |
+| C | one-shots con peso/cooldown, rotación de tracks, semilla por partida | ☐ |
+| D | reverb/lowpass por estado de zona, snapshot al pausar, ducking desde gameplay | ☐ |
+| E | ~~submarino~~ ✅ · isla → petrolera (falta exportar `negro-corazon.flp`) | ⏳ |
+
+**Fase E — submarino CABLEADO (2026-10-09):** `lobbyV2.tscn` → hijo
+`AmbienteSubmarino` (prefab instanciada en (19.8, −1.5, 0), zona CAJA
+27×9.5×7 m + caída 6 m ajustada al AABB real del SM-13 medido con worker)
++ recurso compartible `src/audio/soundscapes/submarino.tres` (capa
+`oxido.ogg`, −6 dB, fades 2/3 s). Smoke: 0 errores, exit 0.
+
+### Gotchas medidas (NO volver a tropezar)
+
+- **`heren.validate` → `reload_err=22` es FALSO POSITIVO, no parse error.**
+  22 = `ERR_ALREADY_IN_USE` (`ERR_PARSE_ERROR` = **43**). Le pasa a
+  **cualquier `@tool` + `class_name` con instancia viva en una escena
+  abierta** — confirmado con bisect (mismo script OK → 22 al adjuntarlo a
+  escena abierta) y con `atmosfera.gd` (preexistente, idéntico 22).
+  La verdad la da la CLI: `Godot --headless --path <proj> --check-only -s
+  res://ruta.gd` (exit 0 = limpia) y el test de runtime.
+- **Leak de 4 objetos OGG al salir en HEADLESS es del ENGINE, no del
+  sistema:** cualquier `AudioStreamPlayer` con `.ogg` reproduciéndose al
+  hacer quit en headless (driver de audio dummy) reporta `Leaked instance:
+  AudioStreamOggVorbis/OggPacketSequence/...`. Medido con player estándar
+  de Godot puro (cero código nuestro) → 4 leaks; **con render real →
+  0**. No arreglar: es ruido del test.
+- **`ogg.loop = true` en runtime ya NO se usa** (aunque el leak no era por
+  eso): el loop es manual `finished → play()` en
+  `AmbienteAudio._replay_si_termino()` — más un guard de `stream != null`.
+- **`Array[X]` no acepta un literal `[a]` sin tipar**: `nodo.set("zonas",
+  [zona])` falla **en silencio** (queda `[]`). Hay que declarar
+  `var zonas_t: Array[SoundZona] = [zona]` y asignar eso. El `get_prop`
+  devolvió `value: []` — siempre verificar tras guardar.
+- **`ctx.instance_scene()` de heren falla en silencio** (`ran=true`, logs
+  vacíos, nada añadido). Usar `load(...).instantiate()` + `owner` a mano.
+- **Workers inline de `scene_script` fallan con `reload_err=43`** si la
+  lógica es larga: escribirlos a `.heren/tmp/*.gd` y pasar `script_path`
+  (siempre con `--check-only` antes).
+- **`ScriptServer` NO existe en GDScript** (`Identifier not declared`);
+  no sirve para consultar clases globales.
+- **Un worker que llama `AudioServer.add_bus()` corre en el PROCESO DEL
+  EDITOR** y puede persistir el bus en `default_bus_layout.tres`
+  (contaminó el repo con `BusExp2`; borrado). Nunca crear buses desde un
+  worker — eso es trabajo del juego en runtime.
+- `play()` dentro de `_initialize()` de un `SceneTree` script falla
+  (`Playback can only happen when a node is inside the scene tree`):
+  crear nodos en el primer frame, no en `_initialize`.
+
+## 🌤️ ATMOSFERA — cielo, soles, nubes y rayos (2026-09-28)
 
 Sistema canonico de clima, **preconfigurado por nivel** (sin ciclo dia/noche ni
 transiciones). Todo el cielo y toda la niebla de un mapa viven DENTRO de un nodo:
 
-`src/weather/ambientacion.tscn` → `Ambientacion` (`ambientacion.gd`, `@tool`)
+`src/weather/atmosfera.tscn` → `Atmosfera` (`atmosfera.gd`, `@tool`)
 ├── `WorldEnvironment`  ← HIJO: este nodo es el DUEÑO UNICO del cielo
 └── `Precipitacion`     ← GPUParticles3D, emisor que sigue a la camara
 
@@ -982,7 +1150,7 @@ REGISTRADO (`world_environment.cpp` → `get_first_node_in_group`) — quien man
 depende del orden del arbol, silenciosamente. `_avisar_competicion()` lo detecta
 y avisa una sola vez (NO lo borra: quitarle la Environment a un mapa es destructivo).
 
-- Preset: `AmbientacionPreset` → `resources/clima/petrolera.tres`
+- Preset: `AtmosferaPreset` → `resources/clima/petrolera.tres`
 - Cielo: `src/shaders/sky_alien.gdshader` (dos soles + KH)
 - La `DirectionalLight3D` la pone el MAPA (`Sol` en la raiz). El script solo la
   LEE (`basis.z`) para pintar el disco del sol primario → disco y sombras casan

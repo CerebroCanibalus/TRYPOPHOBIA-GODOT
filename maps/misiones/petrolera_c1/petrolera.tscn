@@ -53,7 +53,7 @@
 [ext_resource type="PackedScene" uid="uid://c6u1gnxq15ys5" path="res://assets/env/MAR-03/MAR-03_Carguero_en_el_horizonte.gltf" id="51"]
 [ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="52_oimow"]
 [ext_resource type="Material" uid="uid://dbja1p0l4y85y" path="res://src/shaders/materials/ocean_stylized_mat.tres" id="52_vb28n"]
-[ext_resource type="PackedScene" uid="uid://inov0wudkrct" path="res://src/weather/ambientacion.tscn" id="54_uchfo"]
+[ext_resource type="PackedScene" uid="uid://inov0wudkrct" path="res://src/weather/atmosfera.tscn" id="54_uchfo"]
 [ext_resource type="Resource" uid="uid://d1bgdyxrhj2uq" path="res://resources/clima/petrolera.tres" id="56_xsbve"]
 
 [sub_resource type="PlaneMesh" id="Mar_lejano_malla"]
@@ -2903,7 +2903,7 @@ mesh = SubResource("Mar_lejano_malla")
 skeleton = NodePath("../..")
 
 [node name="Character" parent="." unique_id=94893202 instance=ExtResource("52_oimow")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 3.7379074, 16.85762, -0.11458635)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -9.783367, 13.253771, 20.427172)
 
 [node name="Sol" type="DirectionalLight3D" parent="." unique_id=683004891]
 transform = Transform3D(0.62161, -0.38976055, 0.67947614, 0, 0.8674234, 0.49757075, -0.7833269, -0.30929494, 0.53919905, 57.962566, 60, 0)
@@ -2915,6 +2915,6 @@ shadow_enabled = true
 shadow_blur = 2.06
 directional_shadow_max_distance = 120.0
 
-[node name="Ambientacion" parent="." unique_id=1587442147 instance=ExtResource("54_uchfo")]
+[node name="Atmosfera" parent="." unique_id=1587442147 instance=ExtResource("54_uchfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.595291, 58.995846, 0)
 preset = ExtResource("56_xsbve")
