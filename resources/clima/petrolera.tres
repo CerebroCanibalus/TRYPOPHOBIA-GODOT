@@ -36,7 +36,6 @@ ambiente_energia = 0.05
 niebla_vol_densidad = 0.0336
 niebla_vol_albedo = Color(0.18094909, 0.028859848, 0.00405652, 1)
 niebla_vol_emision_energia = 0.35
-precipitacion = 1
 precipitacion_intensidad = 3.6
 precipitacion_velocidad = 24.0
 precipitacion_viento = 0.75

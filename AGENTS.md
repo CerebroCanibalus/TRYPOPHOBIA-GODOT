@@ -1208,11 +1208,17 @@ Plan completo (Fase 0, sin implementar): **`meta/docs/Infeccion_Niebla_Roja.md`*
 Resumen: plasta blanquecina/roja con agujeros Voronoi y grumos = shader sobre
 **parches procedurales por raycast** (`src/infeccion/`, patrón `src/water/`).
 Decisiones del General: **D-I1** visual reactiva SIN spread (cero red) ·
-**D-I2** `Atmosfera` pasa a ser DUEÑA de los globals de viento (hoy los escribe
-`Ocean`; refactor pendiente = Fase 1) · **D-I3** solo entorno estático.
-Cero modelos 3D externos; hacen falta ~4 texturas (prototipo: `agua1.png`) +
+**D-I2** `Atmosfera` es DUEÑA de los globals de viento (**HECHO 2026-10-09**:
+la racha/rumbo se movieron de `ocean.gd`; Ocean LEE si hay Atmosfera y si no,
+fallback — 5 tests CLI verdes: 2 `--check-only` + `AGUA_TEST` 17/17 + smoke
+petrolera + `tests/viento/test_viento.tscn` 5/5) · **D-I3** solo entorno estático.
+Cero modelos 3D externos; LAS 4 texturas con placeholders (§7 del plan:
+`agua1.png` / `agua1_nm.png` / GradientTexture2D — cero ficheros nuevos) +
 4 .ogg. **`Decal` de Godot 4.7 NO acepta shader custom** (docs leídas): solo
-relleno estático, nunca núcleo del efecto.
+relleno estático, nunca núcleo del efecto. **Descubierto en la Fase 1:**
+`petrolera.tscn` NO tiene controlador `Ocean` (solo `MarLejano`) — su mar
+recibe viento de `Atmosfera` desde esta fase; hook de marea sin cablear
+(preexistente). `tests/viento/` está SIN COMMITEAR.
 
 ---
 

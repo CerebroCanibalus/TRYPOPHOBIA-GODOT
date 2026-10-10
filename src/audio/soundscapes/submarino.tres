@@ -9,8 +9,6 @@ script = ExtResource("1_6tg1f")
 nombre = "oxido"
 streams = Array[AudioStream]([ExtResource("2_k60fg")])
 volumen_base = -6.0
-nivel_min = null
-nivel_max = null
 
 [resource]
 script = ExtResource("3_35rdu")

@@ -1,6 +1,7 @@
 # INFECCIÓN DE LA NIEBLA ROJA — Plan de diseño
 
-> **Estado:** Fase 0 (plan, sin implementar) · **Fecha:** 2026-10-09
+> **Estado:** Fases 0-1 completas (plan + refactor de viento, 2026-10-09) ·
+> **Siguiente:** Fase 2 (shader del parche en `demo_infeccion.tscn`)
 > **Objetivo:** representar la infección ambiental de la Niebla Roja como una
 > **plasta blanquecina con rojo, agujeros, grumosa y humeante**, en "parches
 > modulares" sobre el entorno, con **venas** que reaccionan al **viento de
@@ -144,7 +145,10 @@ feísima).
 
 ---
 
-## 6. Refactor de viento (D-I2) — prerequisite de la Fase 3
+## 6. Refactor de viento (D-I2) — ~~prerequisite de la Fase 3~~ ✅ HECHO (2026-10-09)
+
+**Implementado y validado** — ver §10.1 para la evidencia completa (5 tests
+CLI verdes). Resumen de lo que quedó en el código:
 
 **Antes (hoy):** `Ocean` escribe `wind_intensity`/`wind_direction` globales;
 `Atmosfera` ni se entera; sin Ocean ⇒ viento 0.
@@ -177,15 +181,23 @@ uniform` directamente ⇒ no les importa quién escribe, siempre que sea 1 solo.
 **No hace falta NI UN modelo 3D externo.** Toda la geometría (parches, venas,
 vapor) es procedural, generada por código. Lo que sí hace falta:
 
-### Texturas (4-5)
+### Texturas — LAS 4 (definitivas vs placeholder de HOY)
 
-| Fichero | Qué | Alternativa barata |
-|---|---|---|
-| `assets/env/textures/infeccion/huecos.png` | Worley/Voronoi tileable en grises 1024² — BASE de los agujeros | **Provisional: `agua1.png`** (ya es celular en grises; lo usa el océano, copia local) |
-| `.../grumos_nrm.png` | Normal map tiling de grumos 1024² | Normales **analíticas** del ruido → 0 texturas |
-| `.../mucosa.png` | Máscara de brillo/humedad para roughness | Reutilizar `huecos.png` |
-| `.../vapor.png` | Sprite suave radial para las partículas | Dibujado a mano / generado |
-| `.../vena_alpha.png` | Borde irregular de la cinta | Procedural en shader (recomendado) |
+Regla: **ni un solo fichero nuevo de textura hasta Fase 5.** Todas las fases
+de desarrollo usan placeholders que YA estan en el repo o se generan en
+codigo. La tabla es el contrato de la fase final (:v
+
+| # | Textura definitiva | Uso en el shader | **Placeholder (ahora)** |
+|---|---|---|---|
+| 1 | `assets/env/textures/infeccion/huecos.png` | Worley/Voronoi tileable 1024² — BASE de los agujeros trypofobicos (umbral + rim + interior) | **`assets/env/textures/nature/agua1.png`** — ya es celular en escala de grises y ya esta en el repo (la del océano); referencia directa, sin copiar |
+| 2 | `.../infeccion/grumos_nrm.png` | Normal map tiling de los grumos/mucosa | **`assets/env/textures/nature/agua1_nm.png`** (normal real existente) — y si al afinar no convence, **normales analiticas en el shader = 0 texturas** |
+| 3 | `.../infeccion/mucosa.png` | Máscara de brillo/humedad para `ROUGHNESS` (la pelicula deslizante) | **la misma `agua1.png`** con otro canal/tinte en el material |
+| 4 | `.../infeccion/vapor.png` | Sprite suave radial para las particulas de vapor | **`GradientTexture2D` radial generado en codigo** — cero fichero en disco |
+
+**Ni quinta:** la máscara de borde de las venas (`vena_alpha`) NO sera textura:
+sale **procedural en el shader** (ruido sobre UV.x), asi que no cuenta como
+asset. Si al final hace falta una textura de vena dedicada, sera un derivado
+de `huecos.png`, no una pieza nueva (:v
 
 ### Audio — `audio/sfx/infeccion/` (4 .ogg)
 
@@ -253,12 +265,50 @@ Modelos de venas · texturas de personaje · animaciones · authoring de decals
 
 | Fase | Contenido | Entrega | Estado |
 |---|---|---|---|
-| **0** | Este plan | `meta/docs/Infeccion_Niebla_Roja.md` | ✅ hoy |
-| **1** | **Refactor de viento**: `Atmosfera` dueña, `Ocean` lee (D-I2) | Océano con test `AGUA_TEST=1` verde + captura igual que antes | ☐ |
+| **0** | Este plan | `meta/docs/Infeccion_Niebla_Roja.md` | ✅ 2026-10-09 |
+| **1** | **Refactor de viento**: `Atmosfera` dueña, `Ocean` lee (D-I2) | Ver evidencia §6.1 | ✅ 2026-10-09 — **5 tests verdes** (abajo) |
 | **2** | Shader de parche + `InfeccionZona` con parches estáticos (sin reactividad) en `demo_infeccion.tscn` | `INFECT_TEST=1` PASS + captura "asquerosa" aprobada por el General | ☐ |
 | **3** | Venas procedurales + reacción al viento | Captura con viento fuerte moviendo venas/humo | ☐ |
 | **4** | Reactividad al jugador + vapor + audio (`AmbienteAudio` grupo "infeccion") | Demo jugable: pisas la plasta y reacciona | ☐ |
 | **5** | Cablear en mapa real (petrolera: zonas de la Colmena) + gizmos + Decal de relleno opcional | Zonas en el mapa + README | ☐ |
+
+### 10.1 Evidencia de la Fase 1 (medida, 2026-10-09)
+
+Cinco comprobaciones por CLI (`Godot_v4.7.1-stable`), todas con exit 0:
+
+| # | Qué prueba | Resultado |
+|---|---|---|
+| 1 | `--check-only` `src/weather/atmosfera.gd` | parse limpio, exit 0 |
+| 2 | `--check-only` `src/shaders/ocean.gd` | parse limpio, exit 0 |
+| 3 | **Océano sin Atmosfera intacto**: `AGUA_TEST=1` → `demo_agua.tscn` | `RESULTADO: TODO OK (7 fases, 17 comprobaciones)`, 0 errores |
+| 4 | Smoke de la petrolera (1200 frames, render Vulkan) | exit 0, **0 ERROR / 0 WARNING** |
+| 5 | **Contrato con ambos juntos**: `tests/viento/test_viento.tscn` (monta Atmosfera + `mar.tscn`) | `RESULTADO: TODO OK (5 comprobaciones)` |
+
+El test 5 es el que no existia en ninguna escena del proyecto (medido: ni
+`demo_agua` tiene Atmosfera ni la petrolera tiene controlador `Ocean`) y
+cubre los DOS sentidos del contrato:
+
+- **Con Atmosfera viva**: Ocean adopta su viento (0.9) y NO el suyo (0.3),
+  y los getters que lee `WaterSurface` coinciden.
+- **Al liberar Atmosfera en vivo**: Ocean re-resuelve el grupo, cae a SU
+  fallback (0.3 exacto a rumbo 200°) sin reiniciar nada.
+
+Gotcha del propio test (no del producto): la primera corrida FALLÓ porque
+el test no había apagado `auto_wind` en Ocean — el fallback corría con sus
+rachas (0.3×1.0995=0.3298, rumbo derivando). Eso, además, demostró que el
+fallback se activa de verdad. Fix: `_oce.auto_wind = false` (:v
+
+**Descubrimiento de la Fase 1:** `petrolera.tscn` **NO tiene controlador
+`Ocean`** (solo `Mar/MarLejano` con el material; medido con grep en todo
+`maps/`). El shader del mar de la petrolera **recibía viento 0** — el default
+del proyecto — hasta ahora; desde esta fase lo recibe de `Atmosfera` (que sí
+tiene). El AGENTS documentaba `Mar/Ocean` para ese mapa: doc obsoleto. El
+hook de marea/radar de sonido de la petrolera sigue sin cablear (preexistente,
+fuera del alcance de la Fase 1).
+
+**No hecho (y por qué):** la captura visual `AGUA_SHOT` de comparación —
+`demo_agua` NO tiene Atmosfera, asi que su ruta es el fallback, que es el
+codigo viejo movido literalmente; las 17 comprobaciones cubren el comportamiento.
 
 ---
 

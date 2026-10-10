@@ -2903,7 +2903,7 @@ mesh = SubResource("Mar_lejano_malla")
 skeleton = NodePath("../..")
 
 [node name="Character" parent="." unique_id=94893202 instance=ExtResource("52_oimow")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -9.783367, 13.253771, 20.427172)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -9.783367, 18.0364, 16.71067)
 
 [node name="Sol" type="DirectionalLight3D" parent="." unique_id=683004891]
 transform = Transform3D(0.62161, -0.38976055, 0.67947614, 0, 0.8674234, 0.49757075, -0.7833269, -0.30929494, 0.53919905, 57.962566, 60, 0)
@@ -2918,3 +2918,7 @@ directional_shadow_max_distance = 120.0
 [node name="Atmosfera" parent="." unique_id=1587442147 instance=ExtResource("54_uchfo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.595291, 58.995846, 0)
 preset = ExtResource("56_xsbve")
+viento_intensidad = null
+viento_auto = null
+viento_rumbo_grados = null
+viento_racha = null

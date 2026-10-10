@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cwrvhdogiyia0"]
+
+[ext_resource type="Script" uid="uid://b7jdpk6upmaq" path="res://tests/viento/test_viento.gd" id="1_uknaj"]
+
+[node name="TestViento" type="Node" unique_id=662004861]
+
+[node name="Prueba" type="Node" parent="." unique_id=126302185]
+script = ExtResource("1_uknaj")

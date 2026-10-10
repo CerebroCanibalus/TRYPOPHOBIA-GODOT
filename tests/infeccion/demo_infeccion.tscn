@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bhtkxwskw5twr"]
+
+[ext_resource type="Script" uid="uid://3xtc75jcoaaw" path="res://tests/infeccion/demo_infeccion.gd" id="1_2k4rs"]
+
+[node name="DemoInfeccion" type="Node3D" unique_id=1938599030]
+
+[node name="Demo" type="Node3D" parent="." unique_id=1650936326]
+script = ExtResource("1_2k4rs")
