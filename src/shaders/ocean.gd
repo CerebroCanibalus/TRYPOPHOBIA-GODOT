@@ -25,6 +25,11 @@ extends Node3D
 @export var tide_starts_high := true
 
 @export_group("Viento")
+## SOLO FALLBACK: si la escena tiene un nodo `Atmosfera` (el dueño de los
+## globals de viento desde la decision D-I2), estos exports NO se usan para
+## empujar nada — Ocean lee los getters de Atmosfera en `_push_globals`.
+## Siguen aqui para los mapas/demo SIN Atmosfera (demo_agua), que es el
+## codigo que ya estaba validado y no se toca (:v
 ## 0 = mar plano. 1 = oleaje completo.
 @export_range(0.0, 1.0, 0.01) var wind_intensity := 0.65
 ## Si esta apagado, el viento queda FIJO: ni racha ni deriva de rumbo. Util
@@ -76,6 +81,10 @@ var _tide_override := INF  ## si != INF, manda la red y el ciclo local se ignora
 # que WaterSurface replique la direccion de las olas sin leer globals. :v
 var _wind_actual := 0.0
 var _wind_dir_actual := Vector3(0.0, 0.0, 1.0)
+## Cache del nodo Atmosfera, la DUEÑA de los globals de viento (decision
+## D-I2). Se re-resuelve si desaparece; un mapa sin Atmosfera (demo_agua)
+## es el caso normal y ahi manda el fallback de este script (:v
+var _atm_cache: Atmosfera
 
 ## Color del cielo reflejado en el agua. Lo unico que el shader no saca de la
 ## Environment. La niebla y el sol los pone la ESCENA, no el material.
@@ -176,7 +185,24 @@ func current_tide_level() -> float:
 # ---------------------------------------------------------------------------
 #  Globals
 # ---------------------------------------------------------------------------
-func _push_globals() -> void:
+## Viento: UN SOLO ESCRITOR de los shader globals en toda la escena (:v
+##
+## Si hay un nodo `Atmosfera` (grupo "atmosfera", decision D-I2), ELLA es la
+## dueña: ya se encarga ella de empujar `wind_intensity`/`wind_direction`, y
+## aqui solo se cachean sus getters para que los lectores por GDScript
+## (`WaterSurface`, la futura infeccion) reciban el mismo valor que ella.
+## Los shaders los leen al RENDERIZAR, que es despues de TODOS los
+## `_process`, asi que el orden de ejecucion entre nodos no importa (:v
+##
+## Si NO hay Atmosfera, manda la logica de este nodo: es el fallback de
+## SIEMPRE, intacto, para demo_agua y cualquier mapa sin Atmosfera. :v
+func _push_viento() -> void:
+	var atm := _atmosfera()
+	if atm != null:
+		_wind_actual = atm.wind_intensity_actual()
+		_wind_dir_actual = atm.wind_direction_actual()
+		return
+
 	var gust := 1.0
 	var heading := deg_to_rad(wind_heading_deg)
 	if auto_wind:
@@ -196,6 +222,20 @@ func _push_globals() -> void:
 	# no avisa: empuja un ERROR por frame y el agua se queda con el valor viejo.
 	RenderingServer.global_shader_parameter_set("wind_intensity", wind)
 	RenderingServer.global_shader_parameter_set("wind_direction", dir)
+
+
+## Atmosfera de la escena si existe; `null` = este nodo es el dueño del
+## viento. Se cachea y se re-resuelve solo si el cache caduca, para no hacer
+## una busqueda de grupo en cada frame cuando no hay Atmosfera (:v
+func _atmosfera() -> Atmosfera:
+	if _atm_cache != null and is_instance_valid(_atm_cache) and _atm_cache.is_inside_tree():
+		return _atm_cache
+	_atm_cache = get_tree().get_first_node_in_group("atmosfera") as Atmosfera
+	return _atm_cache
+
+
+func _push_globals() -> void:
+	_push_viento()
 
 	# Marea y radar de sonido. Uniforms del material, no shader globals.
 	if _mat == null or _mat.get_instance_id() == 0:

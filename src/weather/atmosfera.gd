@@ -93,6 +93,29 @@ const PRECIP_CAIDA := 55.0
 ## En reposo no se toca nada, ni nodos ni recursos.
 const REFREJO_EDITOR := 0.1
 
+@export_group("Viento")
+## DUEÑA de los shader globals `wind_intensity` / `wind_direction` (decision
+## D-I2 del plan de infeccion, `meta/docs/Infeccion_Niebla_Roja.md`).
+##
+## ANTES los empujaba `ocean.gd`, con lo que un mapa SIN Ocean tenia viento
+## 0 para siempre y "el viento" era una propiedad del MAR, no del clima.
+## Ahora manda ESTE nodo (el canonico del clima): Ocean comprueba el grupo
+## "atmosfera" y si nos encuentra, solo LEE nuestros getters; si no nos
+## encuentra, mantiene su logica de antes como fallback (demo_agua no tiene
+## Atmosfera, asi que ese test no cambia ni un numero). :v
+##
+## Van en el NODO y no en el preset: el viento tiene que funcionar aunque
+## el mapa no haya elegido preset todavia, y asi los exports son 1:1 con
+## los que ya tenia Ocean (la migracion fue mecanica). :v
+@export_range(0.0, 1.0, 0.01) var viento_intensidad := 0.65
+## Si esta apagado, el viento queda FIJO: ni racha ni deriva de rumbo. Util
+## para comparar dos capturas sin que nada se mueva entre una y otra. :v
+@export var viento_auto := true
+## Rumbo por defecto en grados (0 = +Z, gira antihorario).
+@export_range(0.0, 360.0, 0.5) var viento_rumbo_grados := 35.0
+## Racha: el viento sube y baja solo. Da movimiento sin que se note. :v
+@export_range(0.0, 0.5, 0.01) var viento_racha := 0.18
+
 var _mat: ShaderMaterial
 var _env: Environment
 ## Emisor de precipitacion, cacheado en `_configurar_precipitacion` para que
@@ -110,6 +133,17 @@ var _audio_viento: AmbienteAudio
 var _scape_lluvia: SoundScape
 var _scape_viento: SoundScape
 
+# --- Viento (shader globals) ------------------------------------------------
+## Reloj de las rachas. Se congela en editor (delta x 0), igual que hacia
+## `ocean.gd`: asi una captura del editor es reproducible. :v
+var _t_viento := 0.0
+## Viento del ULTIMO frame, tal cual se empujo a los shader globals.
+## `RenderingServer.global_shader_parameter_get()` da ERROR en runtime
+## ("editor-only"), asi que estos caches SON la forma legal de leer el viento
+## desde GDScript — el mismo motivo por el que `ocean.gd` tenia los suyos. :v
+var _wind_actual := 0.0
+var _wind_dir_actual := Vector3(0.0, 0.0, 1.0)
+
 # --- Refresco en vivo del editor -------------------------------------------
 var _t_refresco := 0.0
 var _firma_cache := ""
@@ -125,7 +159,52 @@ func _ready() -> void:
 	# `@tool` no recibe `_process`, y entonces el refresco en vivo de abajo
 	# no correria nunca (:v
 	set_process(true)
+	# Regla del UN SOLO ESCRITOR de los globals de viento: `ocean.gd` busca
+	# este grupo y, si nos encuentra, deja de escribir y solo lee (:v
+	add_to_group("atmosfera")
+	# Estado inicial para que el primer lector (WaterSurface, el oceano, la
+	# futura infeccion) no vea los defaults del proyecto (0.0 / (0,0,0))
+	# mientras no llegue el primer `_procesar_viento` (:v
+	_wind_actual = clampf(viento_intensidad, 0.0, 1.0)
+	var r0 := deg_to_rad(viento_rumbo_grados)
+	_wind_dir_actual = Vector3(sin(r0), 0.0, cos(r0))
 	_aplicar()
+
+
+## Intensidad de viento real (con racha) empujada a los shader globals. :v
+func wind_intensity_actual() -> float:
+	return _wind_actual
+
+
+## Direccion de viento real empujada a los shader globals. :v
+func wind_direction_actual() -> Vector3:
+	return _wind_dir_actual
+
+
+## Empuja `wind_intensity` / `wind_direction` a los shader globals.
+##
+## Corre SIEMPRE (tambien en editor y aunque no haya preset): el viento es
+## clima, no cielo. En editor el reloj va congelado, asi que se empuja el
+## valor fijo — barato e imperceptible (:v
+##
+## La matematica es EXACTAMENTE la que tenia `ocean.gd::_push_globals`: dos
+## senos incomensurables para que las rachas nunca se repitan y una deriva
+## de rumbo de +-12 grados muy lenta ("un viento que gira 90 grados en un
+## minuto no es viento, es un rotor"). No se reimplementa nada: se movio
+## tal cual, porque ya esta afinado con el mar (:v
+func _procesar_viento(delta: float) -> void:
+	_t_viento += delta * (0.0 if Engine.is_editor_hint() else 1.0)
+	var racha := 1.0
+	var rumbo := deg_to_rad(viento_rumbo_grados)
+	if viento_auto:
+		racha += viento_racha * (sin(_t_viento * 0.37) * 0.5 + sin(_t_viento * 1.13) * 0.3)
+		rumbo = deg_to_rad(viento_rumbo_grados + sin(_t_viento * 0.021) * 12.0)
+	_wind_actual = clampf(viento_intensidad * racha, 0.0, 1.0)
+	_wind_dir_actual = Vector3(sin(rumbo), 0.0, cos(rumbo))
+	# SOLO los 2 globals que existen en `project.godot [shader_globals]`.
+	# Asignar un nombre inexistente no avisa: empuja un ERROR por frame (:v
+	RenderingServer.global_shader_parameter_set("wind_intensity", _wind_actual)
+	RenderingServer.global_shader_parameter_set("wind_direction", _wind_dir_actual)
 
 
 ## Aplica el preset entero. Se llama desde `_ready` y desde el setter de
@@ -467,6 +546,12 @@ func _empujar_entorno(env: Environment) -> void:
 #       particulas no se corten al salirse de la caja por abajo.
 # ---------------------------------------------------------------------------
 func _process(delta: float) -> void:
+	# El viento va PRIMERO y sin guardar: en editor tambien (ahi el reloj
+	# va congelado y se empuja el valor fijo). Los shaders lo consumen al
+	# renderizar, que es despues de TODOS los `_process`, asi que el orden
+	# con Ocean solo importa para quien lea los caches por GDScript, y ahi
+	# un frame de retraso es invisible (:v
+	_procesar_viento(delta)
 	if Engine.is_editor_hint():
 		_refrescar_editor(delta)
 		return

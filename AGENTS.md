@@ -1202,6 +1202,20 @@ anti-culling esta, pero no hay nada que se vea hasta que se active.
 
 ---
 
+## 🦠 INFECCIÓN NIEBLA ROJA — plan (2026-10-09)
+
+Plan completo (Fase 0, sin implementar): **`meta/docs/Infeccion_Niebla_Roja.md`**.
+Resumen: plasta blanquecina/roja con agujeros Voronoi y grumos = shader sobre
+**parches procedurales por raycast** (`src/infeccion/`, patrón `src/water/`).
+Decisiones del General: **D-I1** visual reactiva SIN spread (cero red) ·
+**D-I2** `Atmosfera` pasa a ser DUEÑA de los globals de viento (hoy los escribe
+`Ocean`; refactor pendiente = Fase 1) · **D-I3** solo entorno estático.
+Cero modelos 3D externos; hacen falta ~4 texturas (prototipo: `agua1.png`) +
+4 .ogg. **`Decal` de Godot 4.7 NO acepta shader custom** (docs leídas): solo
+relleno estático, nunca núcleo del efecto.
+
+---
+
 ## 🌍 WORLDBUILDING — Reglas del universo
 
 ### El Planeta
