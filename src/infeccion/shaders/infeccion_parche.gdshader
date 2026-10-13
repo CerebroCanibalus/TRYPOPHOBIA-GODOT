@@ -2,16 +2,18 @@
 shader_type spatial;
 
 // ===========================================================================
-//  INFECCION — "la plasta" — PROBE C (colores LITERALES, lit, EMISSION=0)
+//  INFECCION — PROBE D (DIAGNOSTICO NaN — unshaded)
 //
-//  Evidencia acumulada: GDScript VE color_base=(0.86,0.83,0.73) en el
-//  material y la textura bien cableada ([DIAG]), pero el shader pinta
-//  negro -> los uniforms de color NO llegan a la GPU. Sospecha: el hint
-//  source_color sobre vec3 (o empujar Color a un uniform vec3).
-//  Este probe pone los colores como LITERALES: si sale crema, es eso. :v
+//  Deduccion previa: los siluetas son CIRCULOS -> ruido sano (si fuera NaN,
+//  el discard del borde nunca dispararia y veriamos CUADRADOS).
+//  Canales de este probe (base 0.25 = oscuro si sano, 1.0 = NaN):
+//    R = umbral_huecos es NaN?
+//    G = h (triplanar/pesos) es NaN?
+//    B = norm_mundo es NaN?
+//  BLANCO puro = todos NaN; GRIS oscuro = todos sanos. :v
 // ===========================================================================
 
-render_mode cull_disabled, depth_draw_opaque;
+render_mode cull_disabled, depth_draw_opaque, unshaded;
 
 global uniform float wind_intensity;
 global uniform vec3 wind_direction;
@@ -58,18 +60,11 @@ void vertex() {
 
 
 void fragment() {
-	float largo_viento = length(wind_direction);
-	vec2 viento = largo_viento > 1e-4 ? normalize(wind_direction).xz : vec2(0.0, 1.0);
-	float fuerza_viento = clamp(wind_intensity, 0.0, 1.0);
-
+	// Silueta identica a la real (usa ruido sano deducido): :v
 	vec2 centro = (UV - 0.5) * 2.0;
 	float radio = length(centro);
 	float ruido = texture(textura_huecos, UV * 2.7).r;
-	vec2 dir_centro = centro / max(radio, 1e-4);
-	float alineado = max(dot(dir_centro, viento), 0.0);
-	float borde = radio + (ruido - 0.5) * 0.6
-			+ fuerza_viento * 0.05 * alineado
-			* (0.5 + 0.5 * sin(TAU * TIME * 0.6 + ruido * 6.2831));
+	float borde = radio + (ruido - 0.5) * 0.6;
 	if (borde > 1.0) {
 		discard;
 	}
@@ -81,24 +76,13 @@ void fragment() {
 			+ texture(textura_huecos, pos_mundo.xz * e).r * pesos.y
 			+ texture(textura_huecos, pos_mundo.xy * e).r * pesos.z;
 
-	if (h < umbral_huecos) {
-		discard;
-	}
+	// NaN por comparacion x != x (isnan no existe seguro en Godot). :v
+	float n_umbral = umbral_huecos != umbral_huecos ? 1.0 : 0.25;
+	float n_h = h != h ? 1.0 : 0.25;
+	float nn = dot(norm_mundo, norm_mundo);
+	nn = nn != nn ? 1.0 : 0.25;
 
-	float pendiente = 1.0 - smoothstep(umbral_huecos, umbral_huecos + 0.16, h);
-	float inflamado = 1.0 - smoothstep(umbral_huecos, umbral_huecos + 0.34, h);
-
-	// ---- PROBE C: colores como LITERALES (sin uniforms de color) -------
-	vec3 c_base = vec3(0.86, 0.83, 0.73);
-	vec3 c_rojo = vec3(0.4, 0.04, 0.045);
-	vec3 albedo = mix(c_base, c_rojo, inflamado * 0.9);
-	albedo *= 0.8 + 0.4 * ruido;
-	float rim = smoothstep(umbral_huecos, umbral_huecos + 0.05, h)
-			* (1.0 - smoothstep(umbral_huecos + 0.05, umbral_huecos + 0.13, h));
-	albedo = mix(albedo, c_base * 1.2, rim * 0.75);
-	ALBEDO = albedo;
-	// ------------------------------------------------------------ fin probe
-
-	ROUGHNESS = 0.72;
+	ALBEDO = vec3(n_umbral, n_h, nn);
 	EMISSION = vec3(0.0);
+	ROUGHNESS = 1.0;
 }
