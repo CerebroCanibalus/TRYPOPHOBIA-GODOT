@@ -2,20 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://df8odleo4i65b"
-path="res://.godot/imported/SUM_dentro.png-109271ac3bfe42b1d65d60651658c5eb.ctex"
+uid="uid://31y8i87oux3m"
+path.s3tc="res://.godot/imported/SUM_casco.png-c2d63fe1a50614f20c8cfe8634bf621c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://assets/env/Submarino/SUM_dentro.png"
-dest_files=["res://.godot/imported/SUM_dentro.png-109271ac3bfe42b1d65d60651658c5eb.ctex"]
+source_file="res://maps/Lobby/textures/SUM_casco.png"
+dest_files=["res://.godot/imported/SUM_casco.png-c2d63fe1a50614f20c8cfe8634bf621c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -23,7 +24,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

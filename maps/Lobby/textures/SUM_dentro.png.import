@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://31y8i87oux3m"
-path.s3tc="res://.godot/imported/SUM_casco.png-0317f999ae91932b4d4bb39c62ae50c5.s3tc.ctex"
+uid="uid://2ehbwkqn6s0u"
+path.s3tc="res://.godot/imported/SUM_dentro.png-dac3c20beed403d994710beb5883763c.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://maps/lobby/textures/SUM_casco.png"
-dest_files=["res://.godot/imported/SUM_casco.png-0317f999ae91932b4d4bb39c62ae50c5.s3tc.ctex"]
+source_file="res://maps/Lobby/textures/SUM_dentro.png"
+dest_files=["res://.godot/imported/SUM_dentro.png-dac3c20beed403d994710beb5883763c.s3tc.ctex"]
 
 [params]
 

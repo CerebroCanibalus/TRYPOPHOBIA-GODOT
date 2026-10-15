@@ -28,7 +28,7 @@
 ; circulo centrado, asi que fuera del eje su borde inferior hace de galapago alto:
 ; para cruzarla hay que volver al centro.
 
-[ext_resource type="PackedScene" path="res://assets/env/Submarino/SM-13_Sumergible.gltf" id="1_gltf"]
+[ext_resource type="PackedScene" path="res://maps/Lobby/SM-13_Sumergible.gltf" id="1_gltf"]
 
 [node name="SM13_Sumergible" type="Node3D"]
 

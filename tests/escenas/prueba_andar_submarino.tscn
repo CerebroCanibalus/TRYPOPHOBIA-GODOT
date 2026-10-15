@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://tests/escenas/prueba_andar_submarino.gd" id="1_s"]
-[ext_resource type="PackedScene" path="res://assets/env/Submarino/SM-13_Sumergible.tscn" id="2_sub"]
+[ext_resource type="PackedScene" path="res://maps/Lobby/SM-13_Sumergible.tscn" id="2_sub"]
 [ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="3_iza"]
 
 [node name="PruebaAndarSubmarino" type="Node3D"]

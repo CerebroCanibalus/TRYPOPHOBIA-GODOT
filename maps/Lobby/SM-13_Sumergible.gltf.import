@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bxgtbkukxisjv"
-path="res://.godot/imported/SM-13_Sumergible.gltf-199bc381cc97063cfe927818015e6dff.scn"
+path="res://.godot/imported/SM-13_Sumergible.gltf-3b204ab150f3b5e840dffa133d068bc7.scn"
 
 [deps]
 
-source_file="res://assets/env/Submarino/SM-13_Sumergible.gltf"
-dest_files=["res://.godot/imported/SM-13_Sumergible.gltf-199bc381cc97063cfe927818015e6dff.scn"]
+source_file="res://maps/Lobby/SM-13_Sumergible.gltf"
+dest_files=["res://.godot/imported/SM-13_Sumergible.gltf-3b204ab150f3b5e840dffa133d068bc7.scn"]
 
 [params]
 

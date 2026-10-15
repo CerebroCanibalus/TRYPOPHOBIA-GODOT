@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cm41a8ul16q86"
-path="res://.godot/imported/SUM_casco.png-7d40d56f1c949a3e4502416430c273e9.ctex"
+uid="uid://df8odleo4i65b"
+path="res://.godot/imported/SUM_dentro.png-3d3bd9013e864a9c2322091919b3bd47.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/env/Submarino/SUM_casco.png"
-dest_files=["res://.godot/imported/SUM_casco.png-7d40d56f1c949a3e4502416430c273e9.ctex"]
+source_file="res://maps/Lobby/SUM_dentro.png"
+dest_files=["res://.godot/imported/SUM_dentro.png-3d3bd9013e864a9c2322091919b3bd47.ctex"]
 
 [params]
 

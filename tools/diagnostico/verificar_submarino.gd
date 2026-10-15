@@ -3,7 +3,7 @@ extends SceneTree
 ## Comprueba el SM-13 DENTRO de Godot, que es lo unico que vale: el exportador
 ## solo puede prometerlo desde fuera.
 func _init():
-	var esc := load("res://assets/env/Submarino/SM-13_Sumergible.tscn") as PackedScene
+	var esc := load("res://maps/Lobby/SM-13_Sumergible.tscn") as PackedScene
 	assert(esc != null, "no carga la pieza")
 	var n := esc.instantiate()
 	var luces: Array = n.find_children("*", "Light3D", true, false)

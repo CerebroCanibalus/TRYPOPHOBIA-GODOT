@@ -13,7 +13,7 @@
 ; puerta del mamparo es un circulo centrado, asi que para cruzarla hay que volver
 ; al centro — fuera del eje su borde inferior hace de galapago alto.
 
-[ext_resource type="PackedScene" path="res://assets/env/Submarino/SM-13_Sumergible.tscn" id="1_sub"]
+[ext_resource type="PackedScene" path="res://maps/Lobby/SM-13_Sumergible.tscn" id="1_sub"]
 [ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="2_iza"]
 
 [sub_resource type="Environment" id="entorno"]
