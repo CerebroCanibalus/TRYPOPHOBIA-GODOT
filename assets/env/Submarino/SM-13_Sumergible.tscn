@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3]
+
+; EL SM-13 COMO UNA PIEZA. Se suelta en cualquier mapa y ya trae todo:
+;
+;   - UNA malla (7.919 tris) y UN cuerpo de colision. La colision viaja en el
+;     nombre del nodo ("-col"), asi que es TRIMALLA y no casco convexo: un
+;     submarino hueco metido en un casco convexo es un bloque macizo y el interior
+;     desaparece.
+;
+;   - LA COLISION VA A DOS CARAS. `src/import/arreglos_al_importar.gd` enciende
+;     `backface_collision` al importar, y hace falta: medido sobre el modelo, de
+;     las caras del piso OCHO miraban arriba y CINCO abajo, y de la virola interior
+;     214 estaban del reves contra 169 bien. No es descuido — recalc_face_normals
+;     no puede orientar una malla que mezcla el casco cerrado con superficies de
+;     una sola cara. Con backface apagado eso es un casco por cuyas paredes se sale
+;     andando y por cuyo suelo se cae.
+;
+;   - CUATRO LAMPARAS de sodio, devueltas a vatios en la importacion (el glTF las
+;     manda en candelas: 26 W salen a 1.413 cd).
+;
+; PROBADO ANDANDO, que es lo unico que vale: `maps/pruebas/prueba_andar_submarino.tscn`
+; mete a Iza dentro y mide. 6,03 m a lo largo esquivando la escala y 6,89 m
+; cruzando la puerta del mamparo, sin caerse y pisando suelo.
+;
+; OJO AL RECORRIDO: la escala de la escotilla va en el EJE, bajo el brocal, que es
+; donde va en un barco. Bloquea el carril central a la altura de x=3,2 y se pasa
+; por un lado — quedan 0,87 m libres a cada banda. Y la puerta del mamparo es un
+; circulo centrado, asi que fuera del eje su borde inferior hace de galapago alto:
+; para cruzarla hay que volver al centro.
+
+[ext_resource type="PackedScene" path="res://assets/env/Submarino/SM-13_Sumergible.gltf" id="1_gltf"]
+
+[node name="SM13_Sumergible" type="Node3D"]
+
+[node name="Modelo" parent="." instance=ExtResource("1_gltf")]

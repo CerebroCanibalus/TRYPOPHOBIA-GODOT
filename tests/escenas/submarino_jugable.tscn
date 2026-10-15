@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3]
+
+; El SM-13 para recorrerlo a pie. Iza entra en la camara, mirando a popa.
+;
+; EL REVELADO ES AgX. Sin WorldEnvironment Godot revela en Lineal y un interior
+; afinado a la luz de cuatro lamparas de 26 W sale quemado; es el mismo fallo que
+; tenia la Isla. El ambiente va muy bajo a proposito: el sitio es oscuro de diseno
+; —se midio contra la referencia, el 79 % del cuadro por debajo de luminancia 18—
+; y la linterna es la que descubre lo que hay.
+;
+; OJO AL RECORRIDO, que esta medido: la escala de la escotilla va en el EJE, bajo
+; el brocal, y bloquea el carril central en x=3,2 (quedan 0,87 m a cada banda). La
+; puerta del mamparo es un circulo centrado, asi que para cruzarla hay que volver
+; al centro — fuera del eje su borde inferior hace de galapago alto.
+
+[ext_resource type="PackedScene" path="res://assets/env/Submarino/SM-13_Sumergible.tscn" id="1_sub"]
+[ext_resource type="PackedScene" uid="uid://bwiacylloduj7" path="res://src/player/IzaPlayer.tscn" id="2_iza"]
+
+[sub_resource type="Environment" id="entorno"]
+tonemap_mode = 4
+tonemap_exposure = 1.0
+tonemap_white = 1.0
+background_mode = 1
+background_color = Color(0.035, 0.05, 0.075, 1)
+background_energy_multiplier = 0.5
+ambient_light_source = 2
+ambient_light_color = Color(0.09, 0.1, 0.13, 1)
+ambient_light_energy = 0.35
+
+[node name="SubmarinoJugable" type="Node3D"]
+
+[node name="Entorno" type="WorldEnvironment" parent="."]
+environment = SubResource("entorno")
+
+[node name="Submarino" parent="." instance=ExtResource("1_sub")]
+
+[node name="Iza" parent="." instance=ExtResource("2_iza")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0.9, -1.11, 0.62)
+
+[node name="Linterna" type="SpotLight3D" parent="Iza/CameraPivot/Camera3D"]
+light_energy = 2.2
+spot_range = 14.0
+spot_angle = 24.0
