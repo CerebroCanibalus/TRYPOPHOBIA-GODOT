@@ -34,6 +34,10 @@ window/size/viewport_height=1080
 
 enabled=PackedStringArray("res://addons/heren/plugin.cfg")
 
+[filesystem]
+
+import/blender/enabled=false
+
 [input]
 
 ui_left={
@@ -169,18 +173,3 @@ player_position={
 "type": "vec3",
 "value": Vector3(0, 0, 0)
 }
-
-[filesystem]
-
-; LA IMPORTACION DE .blend, APAGADA. Viene activada por defecto, y en headless
-; Godot no puede configurar la ruta de Blender: lanza
-;   "Blender path is invalid or not set ... Cannot configure blender path"
-; y eso ABORTA EL IMPORTADOR DE ESCENAS ENTERO. Consecuencia: ningun glTF se
-; importa. En este clon, de los 144 glTF de maps/misiones/isla_c2 solo cargaba el
-; isla.gltf monolitico —el unico importado antes de que esto se activara—; las
-; 143 piezas sueltas estaban ahi, intactas y validas, y Godot no las veia.
-;
-; El proyecto no importa .blend: todo el arte entra ya exportado a glTF desde la
-; biblia. Asi que apagarlo no quita nada y devuelve la importacion sin editor,
-; que es la que usan los scripts de verificacion.
-import/blender/enabled=false
