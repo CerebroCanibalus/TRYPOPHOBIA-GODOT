@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/ragdoll/shiba_test.gd" id="1_o6qmg"]
+[ext_resource type="PackedScene" path="res://src/player/shiba_player.tscn" id="2_j5a23"]
+[ext_resource type="Script" path="res://src/ragdoll/character/ragdoll_character.gd" id="3_lqcb7"]
+[ext_resource type="Resource" path="res://src/ragdoll/rig/shiba_rig_config.tres" id="4_wfiht"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fb1fl"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="BoxMesh" id="BoxMesh_58bgr"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="Environment" id="Environment_g8ypc"]
+background_mode = 1
+background_color = Color(0.18, 0.2, 0.24, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.58, 0.65, 1)
+ambient_light_energy = 0.7
+
+[node name="ShibaTest" type="Node3D" unique_id=631583793]
+script = ExtResource("1_o6qmg")
+auto_quit_seconds = 8.0
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1007243390]
+collision_mask = 2
+
+[node name="FloorShape" type="CollisionShape3D" parent="Floor" unique_id=895077331]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_fb1fl")
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Floor" unique_id=1814500851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_58bgr")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1814125743]
+transform = Transform3D(0.7648422, 0, 0.64421767, 0, 1, 0, -0.64421767, 0, 0.7648422, 0, 6, 0)
+light_energy = 1.4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=634592104]
+environment = SubResource("Environment_g8ypc")
+
+[node name="Shiba" type="Node3D" parent="." unique_id=1218804823 instance=ExtResource("2_j5a23")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+script = ExtResource("3_lqcb7")
+rig_config = ExtResource("4_wfiht")
+angular_spring_stiffness = 3000.0
+max_angular_force = 250.0
+fp_clip_radius = 0.2
+fp_clip_meshes = PackedStringArray()
+body_follows_camera = false
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1376790914]
+
+[node name="Info" type="Label" parent="HUD" unique_id=1658100766]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 900.0
+offset_bottom = 420.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.92, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+text = "cargando..."

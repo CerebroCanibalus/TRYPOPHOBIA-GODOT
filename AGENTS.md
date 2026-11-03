@@ -1,4 +1,4 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
 Este archivo proporciona orientación a Claude Code (claude.ai/code) cuando trabaja con el código de este repositorio.
 
@@ -123,7 +123,46 @@ ese prop a sistema:
 Dos personajes jugables, y los controladores viejos YA NO existen:
 1. **`src/player/IzaPlayer.tscn` + `iza_player.gd`** — Iza: FPS completo, stamina (recursos CharacterStat — ver `README_MOVEMENT_SYSTEM.md`), agarrar/lanzar, nado.
    ⚠️ **SU RIG `assets/players/zorrillo/iza_rig.tscn` ESTÁ DESECHADO** (2026-10-09): sus 14 `PhysicalBone3D` con `joint_type=5` (Generic6DOF) hacen que Box3D escupa `Generic6DOFJoint3D is not supported` al cargar. Reemplazar por rig nuevo con `joint_type=2`. Detalles y restricciones: sección **🛑 RIG DE IZA DESECHADO** más abajo.
-2. **`src/ragdoll_character/`** — ragdoll de prueba (doble skeleton PiCode9560), FP, IK de brazos, nado; es el personaje de test de las mecánicas.
+2. **`src/ragdoll/`** — **la librería del ragdoll** (doble skeleton, FP, IK de brazos, nado). Ver §📚 RAGDOLL.
+
+### 📚 RAGDOLL — biblioteca, rig y trampas
+
+> **DOCUMENTO NORMATIVO: [`meta/docs/Sistema_Animacion_Ragdoll.md`](meta/docs/Sistema_Animacion_Ragdoll.md)**
+> (arquitectura, el PD y sus números, y las 17 trampas medidas de Godot/Box3D).
+> Índice de la librería: [`src/ragdoll/README.md`](src/ragdoll/README.md).
+
+**Antes de tocar el ragdoll, LÉETE ese documento.** Todo lo que costó horas
+está ahí con su medida. Lo que más se olvida:
+
+- **El joint de un `PhysicalBone3D` se crea en `_ready()`** contra el cuerpo del
+  PADRE: si al entrar el padre no está en el árbol, el joint **NUNCA** se crea
+  (medido: la columna se abría 0,8 m; hay que crear los cuerpos **en runtime
+  dentro del simulador**, padre antes que hijo, todo configurado antes de
+  `add_child`).
+- **`AnimationTree.active` no se serializa** → al cargar la escena el árbol
+  nace apagado y la animación no llega.
+- **El PD aplica TORQUE, no velocidad angular** (si no, el ragdoll sale
+  disparado: la pelvis iba de 0,46 m a 13,6 m en 5 s).
+- **El error de orientación va en axis-angle, no en euler** (con euler los
+  brazos se quedaban a 116° del clip).
+- **Masa = volumen** (la suma es el peso real); lo que un hueso **soporta**
+  es ganancia del PD (`pd_gain`). Meter la carga en la masa → 216 kg (medido).
+- `get_bone_global_pose()` es **relativa al esqueleto, NO al mundo**: el PD
+  trabaja en MUNDO y el espejo convierte a relativa del esqueleto físico.
+
+**Poner un rig nuevo NO es escribir código:** el `RigForge` mide el modelo,
+encuentra los huesos puente, deduce colliders, masas e IK, y genera el rig y
+la escena:
+
+```bash
+godot --headless --path <proj> -s res://tools/ragdoll_forge/forge.gd -- \
+  --model=res://assets/players/shiba/shiba_V2.glb --body=spine --head=spine.006 \
+  --hands=hand.L,hand.R --feet=foot.L,foot.R --extra=spine.003,spine.005 \
+  --mass=50 --name=Shiba --rig=... --scene=...
+```
+
+**Diagnóstico:** `tools/body_debugger` (tabla por hueso físico vs animado con la
+columna `rest` que clasifica el bug). NO escribir sondas a mano.
 
 Borrados el 2026-10-09 por tener **0 referencias** (medido en escenas, scripts ni uid): `src/player/characterbody_jugador.gd`, `src/interactibles/player.gd`, `pause_screen.gd`, `src/ui/ui_barraVida.gd` y `src/import/luces_fotometricas.gd`.
 
@@ -1021,7 +1060,7 @@ estructura limpia, 5 commits de orden y 2 repos con escaneo de secretos activo.
 - **`heren.filesystem` solo implementa `action:"exists"`** — no lee ni escribe. Enumerar las tools disponibles con `Object.keys(tools.heren)` (animation, debug, filesystem, health, node, node_props, node_query, project, resource, scene, scene_script, shader, signal, ui, validate, visual).
 - **El test del agua puede fallar 1 vez tras cambios grandes de disco** (ancla en `y=-9.92` en vez de hundirse): es **flaky de timing** — re-ejecutar antes de concluir regresión. Reintento → `TODO OK (7 fases, 17 comprobaciones)`.
 - **Los `;` de un `.tscn` mueren en cada guardado** del editor/heren: la documentación de una escena no puede vivir solo dentro del `.tscn`.
-- **Borrar `.godot/` obliga a re-importar ANTES de testear:** sin `global_script_class_cache.cfg` y sin `.imported/*.ctex`, los `class_name` (`WaterBody`, `Oxygen`, `RagdollRigConfig`…) no resuelven y sale una **cascada de Parse Errors** (45 en el playground) que NO es regression real. Fix: `Godot --headless --path <proj> --editor --quit-after 12000` (escanea + reimporta) y re-ejecutar. Medido el 2026-10-09.
+- **Borrar `.godot/` obliga a re-importar ANTES de testear:** sin `global_script_class_cache.cfg` y sin `.imported/*.ctex`, los `class_name` (`WaterBody`, `Oxygen`, `RagdollRig`…) no resuelven y sale una **cascada de Parse Errors** (45 en el playground) que NO es regression real. Fix: `Godot --headless --path <proj> --editor --quit-after 12000` (escanea + reimporta) y re-ejecutar. Medido el 2026-10-09.
 
 ### Pendientes que dejó la limpieza
 
@@ -1311,3 +1350,106 @@ La Carabela es una **misión católica de exterminio**, no un ejército. Sus mie
 ## Diseño Visual → Concepto, paleta, elementos barrocos
 ## Notas de Diseño → Ideas sueltas
 ```
+
+---
+
+## ðŸ¦´ SHIBA â€” ragdoll del jugador (2026-11-03)
+
+`src/player/shiba_player.tscn` (24,6 KB) Â· `shiba_rig_config.tres` Â· `shiba_anim.tres` Â·
+`tests/ragdoll/shiba_test.tscn` (13/13 âœ“) Â· capturas en `tests/ragdoll/shots/`.
+
+### Arquitectura
+
+| Pieza | DÃ³nde | QuÃ© es |
+|---|---|---|
+| Instancias del GLB | `Physical/` + `Animated/` | La fÃ­sica y la animaciÃ³n, por separado (doble esqueleto) |
+| `Anim/` | raÃ­z | `AnimationPlayer` + `AnimationTree` (`root_node = "../.."`) |
+| (runtime) | `RagdollSkeleton` | Los **21 cuerpos creados EN RUNTIME** dentro del simulador (nada authored en la escena — ver "GOTA — el joint se crea en `_ready`") |
+| `shiba_rig_config.tres` | datos | Nombres, masas, lÃ­mites de cono, clips, cadenas IK |
+| `shiba_anim.tres` | datos | 11 clips con las rutas reapuntadas al esqueleto animado |
+
+### GOTA â€” `AnimationTree.active` NO se serializa
+
+Es una propiedad de **solo runtime**: al cargar la escena el Ã¡rbol nace **APAGADO** y
+la animaciÃ³n no llega al esqueleto (medido: todos los huesos a 0Â° de su pose de reposo).
+Hay que activarlo en `_ready()`.
+
+### GOTA â€” el `root_node` del AnimationMixer tiene que ser un ANCESTRO
+
+`root_node = "Animated"` â†’ `invalid root_node path` (lo rechaza). Con el Ã¡rbol en el
+subnodo `Anim/`, el `root_node` es `"../.."` (la raÃ­z de la escena) y las pistas llevan
+la ruta completa `Animated/metag/Skeleton3D:<hueso>`.
+
+### GOTA â€” la cadena de cuerpos fÃ­sicos tiene que ser COMPLETA
+
+El joint de un `PhysicalBone3D` se crea contra el cuerpo del **PADRE** del hueso: si el
+padre no tiene cuerpo, **el joint no se crea** y el hueso queda como un cuerpo suelto
+(no tira de sus hijos). En el Shiba faltaban **5** (`spine.001/002/004`, `shoulder.L/R`)
+â†’ los brazos iban **sueltos del pecho** (por eso el antebrazo no seguÃ­a al brazo).
+
+
+### GOTA â€” el PD tiene que aplicar TORQUE, no velocidad
+
+Escribir la velocidad angular de cada hueso por separado hace que **cada articulaciÃ³n
+pelee con el PD**: el solver de joints proyecta las velocidades y el PD las sobrescribe
+â†’ la cadena se embala y el personaje sale disparado (medido: pelvis de 0,46 m a 13,6 m
+en 5 s; con `k=8000` llegÃ³ a 28 m).
+
+- `PhysicalBone3D` **no hereda de `RigidBody3D`** (extiende de `PhysicsBody3D`) y **no
+  tiene `apply_torque()`** â†’ usar `PhysicsServer3D.body_apply_torque(rid, torque)`.
+- `PhysicsServer3D.BODY_PARAM_INERTIA` **sÃ­ existe en Box3D** (medido) â†’ el torque se
+  calcula como `I Â· Î±` en el eje local del cuerpo.
+- El error de orientaciÃ³n debe ser **axis-angle**, no euler: el euler reparte el Ã¡ngulo
+  entre los tres ejes y el vector **no apunta en la direcciÃ³n real**.
+- Estabilidad a 60 Hz: `rigidez < 3600` (Ï‰_nÂ·dt < 1). Con 8000 el sistema es inestable.
+- Tope de velocidad angular obligatorio (sin Ã©l un frame da 40 rad/s = latigazo).
+
+### GOTA - la masa es del VOLUMEN; el SOPORTE del hueso es ganancia del PD
+
+La masa de cada cuerpo va por su **volumen**: la suma es el peso real del
+personaje (50 kg). Lo que un hueso **SOPORTA** va en `pd_gain` (el forge la
+reparte proporcional a la carga, `pd_gain_max = 12`). Meter lo soportado en
+la masa -> el ragdoll pesaba **216 kg** e inercia descolocada (medido).
+Limites de cono: **180/180** (como la referencia) - el cono no debe pelear con el PD.
+
+### GOTA â€” `_anim_pose_cache` se CONGELA
+
+El cache se llena con la seÃ±al `modification_processed` del IK; con **influencia 0** el
+IK no escribe nada y **la seÃ±al no se dispara** â†’ el cache se queda en la pose del
+**primer frame** (la de reposo) y el PD apuntaba ahÃ­: el torso iba bien (el clip IDLE no
+mueve la columna) pero **los brazos se quedaban en T** (el IDLE los baja 59Â°).
+â†’ Usar la pose **actual** del esqueleto animado, salvo que el IK estÃ© activo.
+
+### GOTA â€” el `AnimationTree` reproducÃ­a `grab_middle` en reposo
+
+El BlendSpace `grab_dir` del rig de la coneja mezclaba poses de **agarre**; para el
+Shiba son las de **inclinaciÃ³n** (`lean_back` / `IDLE` / `lean_forward`).
+
+### ðŸ› ï¸ USAR LAS HERRAMIENTAS DEL REPO (no escribir sondas a mano)
+
+| Herramienta | Para quÃ© |
+|---|---|
+| `tools/body_debugger` | Tabla por hueso (fÃ­sico vs animado) con la columna **`rest`** que clasifica el bug. Es el instrumento para diagnosticar el ragdoll |
+| `tools/ragdoll_playground` | Banco con telemetrÃ­a (pos, dXZ, vel, angvel) |
+| `tools/active_ragdoll_reference` | El proyecto de referencia del que se portÃ³ TODO (PD, lÃ­mites 180/90, jerarquÃ­a de la escena) |
+
+### Estado medido (2026-11-03)
+
+- El personaje **se sostiene de pie**: pelvis ~0,7-0,9 m y columna erguida
+  (`up ~ +1` en `spine`), incluso soltado desde 1,1 m (cae, el muelle lo
+  endereza y se queda de pie). Capturas: `tests/ragdoll/shots/`.
+- Test automatico: **13/13** (`tests/ragdoll/shiba_test.tscn`).
+- Joints correctos tras crear los cuerpos **en runtime dentro del simulador**
+  (padre antes que hijo) - ver "GOTA - el joint de PhysicalBone3D".
+- Masas = volumen (suma 50 kg), `pd_gain` por carga (spine = 13x) - ver
+  "GOTA - la masa es del VOLUMEN".
+- Frames consistentes: el PD trabaja en MUNDO; el espejo convierte a relativa
+  del esqueleto fisico (`get_bone_global_pose` NO es el mundo).
+
+### Pendiente
+
+- El **hombro** (clavicula) sigue con ~95 grados de error de *twist* (el clip
+  IDLE no la mueve y el PD no la gira; visualmente va bajo la armadura).
+- Soltada **desde el aire**, la caida aplasta la pose; el spawn real es de pie
+  en el suelo y ahi se sostiene.
+- La cabeza gira con la camara y la 3a persona funciona (tecla V).

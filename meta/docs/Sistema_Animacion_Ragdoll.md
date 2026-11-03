@@ -1,0 +1,386 @@
+# Sistema de Animación Ragdoll — Tripofobia
+
+**Estado:** v1 (2026-11-03) · Implementado en `src/ragdoll/` · Documento **normativo**:
+si algo aquí contradice al código, el código tiene un bug (o el doc está viejo).
+
+> Este documento es la **memoria técnica** del sistema de ragdoll: por qué está
+> hecho como está, qué trampas tiene Godot/Box3D y cómo se pone un modelo nuevo.
+> La librería que lo implementa está en `src/ragdoll/` (índice al final).
+
+---
+
+## 1. QUÉ ES (y qué NO es)
+
+Un **ragdoll activo**: el personaje tiene un esqueleto real (cuerpos físicos
+articulados) y una animación que lo *manda*. El motor (PD) lleva los cuerpos a
+la pose del clip; la física decide cómo llega.
+
+NO es un "muñeco que se cae": es un personaje que anda, se mantiene de pie y
+reacciona a la física.
+
+### Arquitectura (doble esqueleto)
+
+```
+Shiba (Node3D, ragdoll_character.gd)
+├── Physical/            ← instancia del GLB: la malla VISIBLE
+│   └── metarig/Skeleton3D
+│       └── PhysicalBoneSimulator3D → 21 PhysicalBone3D (cuerpos + joints)
+├── Animated/            ← instancia del GLB: esqueleto INVISIBLE
+│   └── metarig/Skeleton3D   ← aquí escribe la animación (AnimationTree)
+├── Anim/                ← AnimationPlayer + AnimationTree (mezcla de estados)
+├── HuesosFisicos/       ← los 21 PhysicalBone3D AUTHORED (se reparentan al esqueleto)
+├── CameraPivot/         ← cámara (1ª / 3ª persona)
+└── Agua/Oxigeno/...     ← componentes del juego
+```
+
+**Por qué dos instancias del GLB:** una lleva la malla (y la deforma la
+FÍSICA) y la otra lleva la ANIMACIÓN (que se calcula aparte). Si se usara un
+solo esqueleto, la animación y la física se pisarían.
+
+---
+
+## 2. LA LIBRERÍA (`src/ragdoll/`)
+
+Cada pieza es un componente con UNA responsabilidad. La raíz los compone.
+
+| Fichero | Clase | Responsabilidad |
+|---|---|---|
+| `rig/ragdoll_bone.gd` | `RagdollBone` | UN hueso físico: forma, tamaño, masa, límites de cono, grupo |
+| `rig/ragdoll_rig.gd` | `RagdollRig` | TODOS los datos de un rig (huesos, clips, cadenas IK, mirada) |
+| `rig/rig_forge.gd` | `RigForge` | **Construye** un `RagdollRig` desde un modelo, solo |
+| `rig/rig_report.gd` | `RigReport` | **Valida** un rig contra su modelo y explica qué falta |
+| `runtime/ragdoll_skeleton.gd` | `RagdollSkeleton` | Los cuerpos físicos: simulator, joints, colliders |
+| `runtime/ragdoll_motor.gd` | `RagdollMotor` | El PD: lleva cada cuerpo a su pose objetivo |
+| `runtime/pose_mirror.gd` | `PoseMirror` | Copia las poses de la física al esqueleto visible |
+| `runtime/animation_driver.gd` | `AnimationDriver` | `AnimationPlayer` + `AnimationTree`: clips, mezcla, estado |
+| `runtime/head_look.gd` | `HeadLook` | La cabeza que sigue a la cámara (pesos acumulados) |
+| `runtime/arm_ik.gd` | `ArmIK` | Los brazos que se estiran hacia el puntero |
+| `runtime/fp_clip.gd` | `FpClip` | El recorte de 1ª persona (el shader del cráneo) |
+| `runtime/balance_controller.gd` | `BalanceController` | El equilibrio (upright + centro de masas) |
+| `character/ragdoll_character.gd` | `RagdollCharacter` | La raíz: input, movimiento, agarre, agua |
+| `character/ragdoll_camera.gd` | — | Cámara en 1ª/3ª persona |
+| `tools/ragdoll_scene_builder.gd` | `RagdollSceneBuilder` | **Construye la escena** completa desde (modelo + rig) |
+
+### Cómo se pone un modelo nuevo (3 pasos)
+
+```bash
+# 1) El forge mide el modelo y genera el rig (incluye los "huesos puente")
+godot --headless --path <proj> -s res://tools/ragdoll_forge/forge.gd -- \
+  --model=res://assets/players/shiba/shiba_V2.glb \
+  --body=spine --head=spine.006 \
+  --hands=hand.L,hand.R --feet=foot.L,foot.R \
+  --extra=spine.003,spine.005 \
+  --look=spine.005,spine.006 --lookw=0.35,0.65 \
+  --mass=50 --name=Shiba \
+  --rig=res://src/ragdoll/rig/shiba_rig_config.tres \
+  --scene=res://src/player/shiba_player.tscn
+
+# 2) El informe dice si el rig esta completo
+#    (el forge lo imprime y NO guarda si hay errores)
+
+# 3) Listo. No se toca codigo.
+```
+
+Lo que el forge **hace solo** (y es donde se perdían horas a mano):
+
+| Qué deduce | Cómo |
+|---|---|
+| **Huesos puente** | Sube por los padres de cada hueso con cuerpo hasta llegar a otro con cuerpo, y mete los intermedios. **Si falta uno, ese hueso queda SUELTO** (ver §4) |
+| Colliders | La cápsula va del origen del hueso al de su hijo (offset = longitud/2) |
+| Masas | Repartidas **proporcional a la carga que soporta** (la vértebra pesa lo que aguanta) |
+| Cadena IK | De la mano hacia el hombro: mano → antebrazo → brazo |
+| Clips | Los de la biblioteca de animación, o los del modelo |
+
+---
+
+## 3. EL PD (control de orientación)
+
+```
+objetivo  = pose de la animación (+ lean + mirada de cabeza)
+error     = eje * angulo  (AXIS-ANGLE, ver §4)
+alpha     = k * error - c * omega        (k=2500, c=100)
+torque    = I * alpha                    (I = inercia real del cuerpo)
+```
+
+### Por qué TORQUE y no velocidad
+
+Escribir la **velocidad angular** de cada hueso por separado hace que *cada
+articulación pelee con el PD*: el solver de joints proyecta las velocidades
+para cumplir las restricciones y el PD las sobrescribe → la cadena se embala y
+el personaje sale disparado.
+
+**Medido:** con el PD por velocidad la pelvis iba de 0,46 m a 13,6 m en 5 s
+(con rigidez 8000, llegó a 28 m).
+
+Con **torque** el solver puede resolver el conjunto: las fuerzas se suman y la
+cadena llega a la pose.
+
+### Números que importan
+
+| Parámetro | Valor | Por qué |
+|---|---|---|
+| `angular_spring_stiffness` | 2500 | La frecuencia natural es `w_n = sqrt(k)`; a 60 Hz hace falta `w_n·dt < 1` → `k < 3600`. Con 8000 el sistema **es inestable** |
+| `angular_spring_damping` | 100 | `ζ = c / (2·sqrt(k))` → ζ ≈ 1 (crítico). Con 80 el rig oscilaba |
+| `max_angular_accel` | 1500 rad/s² | Tope de la corrección |
+| `max_angular_speed` | 6 rad/s | Sin él, un frame da 40 rad/s y la cadena es un latigazo |
+| `arm_spring_scale` | 1.0 | Los brazos que no agarran pueden ir más blandos |
+
+### La masa decide si el personaje se aguanta
+
+El error de equilibrio del PD es `τ_gravedad / (I · k)` y `τ` es proporcional a
+**la masa que CUELGA** del hueso. Con 1 kg en todo, la pelvis no puede sostener
+el torso: hacen falta ~850 rad/s² y el PD se equivoca **54 grados**.
+
+Con masas por carga (la vértebra pesa lo que aguanta) el error baja a **2-15°**.
+
+---
+
+## 4. LAS TRAMPAS (todas medidas)
+
+### T1 — El joint se crea contra el cuerpo del PADRE
+
+El joint de un `PhysicalBone3D` se crea contra el cuerpo del **padre** del
+hueso. **Si el padre no tiene cuerpo, el joint NO se crea** y el hueso queda
+como un cuerpo suelto: no tira de sus hijos ni lo sostienen a él.
+
+En el Shiba faltaban **5** cuerpos (`spine.001/002/004`, `shoulder.L/R`) y los
+brazos iban **sueltos del pecho**. Por eso el antebrazo no seguía al brazo.
+
+→ `RigForge` los encuentra solos; `RigReport` avisa.
+
+### T2 — El packer no serializa el subárbol de una instancia
+
+Los `PhysicalBone3D` **no** se pueden author dentro del `Skeleton3D` de la
+instancia del GLB con un script: al guardar, Godot se los come (medido: 0 de 21).
+
+En la **coneja** sí están en la escena porque su GLB tiene las mallas como
+**hermanas** del esqueleto y la escena se editó en el editor. En el **Shiba** las
+10 mallas son **hijas** del esqueleto → al hacerlo editable se **inlinean**
+(la referencia `active_ragdoll_reference` pesa 256 KB por eso).
+
+→ **Truco:** se authoran en un nodo `HuesosFisicos/` (fuera de la instancia) y
+en runtime se **reparentan** al esqueleto (`RagdollSkeleton._huesos_fisicos_authored()`).
+Escena de 25 KB, cero mallas inlineadas, y los colliders son de verdad datos de
+la escena.
+
+### T3 — `AnimationTree.active` NO se serializa
+
+Es una propiedad de **solo runtime**: al cargar la escena el árbol nace
+**APAGADO** y la animación no llega al esqueleto (todos los huesos a 0° de su
+pose de reposo; el personaje con los brazos en T).
+
+→ `AnimationDriver.setup()` la activa.
+
+### T4 — El `root_node` del AnimationMixer tiene que ser un ANCESTRO
+
+`root_node = "Animated"` → `invalid root_node path` (lo rechaza). El
+`root_node` es la **raíz del personaje**, y las pistas son relativas a ella
+(`Animated/metag/Skeleton3D:<hueso>`).
+
+Y **NO** puede ser `current_scene`: en headless es `null` y el árbol se queda
+sin resolver.
+
+### T5 — El AnimationPlayer hay que cablearlo, no buscarlo por nombre
+
+El modelo puede traer SU propio `AnimationPlayer` (con los clips importados).
+Si el personaje lo busca "por nombre", se queda con ese en vez del que mueve la
+escena → la animación no llega.
+
+→ `AnimationDriver` lo saca de `animation_tree.anim_player`.
+
+### T6 — El error de orientación va en AXIS-ANGLE, no en euler
+
+`Basis.get_euler()` reparte el ángulo entre los tres ejes y el vector
+resultante **no apunta en la dirección real** de la rotación.
+
+Medido: con euler los brazos se quedaban a **116°** del clip mientras el torso
+iba bien (el torso gira poco → el euler "acierta").
+
+→ `RagdollMotor.error_de_rotacion()` usa el cuaternión.
+
+### T7 — `_anim_pose_cache` se congela
+
+El cache de la pose modificada por el IK se llena con la señal
+`modification_processed`. Con **influencia 0** el IK no escribe nada y **la
+señal no se dispara** → el cache se queda en la pose del **primer frame** (la
+de reposo) y el PD apuntaba ahí.
+
+Síntoma: el torso iba bien (el clip IDLE no mueve la columna) pero **los brazos
+se quedaban en T** (el IDLE los baja 59°).
+
+→ Si el IK no está activo, se usa la pose **actual** del esqueleto animado.
+
+### T8 — `PhysicalBone3D` no tiene `apply_torque()`
+
+Extiende de `PhysicsBody3D`, no de `RigidBody3D`. Se usa la API del servidor:
+`PhysicsServer3D.body_apply_torque(rid, torque)` y
+`PhysicsServer3D.body_get_param(rid, BODY_PARAM_INERTIA)` (Box3D **sí** lo
+devuelve).
+
+### T9 — El nodo `PhysicalBone3D` no se actualiza
+
+El motor debería escribir la pose del hueso desde el cuerpo, pero ese callback
+**no se dispara** en Box3D: el nodo se queda con la pose inicial.
+
+→ `RagdollMotor.body_transform()` lee la transform **del servidor de física**.
+
+### T10 — El `Skin` del GLB es un recurso COMPARTIDO
+
+Las dos instancias del modelo (física y animada) comparten el `Skin`, cuya ruta
+apunta al esqueleto de **su** padre. Sin duplicarlo, la malla del "Physical" se
+deformaba con el esqueleto ANIMADO (que está en otra pose) y salía hecha pedazos.
+
+→ `FpClip.setup()` duplica el `mesh` y el `skin`.
+
+### T11 — Los clips de glTF vienen con `loop_mode = NONE`
+
+Se reproducen una vez y se congelan. Hay que forzar `LOOP_LINEAR` (solo en los
+que duren más de 0.1 s: las "poses" de 1 key no).
+
+### T12 — `get_bone_global_pose()` NO es el mundo
+
+La propia documentación lo dice: "global pose below refers to the overall
+transform of the bone **with respect to skeleton**, so it is not the actual
+global/world transform of the bone". El servidor de física devuelve
+transformaciones en **MUNDO**. En la escena del Shiba las dos instancias del
+GLB tienen transformaciones **distintas** (la física lleva un flip de 180°
+sobre Y; la animada es identidad): mezclar los dos marcos mete errores de
+~180° en brazos y piernas (medido).
+
+→ Objetivo del PD en MUNDO (`anim.global_transform * pose`), cuerpo en MUNDO;
+y el espejador convierte a **relativa del esqueleto físico**
+(`fisica.global_transform.affine_inverse() * mundo`) antes de
+`set_bone_global_pose` (que espera la pose **relativa al esqueleto**).
+
+### T13 — El joint de un `PhysicalBone3D` se crea en `_ready()`
+
+El joint se crea cuando el hueso **entra al árbol**, contra el cuerpo del
+**PADRE**. Si al entrar el padre no está en el árbol (o no tiene cuerpo), el
+joint **NUNCA** se crea: el hueso queda suelto.
+
+Medido: autorhados fuera del esqueleto → la cadena de columna se abría
+**0,8 m** padre↔hijo (saco de huesos sueltos; el muelle de altura levantaba
+solo la pelvis y el resto quedaba tirado en el suelo).
+
+→ Los cuerpos se crean **en runtime dentro del simulador**, en orden de
+**padre antes que hijo** (índice de hueso ascendente) y con **TODO
+configurado antes de `add_child`** — al entrar con `joint_type = NONE`
+(default) no se crea nada. Nada de huesos físicos en la escena.
+
+### T14 — `skeleton_updated` del esqueleto físico NO vale para el PD
+
+Esa señal **solo se emite cuando las poses del esqueleto cambian**: como las
+poses las escribe el propio espejador, la cadena se rompe y el PD se queda
+congelado (la malla se quedaba en la pose de reposo del modelo).
+
+→ El PD corre en `_physics_process`.
+
+### T15 — El muelle de altura se captura contra el SUELO, no contra el aire
+
+Los ShapeCast de los pies ven el suelo hasta **0,45 m** por arriba: capturando
+ahí el objetivo quedaba ~1,2 m y el personaje quedaba **colgado en el aire**
+(medido: pelvis a 1,13 m con la cabeza en el suelo). Y al aparecer (spawn en
+el aire), la captura daba la altura de aire (2,42 m) y el muelle empujaba
+hacia arriba para siempre.
+
+→ Captura **perezosa** en el primer contacto con el suelo, con los pies de
+**verdad abajo** (< 0,3 m): objetivo = `pies_y + (pelvis_pose − pies_pose)`
+del clip. En el juego el spawn es de pie en el suelo y la captura es
+inmediata y correcta.
+
+### T16 — El grupo "column" sale de recorrer la jerarquía
+
+El BalanceController busca el torso por el grupo `column` y **excluye el
+hueso-cuerpo**: si solo el pelvis era `column`, `_torso()` devolvía `null` y
+`apply()` salía en silencio sin tocar nada (medido: el personaje se tumbaba
+y el balance no hacía NADA).
+
+→ `RigForge` reparte `column` por la cadena **de la cabeza al cuerpo**
+(`spine..spine.006` completo).
+
+### T17 — Masa real ≠ ganancia del PD
+
+La masa de cada cuerpo va por su **volumen** (la suma da el peso real). Lo que
+un hueso **SOPORTA** es ganancia del PD (`pd_gain`, normalizada con
+`pd_gain_max = 12`). Meter lo soportado en la masa → el ragdoll pesa
+**216 kg** y la inercia descoloca los extremos (medido).
+
+---
+
+## 5. EL IKP (IK de brazos)
+
+- **Necesita un nodo polo** por brazo. Con solo `pole_direction_vector` el
+  solver procesa pero **no escribe pose**. Con un solo polo, los dos codos caen
+  en el mismo plano (ala de pollo).
+- La pose solo es válida en `modification_processed`; por eso el PD lee un
+  cache.
+- El **alcance se mide del rig** (hombro→muñeca). Un valor corto no acorta el
+  brazo: lo **ploga** entero (el codo hace tope).
+- El `TwoBoneIK3D` tiene que ser hijo **DIRECTO** del `Skeleton3D` (el esqueleto
+  solo busca modificadores entre sus hijos). Se crea en runtime para no tocar la
+  instancia del GLB.
+
+---
+
+## 6. INSTRUMENTOS (usar estos, no escribir sondas)
+
+| Herramienta | Para qué |
+|---|---|
+| `tools/body_debugger/` | **Tabla por hueso** (físico vs animado) con la columna `rest`, que clasifica el bug: si `rest ≈ 0` los ejes de los dos rigs coinciden y la divergencia es de la POSE; si `rest ≠ 0` los rigs tienen ejes distintos |
+| `tools/ragdoll_playground/` | Banco con telemetría (pos, dXZ, vel, angvel) |
+| `tools/active_ragdoll_reference/` | El proyecto de referencia del que se portó TODO (PD, límites 180/90, jerarquía) |
+| `tools/ragdoll_forge/forge.gd` | Genera rig + escena desde un modelo |
+
+---
+
+## 7. ESTADO ACTUAL (2026-11-03, medido)
+
+**El ragdoll funciona y se pone de pie.** Las tres patas que faltaban
+(del cuerpo a la cabeza) tienen todas juntas:
+
+| Pieza | Estado |
+|---|---|
+| PD (orientación, pose) | ✅ funciona con marcos **MUNDO** consistentes (T12) |
+| Balance (upright + CoM + height assist) | ✅ captura su objetivo **en el primer contacto con el suelo** (T15); la columna es grupo `column` (T16) |
+| Joints (constraint padre↔hijo) | ✅ cuerpos creados **en runtime dentro del simulador**, padre antes que hijo (T13) |
+
+**Medido:**
+
+- El personaje **se sostiene de pie** (pelvis ~0,7–0,9 m, columna erguida,
+  `up ≈ +1` en `spine`) — incluso soltado desde 1,1 m: cae, el muelle lo
+  endereza y **se queda de pie** (`tests/ragdoll/shots/shiba_3persona.png`).
+- El muelle de altura por sí solo no basta: sin el `column` bien repartido
+  (T16) el balance no hacía **nada** en silencio.
+- Test automático: **13/13** (`tests/ragdoll/shiba_test.tscn`) · capturas
+  en `tests/ragdoll/shots/`.
+- `RigForge` regenera rig + escena (`shiba_rig_config.tres` /
+  `shiba_player.tscn`): columnas, colliders, masas (suma = 50 kg) y
+  `pd_gain` (T17).
+
+**Lo pendiente (honesto):**
+
+1. Soltada **desde el aire**, la caída aplasta la pose y la recuperación es
+   parcial (la captura del muelle es de pie, así que el aire no se valida
+   como "gameplay"): el spawn real es de pie en el suelo y ahí se sostiene.
+2. El **hombro** (clavícula) sigue con ~95° de *twist* en reposo (va bajo la
+   armadura; no afecta a la silueta).
+3. La cola: sus huesos no tienen cuerpo (van como el resto de huesos sin
+   cuerpo, copiando la pose del esqueleto animado); su reposo la deja baja.
+4. El `height assist` está **afinado para este rig**; un rig nuevo lo
+   hereda (mismos nombres de export) — revisar `max_force` si cambia el
+   peso.
+
+---
+
+## 8. CHECKLIST para un rig nuevo
+
+1. El forge dice **"huesos con cuerpo: N"** y lista los puentes.
+2. El informe no tiene errores (ni "CADENA ROTA").
+3. `huesos fisicos = N` es **N creados en runtime dentro del simulador**
+   (nada authored en la escena — ver T13). La escena NO contiene
+   `HuesosFisicos`.
+4. `spine` tiene el grupo **"column"** y TODA la cadena hasta la cabeza
+   (`bone_name = spine.*`) también (ver T16).
+5. Con el body_debugger: `rest = 0` en todos los huesos (los dos rigs coinciden).
+6. El personaje cae y **queda de pie** (pelvis ~0,7-0,9 m tras el aterrizaje).
+7. La cabeza gira con la cámara y la 3ª persona mide lo que debe.

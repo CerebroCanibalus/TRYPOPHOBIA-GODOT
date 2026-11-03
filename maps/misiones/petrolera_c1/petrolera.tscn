@@ -51,7 +51,7 @@
 [ext_resource type="PackedScene" uid="uid://dragngevw60w5" path="res://assets/env/MAR-04/MAR-04_Bote_amarrado_a.gltf" id="49"]
 [ext_resource type="PackedScene" uid="uid://c3f2vuo32grgo" path="res://assets/env/MAR-04/MAR-04_Bote_amarrado_b.gltf" id="50"]
 [ext_resource type="PackedScene" uid="uid://c6u1gnxq15ys5" path="res://assets/env/MAR-03/MAR-03_Carguero_en_el_horizonte.gltf" id="51"]
-[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="52_oimow"]
+[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll/scenes/ragdoll_character.tscn" id="52_oimow"]
 [ext_resource type="Material" uid="uid://dbja1p0l4y85y" path="res://src/shaders/materials/ocean_stylized_mat.tres" id="52_vb28n"]
 [ext_resource type="PackedScene" uid="uid://inov0wudkrct" path="res://src/weather/atmosfera.tscn" id="54_uchfo"]
 [ext_resource type="Resource" uid="uid://d1bgdyxrhj2uq" path="res://resources/clima/petrolera.tres" id="56_xsbve"]

@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bnypyxv3a5m1j"]
+
+[ext_resource type="Shader" uid="uid://sd76uk2sk3f3" path="res://src/ragdoll/shaders/fp_body_clip.gdshader" id="1_y2lg8"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_y2lg8")
+shader_parameter/clip_radius = 0.0
+shader_parameter/clip_forward_scale = 2.0
+shader_parameter/albedo_color = Color(0.906332, 0.906332, 0.906332, 1)
+shader_parameter/roughness = 0.5

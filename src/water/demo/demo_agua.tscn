@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://dvau3ra3pbxaq" path="res://src/water/air_volume.gd" id="6_p5bhh"]
 [ext_resource type="PackedScene" uid="uid://c1a3o2f86ahhp" path="res://src/water/nodos/mar.tscn" id="7_dffkm"]
 [ext_resource type="Script" uid="uid://88vu47dp35rj" path="res://src/water/water_body.gd" id="7_w72ik"]
-[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll_character/scenes/ragdoll_character.tscn" id="8_ef12i"]
+[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll/scenes/ragdoll_character.tscn" id="8_ef12i"]
 
 [sub_resource type="Environment" id="Environment_hvvfa"]
 background_mode = 1

@@ -37,7 +37,7 @@ func _initialize() -> void:
 	root.add_child(env_node)
 
 	# Cargar la coneja_player.tscn
-	var ps: PackedScene = ResourceLoader.load("res://src/ragdoll_character/scenes/coneja_player.tscn", "PackedScene", ResourceLoader.CACHE_MODE_IGNORE)
+	var ps: PackedScene = ResourceLoader.load("res://src/ragdoll/scenes/coneja_player.tscn", "PackedScene", ResourceLoader.CACHE_MODE_IGNORE)
 	if ps == null:
 		print("FAIL: no se pudo cargar coneja_player.tscn")
 		quit(1)
