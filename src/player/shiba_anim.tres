@@ -1,6 +1,7 @@
-[gd_resource type="AnimationLibrary" format=3]
+[gd_resource type="AnimationLibrary" format=3 uid="uid://b8peceh0jr23y"]
 
 [sub_resource type="Animation" id="Animation_l70g2"]
+length = 0.19999999999999998
 tracks/0/type = "rotation_3d"
 tracks/0/imported = false
 tracks/0/enabled = true

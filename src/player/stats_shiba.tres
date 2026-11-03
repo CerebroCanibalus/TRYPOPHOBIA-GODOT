@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CharacterStats" format=3 uid="uid://b5tjx2vtjfuhh"]
+
+[ext_resource type="Script" uid="uid://dkgststtcmpdw" path="res://src/player/character_stats.gd" id="1_0oe8w"]
+
+[resource]
+script = ExtResource("1_0oe8w")
+max_stamina = 50.0
+max_health = 300.0
+walk_speed = 3.0
+sprint_speed = 5.5
+sprint_stamina_cost = 12.0
+jump_stamina_cost = 15.0

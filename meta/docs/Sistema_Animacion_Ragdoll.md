@@ -95,6 +95,13 @@ Lo que el forge **hace solo** (y es donde se perdían horas a mano):
 
 ## 3. EL PD (control de orientación)
 
+> ⚠️ **ESTA SECCIÓN ESTÁ SUPERADA (2026-11-03).** El PD que se describe aquí
+> (`τ = I·α`, `α = k·e − c·ω` con `k`/`c` fijos) **ya no es el del código**: el
+> PD es ahora **por torque** (`τ = ganancia·(k·e − c·ω)`), con el
+> **amortiguamiento crítico** de cada cuerpo y el error **relativo al padre**.
+> Ver **T21** y **T22** (§4bis). Los números de abajo son los del PD viejo y
+> **no** sirven para afinar el actual.
+
 ```
 objetivo  = pose de la animación (+ lean + mirada de cabeza)
 error     = eje * angulo  (AXIS-ANGLE, ver §4)
@@ -307,6 +314,142 @@ un hueso **SOPORTA** es ganancia del PD (`pd_gain`, normalizada con
 
 ---
 
+---
+
+## 4bis. TRAMPAS NUEVAS (2026-11-03) — el día que los huesos pasaron a la ESCENA
+
+Todo lo de arriba describe el ragdoll con los cuerpos **creados por código**.
+Ese diseño se **descartó**: la escena quedaba sin datos (invisible en el
+editor, con los offsets calculados a mano) y el personaje se caía de cabeza.
+
+### T18 — LOS HUESOS FÍSICOS SON DATOS DE ESCENA (regla dura)
+
+`PhysicalBone3D` + su `CollisionShape3D` + `transform` + `body_offset` +
+`joint_offset` + `mass` + `joint_type` + `joint_constraints/*` van **authorados
+en el `.tscn`**, como hijos del `Skeleton3D`. El runtime no crea ni ajusta
+nada de eso (ver §REGLA DURA en `AGENTS.md`).
+
+**Por qué importa (medido):** con el cuerpo y el ancla del joint en el origen
+del hueso, el joint unía **cabeza con cabeza**: el hijo pivota sobre la
+cabeza del padre y la columna no se estira. Con el cuerpo a **media hueso**
+(como hace el editor) el joint une el **final del padre con la cabeza del
+hijo** (la anatomía real).
+
+### T19 — `body_offset` es el offset del cuerpo en espacio de HUESO
+
+Godot coloca el cuerpo con `esqueleto × pose_del_hueso × body_offset`
+(`PhysicalBone3D::reset_to_rest_position`, fuente 4.3-stable). Por eso:
+
+- `body_offset` = `(esqueleto × pose)⁻¹ × cuerpo` — el offset respecto al
+  **hueso**, no respecto a la pose del esqueleto.
+- `joint_offset` = `body_offset⁻¹` (lo calcula Godot en `_fix_joint_offset`).
+- **`PoseMirror` tiene que deshacerlo**: al copiar la pose del cuerpo al
+  esqueleto hay que multiplicar por `body_offset.affine_inverse()`; si no, la
+  malla se va media hueso por eslabón y sale retorcida (medido: la cámara en
+  3ª persona veía el interior del modelo).
+
+### T20 — el simulador lo crea GODOT, y hay que buscarlo por TIPO
+
+`PhysicalBoneSimulator3D` es un hijo del `Skeleton3D` con nombre
+AUTOGENERADO (`@PhysicalBoneSimulator3D@N`). **Buscarlo por nombre
+`"PhysicalBoneSimulator3D"` no lo encuentra** (el test del Shiba fallaba por
+eso). Se busca por **TIPO**.
+
+Y como el simulador es hijo del esqueleto, Godot recorre el **subárbol del
+esqueleto** buscando los `PhysicalBone3D` y los enlaza
+(`PhysicalBoneSimulator3D::_pb_start_simulation`): por eso tienen que estar
+authorados **como hijos del `Skeleton3D`**.
+
+### T21 — el PD va por TORQUE, y el amortiguamiento es el CRÍTICO
+
+El PD antiguo (`τ = I·α`, `α = k·e − c·ω`) tiene tres fallos medidos:
+
+1. **La inercia de los huesos de la columna es diminuta** (0,001–0,013 kg·m²:
+   son cajas de 20 cm) y la gravedad exige 3,7–15,7 N·m. Con el tope de
+   aceleración (1500 rad/s²) el torque máximo era `I·1500` = 1,5–20 N·m: la
+   columna se dobla sola (ratio medido 1,7–4,9).
+2. **El amortiguamiento multiplicado por la ganancia** (`c = 100·13 = 1300`
+   cuando el crítico era 11) → 33× sobreamortiguado e inestable: el cuerpo
+   se ponía a girar a **47 rad/s** (el tope del motor es 6) y se quedaba con
+   **170–178° de error clavados** para siempre.
+3. **La ganancia no puede multiplicar la RIGIDEZ**: la velocidad de
+   equilibrio del PD es `ω = k·e/c`, así que con la ganancia en `k` se iba a
+   46 rad/s (conmutación). **La ganancia va en el TORQUE.**
+
+El PD actual:
+
+```
+τ = ganancia · (k_base·e − c·ω)        [N·m]
+c  = 2·ζ·√(k·ganancia·I)   (crítico, con la inercia REAL del cuerpo)
+τ  = τ.limit_length(min(I·max_angular_accel, max_torque))
+```
+
+`max_angular_accel` (rad/s²) es el tope que define la velocidad a la que el
+PD puede girar un cuerpo (`ω += α·dt`): con 3000 ganaba 50 rad/s por frame y
+**el error crecía**; con 300 gana 5 rad/s por frame y converge.
+
+### T22 — el error del PD es RELATIVO AL PADRE
+
+Con el error **absoluto** (cada hueso persiguiendo su pose absoluta en el
+mundo) los 7 huesos de la columna compiten: cada uno tira de su padre y la
+cadena se dobla en vez de estirarse (medido: cabeza 0,55 m por debajo de la
+pelvis con el personaje de pie).
+
+El error de una articulación es el del hijo respecto al padre:
+
+```
+e = (actual_padre⁻¹ · actual_hijo)⁻¹ · (objet_padre⁻¹ · objet_hijo)
+```
+
+y el torque se aplica al **hijo** (que es quien puede girar respecto al
+padre). El eje se lleva a MUNDO antes de aplicar el torque.
+
+### T23 — el balance ancla al SUELO (raycast), no a los pies
+
+La captura de la altura objetivo se hacía cuando el pie más bajo estaba a
+menos de 0,3 m del suelo. Si el personaje se estrella **de espaldas**, los
+pies quedan a 0,5–0,8 m y **la captura nunca ocurre**: el balance entero
+(upright + centro de masas + muelle vertical) se queda apagado y el ragdoll
+se queda tumbado boca arriba para siempre. Ahora se ancla al **suelo que hay
+debajo de la pelvis** (raycast) → la captura es correcta tumbado o de pie.
+
+### T24 — el `upright` no puede corregir un volteo de 180°
+
+`arriba.cross(Vector3.UP)` da **vector CERO** cuando el torso está
+invertido ⇒ el eje de corrección se anula y el torso se queda boca arriba
+para siempre (medido: `up_col` = −0,98 durante 4 s). Con el torso invertido
+el eje de giro puede ser cualquiera horizontal (se usa el "adelante" del
+torso).
+
+Y el torque del balance va **topado por la inercia** (`I·max_accel`): 120 N·m
+sobre un torso de I = 0,03 son 4000 rad/s² y el torso sale disparado.
+
+---
+
+## 4ter. ESTADO MEDIDO (2026-11-03, tras el cambio a escena)
+
+| Métrica | Antes (cuerpos por código) | Ahora (authorados) |
+|---|---|---|
+| `up_col` (verticalidad del torso) | **−0,9** (columna invertida) | oscila entre −0,9 y +0,8 según el momento |
+| `cab_pel` (cabeza sobre la pelvis) | **−0,86** (cabeza bajo la pelvis) | **−0,04 … −0,55** (se estira a ratos) |
+| `pel_y` (altura de la pelvis) | 0,25 (tumbado) | **0,65–0,71** (el balance lo levanta) |
+| `ω` de los cuerpos | **47 rad/s** (conmutación) | 5–25 rad/s |
+| Error de orientación | **175° clavados** | 0–30° (el PD converge) |
+| Test automático | 13/13 | **13/13** ✓ |
+
+**Lo que funciona:** los 21 huesos están en la escena con sus datos, los
+joints se crean (21 con joint, 0 sueltos), la malla no se deforma, el
+personaje se levanta del suelo, camina (5 m), la cabeza sigue a la cámara y
+el IK de los brazos funciona.
+
+**Lo que QUEDA (honesto):** la columna no se mantiene recta en reposo
+permanente: tras aterrizar el torso acaba con `up_col` negativo (la figura
+queda en U). El objetivo (esqueleto animado) está **perfecto** (medido:
+caderas 0,83 → cabeza 1,61, todos con `up ≈ (0,1,0)`), así que el siguiente
+paso es el **PD de la cadena**: hay que revisar el reparto de `pd_gain` por
+eslabón y el `max_angular_accel` de los huesos de la columna, que es el
+único dato que no se ha barrido todavía con el rig nuevo.
+
 ## 5. EL IKP (IK de brazos)
 
 - **Necesita un nodo polo** por brazo. Con solo `pole_direction_vector` el
@@ -334,6 +477,11 @@ un hueso **SOPORTA** es ganancia del PD (`pd_gain`, normalizada con
 ---
 
 ## 7. ESTADO ACTUAL (2026-11-03, medido)
+
+> ⚠️ **ESTA SECCIÓN describe el estado ANTIGUO** (cuerpos creados en runtime).
+> El estado de HOY está en **§4ter** (después del cambio a huesos authorados
+> en la escena). Los dos convivieron el mismo día: el cambio de arquitectura
+> se hizo a última hora y la sección 7 quedó desfasada.
 
 **El ragdoll funciona y se pone de pie.** Las tres patas que faltaban
 (del cuerpo a la cabeza) tienen todas juntas:

@@ -60,7 +60,15 @@ func mirror(physical_skel: Skeleton3D, animated_skel: Skeleton3D,
 	for i in physical_skel.get_bone_count():
 		if cuerpos.has(i):
 			var b: PhysicalBone3D = cuerpos[i]
-			physical_skel.set_bone_global_pose(i, inv * RagdollMotor.body_transform(b))
+			# OJO (medido) — el cuerpo NO esta en el origen del hueso: el
+			# motor lo coloca en `esqueleto * pose * body_offset` (el
+			# cuerpo va a MEDIA HUESO, ver `PhysicalBone3D::update_offset`).
+			# Para volver a la pose hay que DESHACER ese offset, o la malla
+			# se va media hueso por cada eslabon y sale deformada (medido:
+			# la camara en 3a persona veia el interior del modelo).
+			var boff: Transform3D = b.get("body_offset")
+			physical_skel.set_bone_global_pose(i,
+				inv * RagdollMotor.body_transform(b) * boff.affine_inverse())
 		elif animated_skel != null:
 			var ia := animated_skel.find_bone(physical_skel.get_bone_name(i))
 			if ia < 0:

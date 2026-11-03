@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b3hrysl24dftc"]
 
-[ext_resource type="Script" path="res://tests/ragdoll/shiba_test.gd" id="1_o6qmg"]
+[ext_resource type="Script" uid="uid://txxbwtp1c36t" path="res://tests/ragdoll/shiba_test.gd" id="1_o6qmg"]
 [ext_resource type="PackedScene" path="res://src/player/shiba_player.tscn" id="2_j5a23"]
-[ext_resource type="Script" path="res://src/ragdoll/character/ragdoll_character.gd" id="3_lqcb7"]
+[ext_resource type="Resource" uid="uid://b5tjx2vtjfuhh" path="res://src/player/stats_shiba.tres" id="4_o6qmg"]
 [ext_resource type="Resource" path="res://src/ragdoll/rig/shiba_rig_config.tres" id="4_wfiht"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fb1fl"]
@@ -40,25 +40,37 @@ light_energy = 1.4
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=634592104]
 environment = SubResource("Environment_g8ypc")
 
-[node name="Shiba" type="Node3D" parent="." unique_id=1218804823 instance=ExtResource("2_j5a23")]
+[node name="Shiba" parent="." unique_id=1218804823 instance=ExtResource("2_j5a23")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
-script = ExtResource("3_lqcb7")
 rig_config = ExtResource("4_wfiht")
+stats = ExtResource("4_o6qmg")
 angular_spring_stiffness = 3000.0
-max_angular_force = 250.0
-fp_clip_radius = 0.2
-fp_clip_meshes = PackedStringArray()
-body_follows_camera = false
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1376790914]
 
-[node name="Info" type="Label" parent="HUD" unique_id=1658100766]
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 900.0
-offset_bottom = 420.0
-theme_override_font_sizes/font_size = 22
+[node name="Ayuda" type="Label" parent="HUD" unique_id=1483303105]
+offset_left = 24.0
+offset_top = 890.0
+offset_right = 24.0
+offset_bottom = 890.0
 theme_override_colors/font_color = Color(1, 0.92, 0.2, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-text = "cargando..."
+theme_override_font_sizes/font_size = 18
+text = "WASD mover · Shift correr · Espacio saltar · Click izq/der agarrar · V 3a persona · Esc suelta el raton"
+
+[node name="Salud" type="ProgressBar" parent="HUD" unique_id=1212043447]
+custom_minimum_size = Vector2(320, 26)
+offset_left = 24.0
+offset_top = 930.0
+offset_right = 344.0
+offset_bottom = 957.0
+max_value = 300.0
+value = 300.0
+
+[node name="Stamina" type="ProgressBar" parent="HUD" unique_id=1758118802]
+custom_minimum_size = Vector2(220, 26)
+offset_left = 24.0
+offset_top = 972.0
+offset_right = 244.0
+offset_bottom = 999.0
+max_value = 50.0
+value = 50.0

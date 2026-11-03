@@ -1353,6 +1353,69 @@ La Carabela es una **misión católica de exterminio**, no un ejército. Sus mie
 
 ---
 
+## 🚨 REGLA DURA — LOS HUESOS FÍSICOS SON DATOS DE ESCENA (2026-11-03)
+
+> **Ni un solo `PhysicalBone3D` (ni su `CollisionShape3D`, ni su
+> `transform`, `body_offset`, `joint_offset`, `mass`, `joint_type` ni sus
+> `joint_constraints`) se crea, calcula ni ajusta POR CÓDIGO en runtime.
+> Todo eso va en la ESCENA (`.tscn`), como en
+> `src/ragdoll/scenes/ragdoll_character.tscn`.**
+
+**Por qué (medido, no por gusto):** el runtime que creaba los huesos en
+`RagdollSkeleton` dejaba la escena **sin datos**: invisible en el editor,
+sin `body_offset`/`joint_offset` correctos, y con el cuerpo y el ancla del
+joint en sitios que no son la anatomía real. El resultado medido fue un
+ragdoll que se caía de cabeza (columna invertida, cabeza 0,55 m por debajo
+de la pelvis) y una malla deformada.
+
+**El protocolo (idéntico al de la referencia):**
+
+```
+Shiba (Node3D, ragdoll_character.gd)
+├── Physical                        ← instancia del GLB (editable)
+│   └── metarig/Skeleton3D          ← los PhysicalBone3D son SUS HIJOS
+│       ├── <mallas del modelo>
+│       ├── Physical Bone spine     ← PhysicalBone3D + su CollisionShape3D
+│       │   ├── transform      = rest del hueso con el cuerpo a MEDIA HUESO
+│       │   ├── body_offset    = offset del cuerpo en espacio de HUESO
+│       │   ├── joint_offset   = body_offset⁻¹  (el ancla va a la CABEZA)
+│       │   ├── mass, joint_type, joint_constraints/*
+│       │   └── CollisionShape3D   ← la forma, centrada en el cuerpo
+│       └── ... (21 en total)
+├── Animated                        ← instancia del GLB (visible = false)
+├── Anim (AnimationPlayer + AnimationTree)
+└── CameraPivot, HUD, Agua, ...
+```
+
+**Quién hace qué:**
+
+| Pieza | Quién | Qué hace |
+|---|---|---|
+| `PhysicalBone3D`, colliders, offsets, masa, tipo de joint | **LA ESCENA** | datos, versionables, visibles en el editor |
+| `RagdollSkeleton` | runtime | **solo** recoge los cuerpos ya presentes, arranca `physical_bones_start_simulation()` y normaliza la máscara de colisión |
+| `RagdollMotor` (PD) | runtime | el torque que lleva los cuerpos a la pose de la animación |
+| `BalanceController` | runtime | el equilibrio (upright + centro de masas + muelle vertical) |
+
+**El simulador NO se crea:** lo crea Godot como hijo del `Skeleton3D`
+(`@PhysicalBoneSimulator3D@N`, nombre autogenerado ⇒ **se busca por TIPO,
+nunca por nombre**). Con el simulador como hijo del esqueleto, Godot recorre
+el subárbol del esqueleto buscando los `PhysicalBone3D` y los enlaza
+(`PhysicalBoneSimulator3D::_pb_start_simulation`); por eso tienen que estar
+**authorados como hijos del `Skeleton3D`**.
+
+**Herramienta de autoring (se ejecuta UNA VEZ, no en runtime):**
+`.heren/tmp/autorar_huesos.gd` escribe los bloques `[node ...]` y
+`[sub_resource ...]` de los 21 huesos en el `.tscn` con los mismos valores
+que calcularía el editor de Godot (`PhysicalBone3D::update_offset`).
+Equivale a `RigForge` pero para la ESCENA.
+
+**Al tocar un rig nuevo:** generar el `.tres` del rig → autorar los huesos
+en la escena → NO tocar el runtime. Si el runtime necesita saber algo de
+los huesos, se lee (`get_bone_id()`, `mass`, `get("body_offset")`), no se
+escribe.
+
+---
+
 ## ðŸ¦´ SHIBA â€” ragdoll del jugador (2026-11-03)
 
 `src/player/shiba_player.tscn` (24,6 KB) Â· `shiba_rig_config.tres` Â· `shiba_anim.tres` Â·
@@ -1364,7 +1427,7 @@ La Carabela es una **misión católica de exterminio**, no un ejército. Sus mie
 |---|---|---|
 | Instancias del GLB | `Physical/` + `Animated/` | La fÃ­sica y la animaciÃ³n, por separado (doble esqueleto) |
 | `Anim/` | raÃ­z | `AnimationPlayer` + `AnimationTree` (`root_node = "../.."`) |
-| (runtime) | `RagdollSkeleton` | Los **21 cuerpos creados EN RUNTIME** dentro del simulador (nada authored en la escena — ver "GOTA — el joint se crea en `_ready`") |
+| (escena) | `Physical/metarig/Skeleton3D` | Los **21 `PhysicalBone3D` AUTHORADOS**, con su collider, `transform`, `body_offset`, `joint_offset`, masa y tipo de joint (ver §**REGLA DURA**) |
 | `shiba_rig_config.tres` | datos | Nombres, masas, lÃ­mites de cono, clips, cadenas IK |
 | `shiba_anim.tres` | datos | 11 clips con las rutas reapuntadas al esqueleto animado |
 

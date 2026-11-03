@@ -1,13 +1,16 @@
 extends Node3D
 
-## PRUEBA AUTOMATICA del jugador Shiba (ragdoll).
+## PRUEBA AUTOMATICA y JUGABLE del jugador Shiba (ragdoll).
 ##
-## Comprueba lo que de verdad importa:
+## En modo automatico (SHIBA_TEST=1 o el CLI) comprueba lo que de verdad
+## importa:
 ##   1. El ragdoll arranca (simulador, huesos fisicos, IK, AnimationTree).
 ##   2. El personaje se MUEVE al pulsar adelante (no se queda clavado).
 ##   3. La CABEZA gira con el raton (la nueva funcionalidad).
 ##   4. El modo 3a persona aleja la camara.
 ##   5. El AnimationTree mezcla los clips (piernas al caminar).
+## Y en modo manual (F5) es la escena jugable: raton capturado (Esc lo
+## suelta), salud 300 y stamina 50 en las barras, de Yuki Romero.
 ##
 ## Uso: Godot --headless --path <proj> res://tests/ragdoll/shiba_test.tscn
 ##      con SHIBA_TEST=1 para el modo automatico.
@@ -16,7 +19,8 @@ extends Node3D
 @export var capture_mouse_on_ready := false
 
 @onready var shiba: Node3D = $Shiba
-@onready var info: Label = $HUD/Info
+@onready var salud_bar: ProgressBar = $HUD/Salud
+@onready var stamina_bar: ProgressBar = $HUD/Stamina
 
 var _t := 0.0
 var _fails := 0
@@ -62,8 +66,13 @@ func _physics_process(delta: float) -> void:
 		for b in shiba.find_children("*", "PhysicalBone3D", true, false):
 			bones += 1
 		_check(bones == 21, "huesos fisicos = %d (esperado 21)" % bones)
-		var sim := shiba.find_child("PhysicalBoneSimulator3D", true, false)
-		_check(sim != null, "simulador de huesos bones presente")
+		# El simulador lo crea Godot con nombre AUTOGENERADO (@PhysicalBoneSimulator3D@N):
+		# se busca por TIPO, nunca por nombre.
+		var sim: Node = null
+		for n in shiba.find_children("*", "PhysicalBoneSimulator3D", true, false):
+			sim = n
+			break
+		_check(sim != null, "simulador de huesos presente")
 		var at := shiba.find_child("AnimationTree", true, false) as AnimationTree
 		_check(at != null and at.tree_root != null, "AnimationTree con arbol")
 		if at:
@@ -130,9 +139,11 @@ func _physics_process(delta: float) -> void:
 		if _fails > 0:
 			print("RESULTADO: %d FALLOS" % _fails)
 
-	if info:
-		info.text = "== SHIBA TEST ==\nphase=%d t=%.1f\nchecks=%d fallos=%d\ncabeza yaw=%.1f\ncamara %.2f m del cuerpo" % [
-			_phase, _t, _checks - _fails, _fails, rad_to_deg(_head_yaw1), _cam_pos_far]
+	var jugador := shiba as RagdollCharacter
+	if salud_bar and jugador:
+		salud_bar.value = jugador.health
+	if stamina_bar and jugador:
+		stamina_bar.value = jugador.current_stamina
 
 	if auto_quit_seconds > 0.0 and (Time.get_ticks_msec() - _start_ms) >= int(auto_quit_seconds * 1000.0):
 		print("RESULTADO: %d/%d comprobaciones OK" % [_checks - _fails, _checks])

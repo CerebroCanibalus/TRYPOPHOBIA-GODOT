@@ -27,11 +27,18 @@ class_name BalanceController
 ## Tiene que ser comparable a la rigidez del PD (2500): si no, el PD
 ## "gana" y el torso se queda ladeado (medido: el personaje agachado y
 ## con los brazos abiertos).
-@export var upright_strength := 1500.0
-## Ganancia del desplazamiento del centro de masas (rad/s2 por metro).
-@export var com_strength := 600.0
-## Amortiguamiento de las dos ayudas (rad/s2 por rad/s).
-@export var damping := 120.0
+## Ganancia del torque UPRIGHT (N*m por radian de error). El torso se
+## endereza hacia la vertical del mundo.
+@export var upright_strength := 150.0
+## Ganancia del torque de desplazamiento del centro de masas (N*m por metro).
+@export var com_strength := 15000.0
+## Amortiguamiento angular (N*m*s/rad).
+##
+## OJO: el amortiguamiento es EXPLICITO, asi que tiene que cumplir
+## `c * dt / I <= 2` para ser estable. Con la inercia del tronco (0,012)
+## eso da `c <= 1,5`: por eso es 1,2 y no 120 (medido: con 120 el torso
+## se ponia a vibrar y no se sostenia).
+@export var damping := 1.2
 ## Rigidez del muelle vertical que SOSTIENE al personaje (N/m). El PD solo
 ## controla la ORIENTACION: sin este muelle el torso queda erguido pero
 ## tumbado en el suelo (medido: pelvis a 0,18 m en vez de 0,83).
@@ -46,6 +53,9 @@ class_name BalanceController
 ## torso (inercia 0,17) recibe 0,17*600 = 102 N*m y se pone a girar como
 ## un trompo (medido: el pecho y la cabeza bailando entre -180 y +180).
 @export var max_torque := 120.0
+## Tope de aceleracion angular del torso (rad/s2). El torque del
+## balance se limita con I * este valor.
+@export var max_accel := 300.0
 ## Tope del empuje vertical (N) del muelle que sostiene al personaje.
 ## Tiene que superar el peso (50 kg ~ 490 N) o el personaje no se levanta.
 @export var max_force := 1500.0
@@ -57,20 +67,28 @@ var _captured := false
 
 ## Captura la altura objetivo de la pelvis.
 ##
-## Se calcula sobre el SUELO, no en el instante de aparecer: el span es
+## Se calcula sobre el SUELO real, no en el instante de aparecer: el span es
 ## (altura de la pelvis - altura de los pies) en la pose de reposo del
-## clip, y se ancla al pie fisico mas bajo en el momento de capturar.
-## Asi el objetivo es la altura de DE PIE sobre el suelo real, caiga el
-## personaje de donde caiga (antes se capturaba al aparecer: en una caida
-## libre se capturaba la altura de AIRE y el muelle colgaba al personaje).
+## clip, y se ancla al SUELO que hay DEBAJO de la pelvis (`suelo_y`, que
+## mide el personaje con un raycast).
+##
+## OJO (medido): antes se ancla a la posicion del PIE mas bajo y solo se
+## capturaba si ese pie estaba a menos de 0,3 m del suelo. Si el personaje
+## se estrella de espaldas, los pies quedan a 0,5-0,8 m y la captura NUNCA
+## ocurre: el balance entero (upright + centro de masas + muelle vertical)
+## se queda apagado y el ragdoll se queda tumbado boca arriba para siempre
+## (medido: `up_col` = -0,99 durante 4 s).
+##
+## Con el raycast al suelo la captura es correcta tumbo o de pie.
 ## Se llama desde el personaje cuando toca suelo.
-func capture_target(pelvis_body: PhysicalBone3D, feet: Array[PhysicalBone3D],
-		animated_skel: Skeleton3D, pelvis_bone_id: int,
-		foot_bone_ids: Array[int]) -> void:
+func capture_target(pelvis_body: PhysicalBone3D, animated_skel: Skeleton3D,
+		pelvis_bone_id: int, foot_bone_ids: Array[int], suelo_y: float) -> void:
 	if target_pelvis_height > 0.0:
 		_captured = true
 		return
 	if pelvis_body == null or animated_skel == null:
+		return
+	if is_inf(suelo_y):
 		return
 	var pose_pelvis: float = animated_skel.get_bone_global_pose(pelvis_bone_id).origin.y
 	var pose_pies := INF
@@ -81,14 +99,7 @@ func capture_target(pelvis_body: PhysicalBone3D, feet: Array[PhysicalBone3D],
 	if is_inf(pose_pies):
 		return
 	var span := pose_pelvis - pose_pies
-	var feet_y := INF
-	for f in feet:
-		if f == null:
-			continue
-		feet_y = minf(feet_y, RagdollMotor.body_transform(f).origin.y)
-	if is_inf(feet_y):
-		return
-	target_pelvis_height = feet_y + span
+	target_pelvis_height = suelo_y + span
 	_captured = true
 
 
@@ -113,13 +124,26 @@ func apply(bones: Array[PhysicalBone3D], pelvis_body: PhysicalBone3D,
 	var omega := RagdollMotor.body_angular_velocity(torso)
 
 	# --- 1) UPRIGHT: el torso hacia la vertical ------------------------
+	#
+	# OJO (medido) — dos trampas:
+	# a) Si el torso esta INVERTIDO (180 grados), `arriba.cross(UP)` da
+	#    vector CERO: el eje de correccion se anula y el torso se queda
+	#    boca arriba para siempre (medido: `up_col` = -0,98 durante 4 s).
+	#    Para ese caso se usa el "adelante" del torso como eje.
+	# b) El torque sale de `torque_de()` (I * alpha), asi que con una
+	#    inertia de 0,012 el tope de 600 rad/s2 daba 7,4 N*m, menos de
+	#    los ~15 N*m que el tronco tiene que sostener: no lo erguia.
 	var arriba := xf.basis.y.normalized()
+	var ang := arriba.angle_to(Vector3.UP)
 	var eje_up := arriba.cross(Vector3.UP)
-	var ang := eje_up.length()
-	var alpha := Vector3.ZERO
-	if ang > 0.001:
-		eje_up /= ang
-		alpha += eje_up * minf(ang, deg_to_rad(45.0)) * upright_strength
+	if eje_up.length() < 0.001:
+		# Invertido: el eje de giro puede ser cualquiera horizontal.
+		eje_up = xf.basis.z.normalized().cross(Vector3.UP)
+		if eje_up.length() < 0.001:
+			eje_up = Vector3.RIGHT
+	else:
+		eje_up = eje_up.normalized()
+	var torque := eje_up * minf(ang, deg_to_rad(60.0)) * upright_strength
 
 	# --- 2) CoM SHIFT: el centro de masas sobre la base de apoyo -------
 	var com := _centro_de_masas(bones)
@@ -130,12 +154,15 @@ func apply(bones: Array[PhysicalBone3D], pelvis_body: PhysicalBone3D,
 		# El torso se inclina hacia el lado del desvio (el peso tira de vuelta).
 		var fwd := xf.basis.z.normalized()
 		var lateral := fwd.cross(Vector3.UP).normalized()
-		alpha += lateral * desvio.dot(lateral) * com_strength
+		torque += lateral * desvio.dot(lateral) * com_strength
 
-	alpha -= omega * damping
-	alpha = alpha.limit_length(600.0)
-	PhysicsServer3D.body_apply_torque(torso.get_rid(),
-		RagdollMotor.torque_de(torso, alpha).limit_length(max_torque))
+	torque -= omega * damping
+	# Tope por ACELERACION (igual que el PD): el torque del balance se
+	# limita con la inercia del torso. Sin este tope, 120 N*m sobre un
+	# torso de I=0,03 son 4000 rad/s2 y el torso sale disparado (medido).
+	var inercia := RagdollMotor.inercia_media(torso)
+	torque = torque.limit_length(minf(max_torque, inercia * max_accel))
+	PhysicsServer3D.body_apply_torque(torso.get_rid(), torque)
 
 	# --- 3) HEIGHT ASSIST: el muelle que lo mantiene de pie ------------
 	# El PD solo controla la ORIENTACION: con el torso erguido pero tumbado

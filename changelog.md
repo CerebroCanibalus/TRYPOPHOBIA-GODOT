@@ -3,7 +3,45 @@
 Registro de iteraciones grandes completadas. Los detalles técnicos y las MEDIDAS
 viven en `AGENTS.md` (memoria viva del proyecto); aquí va el qué y el cuándo.
 
+
 ---
+
+## 2026-11-03 - Ragdoll: los huesos fisicos pasan a la ESCENA (regla dura)
+
+**Que:** el `RagdollSkeleton` ya **no crea ni un solo `PhysicalBone3D`**. Los 21
+huesos del Shiba (con su collider, `transform`, `body_offset`, `joint_offset`,
+masa y tipo de joint) van **authorados en `src/player/shiba_player.tscn`**, como
+hijos del `Skeleton3D`, igual que en la referencia `ragdoll_character.tscn`.
+
+**Por que (medido):** el runtime que los creaba dejaba la escena sin datos
+(invisible en el editor, offsets calculados a mano) y el personaje se caia de
+cabeza: la columna invertida, la cabeza 0,55 m por debajo de la pelvis y la
+malla retorcida.
+
+**Lo que se arreglo de paso (todo medido):**
+- El cuerpo va a **media hueso** (como hace el editor): el joint une el final
+  del padre con la cabeza del hijo en vez de unir cabeza con cabeza.
+- `PoseMirror` deshace el `body_offset` al copiar la pose (la malla ya no se
+  deforma).
+- El balance ancla su altura objetivo al **suelo** (raycast) y no a los pies:
+  antes, al caer de espaldas, la captura nunca ocurria y el ragdoll se quedaba
+  tumbado boca arriba para siempre.
+- El `upright` ya puede corregir un volteo de 180 grados (el eje de correccion
+  se anulaba) y su torque se topa por la inercia del torso.
+- El PD es **por torque**, con amortiguamiento **critico** por cuerpo y error
+  **relativo al padre**; la ganancia del rig va en el torque, no en la rigidez.
+- El rig del Shiba tiene masas realistas (~33 kg) y colliders de torso.
+- La cabeza tiene su **propio tipo de joint** (cono 90/100, como la
+  referencia).
+
+**Estado:** test automatico **13/13**; los 21 huesos con joint (0 sueltos); el
+personaje se levanta del suelo y camina. **Pendiente:** la columna no se
+mantiene recta en reposo permanente (queda en U tras aterrizar); el siguiente
+paso es barrer el reparto de `pd_gain` por eslabon y el `max_angular_accel`
+de la columna con el rig nuevo.
+
+**Documentacion:** §REGLA DURA en `AGENTS.md`; trampas T18-T24 y §4ter
+(estado medido) en `meta/docs/Sistema_Animacion_Ragdoll.md`.---
 
 ## 2026-11-03 — Ragdoll: tres bugs de fondo (joints, marcos, balance)
 

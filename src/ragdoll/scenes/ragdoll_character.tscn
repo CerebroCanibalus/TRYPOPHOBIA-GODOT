@@ -127,7 +127,6 @@ node_connections = [&"output", 0, &"Blend2 ", &"Blend2 ", 0, &"walking", &"Blend
 [node name="Character" type="Node3D" unique_id=94893202]
 script = ExtResource("1_lo1uq")
 rig_config = ExtResource("7_rig")
-angular_spring_stiffness = 3000.0
 fp_clip_radius = 0.55
 
 [node name="Physical" parent="." unique_id=1317213108 instance=ExtResource("1_nfcse")]

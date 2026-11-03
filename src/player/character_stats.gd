@@ -5,6 +5,11 @@ extends Resource
 @export_range(0.0, 100.0) var max_stamina: float = 100.0
 @export var stamina_regen_rate: float = 10.0  # por segundo, mientras no se usa
 
+@export_group("Salud")
+## Salud máxima del personaje. Por ahora no la usa ningún sistema de daño;
+## es el stat del personaje (Shiba: 300) y el gancho `take_damage()` la baja.
+@export var max_health: float = 100.0
+
 @export_group("Movement")
 @export var walk_speed: float = 5.0       # m/s
 @export var sprint_speed: float = 9.0     # m/s

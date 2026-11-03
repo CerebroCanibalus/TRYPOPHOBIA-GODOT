@@ -12,6 +12,11 @@ class_name RagdollCharacter
 ## Montar un personaje nuevo = un `RagdollRig` (que genera el `RigForge`)
 ## + esta escena. Nada de tocar codigo.
 
+## La salud llega a 0 → la muerte es local y cosmetica (decision D16 de la
+## guia de red): se suelta el ragdoll y se emite `murio()`. Aún no hay
+## fuentes de dano en el juego; es el gancho para cuando existan.
+signal murio
+
 ## === NODOS DE LA ESCENA =================================================
 
 @export var rig_config: RagdollRig
@@ -40,6 +45,14 @@ var arm_ik: ArmIK                   ## Los brazos que se estiran al puntero.
 var fp_clip: FpClip                 ## El recorte de 1a persona.
 var balance: BalanceController      ## El equilibrio (upright + centro de masas).
 
+## === ESTADISTICAS (Yuki Romero: Velocidad Baja · Stamina 50 · Salud 300)
+## Los valores viven en `stats_shiba.tres`; la escena la asigna.
+@export var stats: CharacterStats
+
+var current_stamina := 0.0
+var health := 0.0
+var is_sprinting := false
+
 ## === MOVIMIENTO ========================================================
 const JUMP_STRENGTH := 70.0
 const SPEED := 50.0
@@ -56,9 +69,10 @@ const SALIDA_AGUA := 8.0
 @export var body_turn_speed := 7.0
 
 ## === MOTOR (ganos del PD) ==============================================
-@export var angular_spring_stiffness := 2500.0
-@export var angular_spring_damping := 100.0
-@export var max_angular_accel := 1500.0
+##
+## La rigidez y el amortiguamiento NO se configuran aqui: los gobierna el
+## `RagdollMotor` (una sola fuente). El PD es por TORQUE (N*m por radian)
+## y su amortiguamiento es el CRITICO de cada cuerpo.
 @export var max_angular_speed := 6.0
 ## Escala de los brazos que NO estan agarrando (1 = igual que el resto).
 @export var arm_spring_scale := 1.0
@@ -117,6 +131,30 @@ func _ready() -> void:
 	_crear_componentes()
 	_conectar_senales()
 	_resolver_agua()
+	_inicializar_stats()
+
+
+## Stats del personaje (salud y stamina). Sin `stats` en la escena, se usan
+## defaults de `CharacterStats` (no el del Shiba: hay que asignar la de cada
+## personaje).
+func _inicializar_stats() -> void:
+	if stats == null:
+		stats = CharacterStats.new()
+	current_stamina = stats.max_stamina
+	health = stats.max_health
+	# Igual que Iza: el juego es de raton capturado; Esc lo suelta (ver
+	# `_input`, accion `exit_camera`).
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+
+## Dano: baja la salud y, al llegar a 0, suelta el ragdoll.
+func take_damage(amount: float) -> void:
+	if health <= 0.0:
+		return
+	health = maxf(health - amount, 0.0)
+	if health == 0.0:
+		ragdoll_mode = true
+		murio.emit()
 
 
 ## === ALTURAS Y VELOCIDADES (telemetria y pruebas) ======================
@@ -133,6 +171,31 @@ func velocidad_cuerpo() -> Vector3:
 
 
 ## === MONTAJE ============================================================
+
+## Altura del SUELO que hay debajo de la pelvis (raycast hacia abajo).
+## INF si no hay suelo debajo.
+##
+## Se usa para anclar la altura objetivo del balance (ver
+## `BalanceController.capture_target`): anclar al PIE fallaba cuando el
+## personaje caia de espaldas (los pies quedan altos y el balance nunca
+## se activaba, medido: el ragdoll se quedaba tumbado boca arriba).
+func _suelo_bajo_pelvis() -> float:
+	if physical_bone_body == null:
+		return INF
+	var mundo := get_world_3d()
+	if mundo == null:
+		return INF
+	var p := RagdollMotor.body_transform(physical_bone_body).origin
+	var q := PhysicsRayQueryParameters3D.create(p, p + Vector3.DOWN * 3.0)
+	q.collision_mask = 1  # solo el mundo
+	q.collide_with_areas = false
+	var hit := mundo.direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return INF
+	var pos: Vector3 = hit["position"]
+	return pos.y
+
+
 func _resolver_refs() -> void:
 	if physical_skel == null:
 		physical_skel = _buscar_esqueleto("Physical")
@@ -196,9 +259,8 @@ func _crear_componentes() -> void:
 	add_child(balance)
 
 	# --- Motor ---------------------------------------------------------
-	motor.stiffness = angular_spring_stiffness
-	motor.damping = angular_spring_damping
-	motor.max_angular_accel = max_angular_accel
+	# La rigidez y el amortiguamiento los gobierna el MOTOR (una sola
+	# fuente): ahora son un PD por TORQUE (N*m), no un PD por aceleracion.
 	motor.max_angular_speed = max_angular_speed
 	motor.arm_spring_scale = arm_spring_scale
 
@@ -289,6 +351,13 @@ func _resolver_agua() -> void:
 
 ## === BUCLE ==============================================================
 func _input(event: InputEvent) -> void:
+	# Esc suelta/captura el raton (accion `exit_camera`).
+	if event.is_action_pressed("exit_camera"):
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		else:
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		return
 	# Captura del pulso de salto por DOS caminos: el evento real (fiable en
 	# gameplay) y is_action_just_pressed (para input sintetizado).
 	if event.is_action_pressed("jump") and not event.is_echo():
@@ -315,33 +384,37 @@ func _physics_process(delta: float) -> void:
 		return
 	walking = false
 	var dir := _direccion_de_movimiento()
+	# Sprint: gasta stamina; si se acaba, vuelve a paso de tortuga.
+	is_sprinting = Input.is_action_pressed("sprint") and current_stamina > 0.0 \
+		and dir.length_squared() > 0.0
+	if is_sprinting:
+		current_stamina = maxf(current_stamina - stats.sprint_stamina_cost * delta, 0.0)
+	else:
+		current_stamina = minf(current_stamina + stats.stamina_regen_rate * delta,
+			stats.max_stamina)
 	if physical_bone_body != null:
 		_mover_cuerpo(dir, delta)
 	_calcular_suelo()
 	_actualizar_agua()
 	# La altura objetivo del balance se captura EN EL PRIMER CONTACTO CON
-	# EL SUELO (no al aparecer, y no con los pies en el aire): el objetivo
-	# es la altura de pie sobre el suelo real. Los ShapeCast de los pies
-	# detectan el suelo hasta 0,45 m por encima: si se capturara ahi, el
-	# muelle colgaria al personaje en el aire (medido: pelvis a 1,13 m
-	# con la cabeza en el suelo). Hay que esperar a que los pies de
-	# VERDAD esten abajo (< 0,3 m del suelo).
-	if is_on_floor and balance != null and not balance.is_captured() \
+	# EL SUELO (no al aparecer): el objetivo es la altura de pie sobre el
+	# suelo real. Se ancla al SUELO que hay DEBAJO de la pelvis (raycast),
+	# no a la posicion de los pies: si el personaje se estrella de espaldas
+	# los pies quedan altos y la captura nunca ocurriria (el balance entero
+	# se quedaria apagado y el ragdoll se quedaria tumbado, medido).
+	if balance != null and not balance.is_captured() \
 			and animated_skel != null and rig_config != null:
-		var pies := _pies()
-		var feet_y := INF
-		for f in pies:
-			if f != null:
-				feet_y = minf(feet_y, RagdollMotor.body_transform(f).origin.y)
-		if not is_inf(feet_y) and feet_y < 0.3:
+		var suelo_y := _suelo_bajo_pelvis()
+		if not is_inf(suelo_y):
 			var pelvis_id := animated_skel.find_bone(rig_config.body_bone_name)
 			var pie_ids: Array[int] = [
 				animated_skel.find_bone(rig_config.on_floor_left_bone_name),
 				animated_skel.find_bone(rig_config.on_floor_right_bone_name)]
-			balance.capture_target(physical_bone_body, pies, animated_skel,
-				pelvis_id, pie_ids)
+			balance.capture_target(physical_bone_body, animated_skel,
+				pelvis_id, pie_ids, suelo_y)
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
 		physical_bone_body.linear_velocity.y += JUMP_STRENGTH
+		current_stamina = maxf(current_stamina - stats.jump_stamina_cost, 0.0)
 		if jump_timer:
 			jump_timer.start()
 		can_jump = false
@@ -393,7 +466,10 @@ func _mover_cuerpo(dir: Vector3, delta: float) -> void:
 	# En el agua se nada: mas lento, y el arrastre del WaterBody (hijo,
 	# corre DESPUES de este script) se encarga del resto.
 	var en_agua := agua != null and agua.sumergido
-	var vel := SPEED * (NADO_ESCALA if en_agua else 1.0)
+	# Yuki es de Velocidad Baja: el multiplicador va respecto a 5 m/s (que
+	# es el walk_speed neutro de `CharacterStats`).
+	var vel_mult := (stats.sprint_speed if is_sprinting else stats.walk_speed) / 5.0
+	var vel := SPEED * (NADO_ESCALA if en_agua else 1.0) * vel_mult
 	# La velocidad se lee del SERVIDOR de fisica: la del nodo no se actualiza
 	# en este motor.
 	var v := RagdollMotor.body_linear_velocity(physical_bone_body)
@@ -494,7 +570,7 @@ func _actualizar_pd() -> void:
 	# balance decide si se aguanta.
 	balance.apply(skeleton.bones, physical_bone_body, rig_config, _pies())
 	motor.drive(skeleton.bones, objetivos, _grupos(), get_physics_process_delta_time(),
-		_ganancias())
+		_ganancias(), physical_skel)
 	mirror.mirror(physical_skel, animated_skel, skeleton.bones, physical_bone_body)
 
 
