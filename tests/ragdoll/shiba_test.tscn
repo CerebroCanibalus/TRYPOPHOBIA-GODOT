@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://b3hrysl24dftc"]
 
-[ext_resource type="Script" uid="uid://txxbwtp1c36t" path="res://tests/ragdoll/shiba_test.gd" id="1_o6qmg"]
-[ext_resource type="PackedScene" uid="uid://hd7ltfufcvh" path="res://src/player/shiba_player.tscn" id="2_j5a23"]
-[ext_resource type="Resource" uid="uid://b5tjx2vtjfuhh" path="res://src/player/stats_shiba.tres" id="4_o6qmg"]
+[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll/scenes/ragdoll_character.tscn" id="2_hyxfb"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fb1fl"]
 size = Vector3(60, 1, 60)
@@ -18,8 +16,6 @@ ambient_light_color = Color(0.55, 0.58, 0.65, 1)
 ambient_light_energy = 0.7
 
 [node name="ShibaTest" type="Node3D" unique_id=631583793]
-script = ExtResource("1_o6qmg")
-auto_quit_seconds = 8.0
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=1007243390]
 collision_mask = 2
@@ -38,10 +34,6 @@ light_energy = 1.4
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=634592104]
 environment = SubResource("Environment_g8ypc")
-
-[node name="Shiba" parent="." unique_id=1218804823 instance=ExtResource("2_j5a23")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5237956, 0)
-stats = ExtResource("4_o6qmg")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1376790914]
 
@@ -71,3 +63,6 @@ offset_right = 244.0
 offset_bottom = 999.0
 max_value = 50.0
 value = 50.0
+
+[node name="Character" parent="." unique_id=94893202 instance=ExtResource("2_hyxfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.431669, 1.14884, 0.8609414)

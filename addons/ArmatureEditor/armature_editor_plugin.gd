@@ -4,12 +4,30 @@ extends EditorPlugin
 const SKELETON_GIZMO := preload("uid://yqxkavcemd2r")
 const TOOLBAR_SCENE := preload("uid://caejk0juh8rr5")
 
+## Servicio de creacion de pistas/claves de animacion.
+##
+## Se carga con `preload` y NO por `class_name` a proposito: el plugin se
+## parsea al arrancar el editor, y una clase global recien creada todavia
+## puede no estar en el cache de clases globales. Con `preload` el plugin
+## carga siempre, sin depender de que el editor haya reescaneado el proyecto.
+const ANIMATION_KEY_SERVICE := preload("res://addons/ArmatureEditor/edit/animation_key_service.gd")
+
 var toolbar_scene: PackedScene = TOOLBAR_SCENE
 
-var skeleton_gizmo: EditorNode3DGizmoPlugin
+## Gizmo propio del armature editor.
+##
+## Se tipa con el script concreto (y no con `EditorNode3DGizmoPlugin`) para
+## poder llamar a sus metodos propios (`show_bone_bodies`,
+## `set_foreign_gizmos_hidden`) sin castear en cada uso.
+##
+## Se usa el `preload` y no el `class_name` global por el mismo motivo que el
+## servicio de claves: el plugin se parsea al arrancar el editor y una clase
+## global recien creada todavia puede no estar en el cache.
+var skeleton_gizmo: SKELETON_GIZMO
 var context: ArmatureSkeletonContext
 
 var toolbar_controller: ToolbarController
+var animation_key_service: ANIMATION_KEY_SERVICE
 var context_menu_controller: ContextMenuController
 var extrude_name_controller: ExtrudeNameController
 var rename_dialog_controller: RenameDialogController
@@ -32,6 +50,9 @@ var _pending_extrude_pre: Array = []
 
 var _saved_show_rest_only_by_id: Dictionary = {}
 var _active_skeleton_id: int = 0
+
+## Si es true se ven los cuerpos de los huesos; si es false, solo los puntos.
+var _show_bones: bool = true
 ## Initializes plugin UI and services.
 func _enter_tree() -> void:
 	context = ArmatureSkeletonContext.new()
@@ -40,9 +61,13 @@ func _enter_tree() -> void:
 	context.editor_interface = get_editor_interface()
 	context.undo_redo = get_undo_redo()
 
+	animation_key_service = ArmatureAnimationKeyService.new()
+	animation_key_service.set_dependencies(context, context.undo_redo)
+
 	skeleton_gizmo = SKELETON_GIZMO.new()
 	add_node_3d_gizmo_plugin(skeleton_gizmo)
 	skeleton_gizmo.recorded_bones_changed.connect(_on_recorded_bones_changed)
+	skeleton_gizmo.show_bone_bodies = _show_bones
 	context.gizmo_plugin = skeleton_gizmo
 
 	toolbar_controller = ToolbarController.new()
@@ -54,6 +79,9 @@ func _enter_tree() -> void:
 	context.toolbar.snap_enabled_changed.connect(_on_snap_enabled_changed)
 	context.toolbar.snap_amount_changed.connect(_on_snap_amount_changed)
 	context.toolbar.create_root_bone.connect(_ensure_skeleton_has_root_bone)
+	context.toolbar.insert_tracks_pressed.connect(_on_insert_tracks_pressed)
+	context.toolbar.insert_modified_pressed.connect(_on_insert_modified_pressed)
+	context.toolbar.show_bones_changed.connect(_on_show_bones_changed)
 	context_menu_controller = ContextMenuController.new()
 	add_child(context_menu_controller)
 	context_menu_controller.set_context(context)
@@ -132,6 +160,11 @@ func _on_snap_amount_changed(amount: float) -> void:
 ## Disposes plugin UI and services.
 func _exit_tree() -> void:
 	_restore_active_skeleton_show_rest_only()
+	# Devuelve los gizmos nativos de Godot a su estado original.
+	if skeleton_gizmo != null:
+		var root := get_editor_interface().get_edited_scene_root()
+		if root != null:
+			_restore_foreign_gizmos_in_tree(root)
 	if context.skeleton:
 		context.skeleton.clear_gizmos()
 	if skeleton_gizmo != null:
@@ -172,6 +205,11 @@ func _handles(object: Object) -> bool:
 		context.skeleton.clear_subgizmo_selection()
 		if !context.skeleton.property_list_changed.is_connected(check_create_root_bone):
 			context.skeleton.property_list_changed.connect(check_create_root_bone)
+
+		# Al seleccionar el esqueleto, Godot crea/recupera su gizmo nativo, que
+		# dibuja los huesos "a su manera". Se apaga si el usuario pidio solo los
+		# puntos de las articulaciones.
+		skeleton_gizmo.set_foreign_gizmos_hidden(next_skeleton, not _show_bones)
 
 		toolbar_controller.toolbar.visible = true
 	elif c == "MultiNodeEdit":
@@ -269,7 +307,11 @@ func _force_refresh_gizmos() -> void:
 
 func _refresh_skeletons_in_tree(node: Node) -> void:
 	if node is Skeleton3D:
-		(node as Skeleton3D).update_gizmos()
+		var skeleton := node as Skeleton3D
+		skeleton.update_gizmos()
+		# Tras redibujar, el gizmo nativo de Godot vuelve a verse: hay que
+		# volver a apagarlo si el usuario pidio solo los puntos.
+		skeleton_gizmo.set_foreign_gizmos_hidden(skeleton, not _show_bones)
 
 	for child in node.get_children():
 		_refresh_skeletons_in_tree(child)
@@ -289,14 +331,92 @@ func _ensure_skeleton_has_root_bone() -> void:
 	skeleton_edit_service._create_initial_root_bone()
 	var post := undo_snapshot_service.capture()
 	undo_snapshot_service.commit("Create Root Bone", pre, post, true)
-## Receives recorded bones updates from the gizmo.
-func _on_recorded_bones_changed(bone_indices: Array) -> void:
+## Aplica la visibilidad de los huesos al esqueleto activo.
+##
+## Godot dibuja sus propios huesos (gizmo nativo "Skeleton3D") ademas de los
+## del armature editor. Con "Bones" desmarcado se apagan los ajenos y el addon
+## deja de pintar los cuerpos de los huesos: solo quedan los puntos redondos
+## de las articulaciones.
+func _on_show_bones_changed(enabled: bool) -> void:
+	_show_bones = enabled
+	if skeleton_gizmo != null:
+		skeleton_gizmo.show_bone_bodies = enabled
+	_apply_bone_visibility()
+
+
+## Aplica la visibilidad de los huesos a todos los Skeleton3D de la escena.
+func _apply_bone_visibility() -> void:
+	if skeleton_gizmo == null:
+		return
 	var root := get_editor_interface().get_edited_scene_root()
 	if root == null:
 		return
-	var ap := root.get_node_or_null("%AnimationPlayer")
-	if ap != null and ap.has_method("key_bone_indices"):
-		ap.call("key_bone_indices", bone_indices)
+	_apply_bone_visibility_in_tree(root)
+
+
+## Aplica la visibilidad de los huesos al esqueleto y sus descendientes.
+func _apply_bone_visibility_in_tree(node: Node) -> void:
+	if node is Skeleton3D:
+		skeleton_gizmo.set_foreign_gizmos_hidden(node as Skeleton3D, not _show_bones)
+	for child in node.get_children():
+		_apply_bone_visibility_in_tree(child)
+
+
+## Devuelve los gizmos nativos de Godot a su estado visible.
+func _restore_foreign_gizmos_in_tree(node: Node) -> void:
+	if node is Skeleton3D:
+		skeleton_gizmo.set_foreign_gizmos_hidden(node as Skeleton3D, false)
+	for child in node.get_children():
+		_restore_foreign_gizmos_in_tree(child)
+
+
+## Receives recorded bones updates from the gizmo.
+##
+## El gizmo avisa de los huesos que acaba de transformar. Se delega en el
+## servicio de claves para que el usuario pueda keyarlos con "Insert Modified".
+func _on_recorded_bones_changed(bone_indices: Array) -> void:
+	if animation_key_service == null:
+		return
+	animation_key_service.note_bones_modified(bone_indices)
+
+
+## Crea las pistas que falten de los huesos modificados.
+func _on_insert_tracks_pressed(mask: int) -> void:
+	if animation_key_service == null:
+		return
+	animation_key_service.set_track_mask(mask)
+	var created := animation_key_service.perform_insert_tracks(mask)
+	if created == 0:
+		_aviso_sin_claves()
+	else:
+		print("[ArmatureEditor] Insert Tracks: %d pistas creadas." % created)
+
+
+## Inserta claves en las pistas existentes de los huesos modificados.
+func _on_insert_modified_pressed(mask: int) -> void:
+	if animation_key_service == null:
+		return
+	animation_key_service.set_track_mask(mask)
+	var inserted := animation_key_service.perform_insert_modified(mask)
+	if inserted == 0:
+		_aviso_sin_claves()
+	else:
+		print("[ArmatureEditor] Insert Modified: %d claves insertadas." % inserted)
+
+
+## Avisa por que no se pudo insertar nada.
+func _aviso_sin_claves() -> void:
+	if context == null or context.skeleton == null:
+		print("[ArmatureEditor] No hay un Skeleton3D seleccionado.")
+		return
+	var player := animation_key_service.find_animation_player()
+	if player == null:
+		print("[ArmatureEditor] No se encontro un AnimationPlayer en la escena abierta.")
+		return
+	if animation_key_service.current_animation(player) == null:
+		print("[ArmatureEditor] No hay ninguna animacion seleccionada en el panel Animation.")
+		return
+	print("[ArmatureEditor] Ningun hueso modificado (la pose de todos los huesos coincide con su rest).")
 
 ## Dispatches context menu actions to edit services.
 func _on_context_menu_action_requested(action_id: int, bone_index: int) -> void:

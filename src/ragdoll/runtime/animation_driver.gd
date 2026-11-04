@@ -105,10 +105,40 @@ func pose_of_bone(bone_name: StringName) -> Transform3D:
 
 
 ## Activa o desactiva el clip de paseo (mezcla con el de reposo).
-func set_walking(caminando: bool) -> void:
+##
+## `velocidad` = la velocidad horizontal REAL del cuerpo (m/s).
+##
+## El ciclo de paso se escala con ella (nodo `TimeScale` del AnimationTree):
+## si el clip va a su ritmo natural y el cuerpo va mas rapido, los pies
+## PATINAN (el pie se queda clavado en el suelo y el cuerpo se queda
+## atras: medido, el pie se deslizaba 4,5 m por ciclo).
+##
+## LA VELOCIDAD NATURAL DEL CLIP: `2 * zancada / ciclo`.
+##
+## OJO con el factor 2 (medido): en un ciclo COMPLETO (dos pasos, una
+## pierna y la otra) el cuerpo avanza DOS zancadas, no una: la zancada es
+## lo que el pie recorre hacia atras mientras esta plantado (por eso el
+## cuerpo pasa por encima). Sin el 2, el clip va al doble de ritmo que el
+## suelo y los pies patinan.
+##
+## Con la zancada de 0,32 m y el ciclo de 0,58 s: 1,10 m/s (el ritmo de
+## andar del Shiba).
+func set_walking(caminando: bool, velocidad: float = 0.0) -> void:
 	if tree == null:
 		return
 	tree.set("parameters/walking/blend_amount", 1.0 if caminando else 0.0)
+	var zancada := 0.32
+	var ciclo := 0.58
+	if rig != null:
+		if rig.walk_stride > 0.0:
+			zancada = rig.walk_stride
+		if rig.walk_cycle > 0.0:
+			ciclo = rig.walk_cycle
+	var natural := 2.0 * zancada / maxf(ciclo, 0.01)
+	var escala := 1.0
+	if caminando and velocidad > 0.05:
+		escala = clampf(velocidad / natural, 0.05, 4.0)
+	tree.set("parameters/TimeScale/scale", escala)
 
 
 ## Posicion del BlendSpace de direccion (-1..1), normalmente el pitch.

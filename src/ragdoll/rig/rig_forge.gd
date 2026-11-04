@@ -29,7 +29,7 @@ class_name RigForge
 ##   var opts := ForgeOptions.new()
 ##   opts.model_path = "res://assets/players/shiba/shiba_V2.glb"
 ##   opts.body_bone = &"spine"
-##   opts.head_bone = &"spine.006"
+##   opts.head_bone = &"head"
 ##   opts.hands = [&"hand.L", &"hand.R"]
 ##   opts.feet = [&"foot.L", &"foot.R"]
 ##   var rig: RagdollRig = RigForge.forge(opts)

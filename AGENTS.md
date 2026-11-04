@@ -156,7 +156,7 @@ la escena:
 
 ```bash
 godot --headless --path <proj> -s res://tools/ragdoll_forge/forge.gd -- \
-  --model=res://assets/players/shiba/shiba_V2.glb --body=spine --head=spine.006 \
+  --model=res://assets/players/shiba/shiba_V2.glb --body=spine --head=head \
   --hands=hand.L,hand.R --feet=foot.L,foot.R --extra=spine.003,spine.005 \
   --mass=50 --name=Shiba --rig=... --scene=...
 ```
@@ -1516,6 +1516,66 @@ Shiba son las de **inclinaciÃ³n** (`lean_back` / `IDLE` / `lean_forward`).
 - Soltada **desde el aire**, la caida aplasta la pose; el spawn real es de pie
   en el suelo y ahi se sostiene.
 - La cabeza gira con la camara y la 3a persona funciona (tecla V).
+
+---
+
+## 🦴 ESQUELETO CANÓNICO DEL SHIBA (2026-11-04)
+
+**Motor:** `project.godot` volvió a **`3d/physics_engine="Box3D Physics"`** (estaba
+en `Godot Physics`, sin commitear). Toda la doc y los parches M2/M3/H2 son de Box3D.
+
+**Regla:** un `PhysicalBone3D` se pone porque el hueso **SOPORTA** o **COLISIONA**.
+Los demás son **puentes** (sin cuerpo): el joint salta al ancestro con cuerpo.
+
+| Cuerpo | Hueso del modelo | Forma | Joint | Masa |
+|---|---|---|---|---|
+| pelvis | `spine` | Box | raíz | 6.0 |
+| pecho | `spine.003` | Capsule | 30/20 | 5.0 |
+| cabeza | `head` (antes `spine.006`) | Capsule | 35/45 | 3.0 |
+| brazo | `upper_arm.L/R` | Capsule | 70/40 | 1.2 |
+| antebrazo | `forearm.L/R` | Capsule | 120/20 | 1.0 |
+| mano | `hand.L/R` | **Sphere r=0.06** | 40/20 | 0.4 |
+| muslo | `thigh.L/R` | Capsule | 50/30 | 4.0 |
+| espinilla | `shin.L/R` | Capsule | 120/20 | 3.0 |
+| pie | `foot.L/R` | **Box alineada al MODELO** | 30/15 | 1.2 |
+
+**Total 15 cuerpos, 35,6 kg** (piernas 16,4 · tronco 14 · brazos 5,2).
+
+**Quitados (7):** `spine.001/.002/.004/.005` (7 vértebras → 3 cuerpos) y
+`shoulder.L/R` (95° de twist y 2 restricciones de más). **Añadidos (2):**
+`foot.L/R` con caja de planta — antes el personaje se apoyaba en la **punta de
+la espinilla** (`shin.L` tenía ESFERA r=0.11 y `shin.R` cápsula: colliders
+asimétricos). **Renombrado:** `spine.006` → `head` en el **GLB** (nodo),
+`shiba_anim.tres` (5 tracks), `shiba_rig_config.tres` y la escena.
+
+**Medido (playground, Box3D, 900 frames):**
+
+| Métrica | 19 cuerpos | 15 cuerpos |
+|---|---|---|
+| `up_col` | 0.901 (peor 0.730) | **0.969 (peor 0.890)** |
+| `omega` máx | 13.03 rad/s | **4.38 rad/s** |
+| error máx | **179.8°** (`spine.005`) | **96.0°** (`foot.R`) |
+| columna | 23 / 27.6° | **13.0 / 22.1°** |
+| brazos | 45–147° | **4.3–7.4°** |
+| piernas | 4.3 / 16.3° | **4.6 / 5.2°** |
+| patinaje | +0.34 m/s | **+0.03 m/s** |
+
+**También:** `RagdollSkeleton` ya **NO** activa la auto-colisión (`mask |= 2`):
+la máscara de la escena (5 = mundo + interactuables) manda. Se acabó la sopa de
+excepciones por AABB. Y se quitó el `print("[MOTOR] ...")` que escribía **una
+línea por tick** (363 líneas en 15 s).
+
+**Pendiente (medido, no supuesto):**
+- `foot.R` 95°: el pie está **plantado** y el servo lo quiere girar con el clip.
+  Necesita IK de pie o excluirlo del servo cuando toca suelo.
+- `_base_de_objetivos()` sigue **sin llamarse**: la mano física queda 1,1 m
+  detrás de su objetivo al caminar (el maestro está fijo en el mundo).
+- Velocidad andando **0.54 m/s** con `walk_speed = 1.1`: el empuje y la fricción
+  del pie se pelean; es tema del controlador (fase A: `CharacterBody3D`).
+- El `shiba_rig_config.tres` **sigue listando 19 huesos** (física duplicada que
+  el runtime ignora). La verdad es la escena.
+- `tests/ragdoll/shiba_test.gd` sigue **vacío** y su `.tscn` instancia el
+  `ragdoll_character.tscn` viejo (Character.glb), no el Shiba.
 
 ---
 

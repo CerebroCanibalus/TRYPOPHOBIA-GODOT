@@ -6,7 +6,7 @@ extends SceneTree
 ## {{{
 ##   godot --headless --path <proyecto> -s res://tools/ragdoll_forge/forge.gd -- \
 ##     --model=res://assets/players/shiba/shiba_V2.glb \
-##     --body=spine --head=spine.006 \
+##     --body=spine --head=head \
 ##     --hands=hand.L,hand.R --feet=foot.L,foot.R \
 ##     --extra=spine.003,spine.005 \
 ##     --clips=res://src/player/shiba_anim.tres \

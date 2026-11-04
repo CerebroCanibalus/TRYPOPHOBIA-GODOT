@@ -40,7 +40,12 @@ var rig: RagdollRig
 var animated_skel: Skeleton3D
 var camera_pivot: Node3D
 
-var ik: TwoBoneIK3D
+## Un modificador POR BRAZO: la influencia de un TwoBoneIK3D es una sola
+## para todas sus cadenas, asi que con un unico modificador al hacer clic
+## en un brazo el otro tambien se re-resolvia (medido: el brazo que no
+## agarra se movia y se deformaba). Con dos, cada uno tiene su influencia.
+var ik_l: TwoBoneIK3D
+var ik_r: TwoBoneIK3D
 var pole_l: Node3D
 var pole_r: Node3D
 var target_l: Node3D
@@ -70,20 +75,18 @@ func setup(p_rig: RagdollRig, p_skel: Skeleton3D, p_camera: Node3D,
 	# mallas y el Skin deja de enlazar (la malla sale estirada).
 	# Anadiendolo aqui, en runtime, la instancia se queda intacta.
 	_crear_nodos()
-	if ik == null:
-		push_warning("[ArmIK] no se encontro el TwoBoneIK3D: sin IK de brazos")
+	if ik_l == null or ik_r == null:
+		push_warning("[ArmIK] no se encontraron los TwoBoneIK3D: sin IK de brazos")
 		return
 	if target_l == null or target_r == null:
 		push_warning("[ArmIK] faltan los HandTarget: sin IK de brazos")
 		return
-	ik.setting_count = 0
 	if not enabled:
 		print("[ArmIK] desactivado por export")
 		return
-	ik.setting_count = 2
 	_place_poles_and_measure()
-	_configurar_cadena(0, rig.ik_arm_left, target_l, pole_l)
-	_configurar_cadena(1, rig.ik_arm_right, target_r, pole_r)
+	_configurar_cadena(ik_l, rig.ik_arm_left, target_l, pole_l)
+	_configurar_cadena(ik_r, rig.ik_arm_right, target_r, pole_r)
 	_l_arm_id = animated_skel.find_bone(rig.ik_arm_left["root"])
 	_r_arm_id = animated_skel.find_bone(rig.ik_arm_right["root"])
 	_l_hand_id = animated_skel.find_bone(rig.ik_arm_left["end"])
@@ -92,7 +95,8 @@ func setup(p_rig: RagdollRig, p_skel: Skeleton3D, p_camera: Node3D,
 
 ## ¿El IK esta escribiendo pose ahora mismo?
 func is_active() -> bool:
-	return ik != null and ik.get_influence() > 0.001
+	return (ik_l != null and ik_l.get_influence() > 0.001) \
+		or (ik_r != null and ik_r.get_influence() > 0.001)
 
 
 ## Longitud real del brazo (hombro -> muneca), medida del rig.
@@ -117,14 +121,22 @@ func current_reach() -> float:
 ## personaje camina con los brazos por delante (medido).
 func update_targets(world_point: Vector3, clicked_l: bool, clicked_r: bool,
 		delta: float) -> void:
-	if ik == null or target_l == null or target_r == null:
+	if (ik_l == null and ik_r == null) or target_l == null or target_r == null:
 		return
 	if _l_arm_id < 0 or _r_arm_id < 0:
 		return
-	var clicked := clicked_l or clicked_r
-	var want := influence if clicked else 0.0
-	ik.set_influence(move_toward(ik.get_influence(), want, influence_fade_speed * delta))
-	if not clicked:
+	# La influencia es POR BRAZO: el que agarra se estira hacia el
+	# puntero y el otro se queda en la pose del clip (lo que pedia el
+	# General: "que se queden mayormente en la posicion de la animacion
+	# idle a menos que estiren el brazo").
+	var fade := influence_fade_speed * delta
+	if ik_l != null:
+		var want_l := influence if clicked_l else 0.0
+		ik_l.set_influence(move_toward(ik_l.get_influence(), want_l, fade))
+	if ik_r != null:
+		var want_r := influence if clicked_r else 0.0
+		ik_r.set_influence(move_toward(ik_r.get_influence(), want_r, fade))
+	if not (clicked_l or clicked_r):
 		return
 	if camera_pivot == null:
 		return
@@ -148,10 +160,14 @@ func update_targets(world_point: Vector3, clicked_l: bool, clicked_r: bool,
 # --- Interno ---------------------------------------------------------------
 
 func _crear_nodos() -> void:
-	if ik == null:
-		ik = TwoBoneIK3D.new()
-		ik.name = "ArmIK"
-		animated_skel.add_child(ik)
+	if ik_l == null:
+		ik_l = TwoBoneIK3D.new()
+		ik_l.name = "ArmIK_L"
+		animated_skel.add_child(ik_l)
+	if ik_r == null:
+		ik_r = TwoBoneIK3D.new()
+		ik_r.name = "ArmIK_R"
+		animated_skel.add_child(ik_r)
 	if pole_l == null:
 		pole_l = Node3D.new()
 		pole_l.name = "PoleTargetL"
@@ -162,15 +178,18 @@ func _crear_nodos() -> void:
 		animated_skel.add_child(pole_r)
 
 
-func _configurar_cadena(indice: int, cfg: Dictionary, target: Node3D, polo: Node3D) -> void:
-	ik.set_root_bone_name(indice, cfg["root"])
-	ik.set_middle_bone_name(indice, cfg["mid"])
-	ik.set_end_bone_name(indice, cfg["end"])
-	ik.set_target_node(indice, ik.get_path_to(target))
+func _configurar_cadena(mod: TwoBoneIK3D, cfg: Dictionary, target: Node3D, polo: Node3D) -> void:
+	if mod == null:
+		return
+	mod.setting_count = 1
+	mod.set_root_bone_name(0, cfg["root"])
+	mod.set_middle_bone_name(0, cfg["mid"])
+	mod.set_end_bone_name(0, cfg["end"])
+	mod.set_target_node(0, mod.get_path_to(target))
 	if polo != null:
-		ik.set_pole_node(indice, ik.get_path_to(polo))
+		mod.set_pole_node(0, mod.get_path_to(polo))
 	else:
-		push_warning("[ArmIK] falta el polo de la cadena %d" % indice)
+		push_warning("[ArmIK] falta el polo de la cadena")
 
 
 ## Mide el brazo y coloca los polos.

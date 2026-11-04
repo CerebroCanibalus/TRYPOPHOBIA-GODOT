@@ -8,22 +8,47 @@ class_name RagdollMotor
 ## probar aislado.
 ##
 ## ---------------------------------------------------------------------------
-## LEY DE CONTROL (2026-11-03) — SERVO DE VELOCIDAD CON OBJETIVO ABSOLUTO
+## LEY DE CONTROL: SERVO JERARQUICO (2026-11-04)
 ## ---------------------------------------------------------------------------
 ##
-## Para cada cuerpo, en cada tick de fisica:
+## NUESTRO rig es una cadena articulada (la columna son 7 huesos, los brazos
+## 2, las piernas 2). Servir cada hueso a una ORIENTACION ABSOLUTA uno por
+## uno hace que cada uno pelee con su vecino: los jointsendeduran la
+## posicion rigida del padre mientras el servo del hijo quiere llevarla a
+## una orientacion absoluta distinta.
 ##
-##   actual   = pose del HUESO en MUNDO   (cuerpo del servidor * body_offset^-1)
-##   objetivo = pose del HUESO en MUNDO de la ANIMACION
-##   e        = eje*angulo de (objetivo * actual^-1)      [MUNDO]
-##   alpha    = k*e - c*omega                             [rad/s2]
-##   omega   += alpha*dt                                  [rad/s]
+## MEDIDO (2026-11-04): con el servo absoluto, la pelvis giraba a 344
+## grados por segundo de forma continua (un trompo), el personaje no ganaba
+## terreno (0,5 m/s con un objetivo de 1,7) y la marcha no se leia.
 ##
-## Es la MISMA ley que el proyecto de referencia
-## (`tools/active_ragdoll_reference`, el unico ragdoll que se ha visto
-## andar de verdad) y la UNICA que aguanta con Box3D.
+## La ley correcta para una cadena es la JERARQUICA:
 ##
-## POR QUE NO HAY PD POR TORQUE (medido, noopinado)
+##   RAIZ de la cadena (la pelvis):
+##     actual   = pose del HUESO en MUNDO
+##     objetivo = pose del HUESO en MUNDO de la ANIMACION
+##     e        = eje*angulo de (objetivo * actual^-1)      [MUNDO]
+##     alpha    = k*e - c*omega                              [rad/s2]
+##     omega    = omega + alpha*dt                           [rad/s]
+##
+##   HIJO (con padre fisico P):
+##     rel_objetivo = objetivo_P^-1 * objetivo_hijo          [marco del padre]
+##     rel_actual   = actual_P^-1   * actual_hijo            [marco del padre]
+##     e            = eje*angulo de (rel_objetivo * rel_actual^-1)
+##     omega_rel    = actual_P^-1 * (omega_hijo - omega_P)
+##     alpha_rel    = k*e - c*omega_rel
+##     omega_hijo   = omega_P + actual_P.basis * (omega_rel + alpha_rel*dt)
+##
+## El padre MANDA: el hijo no puedeapartarse de la pose que el padre le
+## impone, asi que la cadena se comporta como un cuerpo articulado de
+## verdad y el joint y el servo dejan de pelear.
+##
+## El "padre fisico" es el ancestro mas cercano que tenga cuerpo: es el
+## mismo que usa Godot para crear el joint
+## (`PhysicalBoneSimulator3D::_get_physical_bone_parent` sube por la
+## jerarquia), asi que el servo y la fisica comparten la misma jerarquia.
+##
+## ---------------------------------------------------------------------------
+## POR QUE NO HAY PD POR TORQUE (medido, no opinado)
 ## ----------------------------------------------------
 ## Se probo un PD "serio": error RELATIVO al padre, torque aplicado como
 ## PAR (+tau al hijo, -tau al padre), dos inercias (propia y de subarbol)
@@ -34,16 +59,16 @@ class_name RagdollMotor
 ## El PD por torque tambien tiene ERROR DE EQUILIBRIO: la gravedad gana y
 ## el tronco se queda inclinado 20-29 grados.
 ##
-## El servo de velocidad no tiene error de equilibrio (el error manda la
-## velocidad, no la fuerza) y cada hueso va a su pose ABSOLUTA: no hay
-## cadena de errores acumulados ni pares que se cancelen.
+## El servo no tiene error de equilibrio (el error manda la velocidad, no
+## la fuerza) y cada hueso va a su pose: no hay cadena de errores
+## acumulados ni pares que se cancelen.
 ##
 ## TRAMPA — el tope de velocidad angular
 ## ------------------------------------
 ## Con un tope de 6 rad/s el servo no puede mover un hueso grande en un
 ## frame: el personaje se queda "aguado" y los brazos y el pecho parecen
-## NO seguir al ragdoll (sintoma medido). El tope tiene que ser de
-## decenas de rad/s (40), no de 6.
+## NO seguir el ragdoll (sintoma medido). El tope tiene que ser de
+## decenas de rad/s, no de 6.
 ##
 ## TRAMPA — comparar pose de HUESO con pose de CUERPO
 ## --------------------------------------------------
@@ -58,43 +83,26 @@ class_name RagdollMotor
 ## La frecuencia natural es `w_n = sqrt(k)`: a 60 Hz hace falta
 ## `w_n*dt < 1` -> `k < 3600`. El valor 3000 es el de la referencia (la
 ## escena la sobreescribia a 3000 sobre 4000 del script).
-@export var stiffness := 3000.0
+@export var stiffness := 4000.0
 ## Amortiguamiento del servo (1/s): frena la velocidad angular.
-## `zeta = c / (2*sqrt(k))` -> con 3000 y 80 sale 0.73 (algo por debajo de
+## `zeta = c / (2*sqrt(k))` -> con 3000 y 80 sale 0,73 (algo por debajo de
 ## lo critico: el servo llega rapido y no oscila).
 @export var damping := 80.0
 ## Tope de la velocidad angular (rad/s). Con 6 el servo no puede mover
 ## un hueso grande: el personaje se ve "aguado" (medido).
-@export var max_angular_speed := 40.0
+@export var max_angular_speed := 9999.0
 ## Escala de rigidez y amortiguamiento de los brazos que NO estan
-## agarrando (1 = igual que el resto). 0.25 = los brazos cuelgan.
-@export var arm_spring_scale := 0.25
+## agarrando (1 = igual que el resto).
+##
+## MEDIDO (2026-11-04): con 0,25 los brazos se CAEN por la gravedad (el
+## servo no los sujeta) y, con el personaje ya bien erguido, se veia con
+## los brazos caidos. Ahora valen 1 (se sujetan en la pose del clip) y el
+## IK los estira cuando se pulsa el clic.
+@export var arm_spring_scale := 1.0
 ## Tope de la aceleracion angular (rad/s2) que se puede pedir en un
 ## tick. Es el equivalente al `limit_length(max_angular_force)` de la
 ## referencia (que ponia 9999, o sea, casi ninguno).
-@export var max_angular_accel := 4000.0
-## Ley por TORQUE: en vez de COMANDAR la velocidad angular (que pisa la
-## que calculo el solver y hace que los joints ganen siempre), se aplica un
-## PARQUE de fuerza: `tau = I*(k*e - c*w)`. El solver de joints reparte
-## esas fuerzas de forma consistente y la cadena aguanta el peso.
-@export var por_torque := false
-## Amortiguamiento como fraccion del CRITICO (1 = critico).
-@export var damping_ratio := 1.0
-## Tope del torque (N*m) que se puede aplicar a un hueso.
-@export var max_torque := 400.0
-## Rigidez del servo POR TORQUE (N*m por radian de error).
-##
-## Es la UNICA rigidez que no depende de la inercia para el error de
-## equilibrio: con un servo en ACELERACION el error es
-## `e = tau_gravedad / (I * k)` y con la pelvis del Shiba (I = 0,11
-## kg*m2 sosteniendo 30 kg de torso a 0,3 m = 88 N*m) salen 15
-## GRADOS de error en la pelvis: el personaje se inclina y se hunde (medido).
-## Con k en N*m/rad el error es `e = tau_gravedad / k` y no depende de la
-## inercia.
-@export var stiffness_torque := 900.0
-## Limite de estabilidad por cuerpo: `k < 4*I/dt^2` (a 60 Hz).
-## Se aplica solo a los cuerpos que se doblarian con una rigidez global.
-@export var limite_estabilidad := true
+@export var max_angular_accel := 99999.0
 
 
 ## Lleva los cuerpos a sus poses objetivo.
@@ -114,12 +122,20 @@ func drive(bones: Array[PhysicalBone3D], objetivos: Dictionary,
 		var id := b.get_bone_id()
 		if id >= 0:
 			cuerpos[id] = b
-	# Se procesa de la RAIZ a las puntas: el hijo necesita la velocidad
-	# angular que se le ha COMMANDADO al padre (ver abajo).
+	# El padre FISICO de cada hueso: el ancestro mas cercano con cuerpo.
+	# Es el mismo que usa Godot para el joint, asi que el servo y la
+	# articulacion comparten jerarquia (y no se pelean).
+	var padres := {}
+	for b in bones:
+		var id := b.get_bone_id()
+		if id >= 0:
+			padres[id] = _padre_con_cuerpo(physical_skel, id, cuerpos)
+	# Se procesa de la RAIZ a las puntas: el padre se resuelve antes que
+	# el hijo (el servo del hijo necesita la velocidad que se le ha
+	# comandado al padre).
 	var orden := _orden_por_profundidad(bones, physical_skel)
-	# Velocidad angular COMANDADA por cuerpo (no la real): el hijo hereda
-	# la de su padre.
-	var omega_cmd := {}
+	var actuals := {}   ## id -> pose del hueso en MUNDO (la de este tick)
+	var omegas := {}    ## id -> velocidad angular COMANDADA (MUNDO)
 	for b in orden:
 		var id := b.get_bone_id()
 		if id < 0 or not objetivos.has(id):
@@ -129,70 +145,91 @@ func drive(bones: Array[PhysicalBone3D], objetivos: Dictionary,
 		# (`body_offset`), asi que se deshace para comparar peras con peras.
 		var boff: Transform3D = b.get("body_offset")
 		var actual := body_transform(b) * boff.affine_inverse()
+		actuals[id] = actual
 		var omega_real := body_angular_velocity(b)
 		var k := stiffness
 		var c := damping
 		if String(grupos.get(id, "")) == "arm":
 			k *= arm_spring_scale
 			c *= arm_spring_scale
-		var e := Vector3.ZERO
-		var omega_rel := Vector3.ZERO
-		var padre_id := -1
-		if physical_skel != null:
-			padre_id = physical_skel.get_bone_parent(id)
-		var pb: PhysicalBone3D = null
-		if padre_id >= 0:
-			pb = cuerpos.get(padre_id)
-		# --- ERROR ABSOLUTO: la orientacion del hueso en el MUNDO (la del
-		# personaje entero). Es la ley de la referencia.
-		#
-		# OJO (medido): la variante por ARTICULACION (el error del hijo
-		# respecto al padre) se midio y NO funciona: cada hueso manda una
-		# velocidad angular INCOMPATIBLE con la de su padre, el solver de
-		# joints tiene que elegir y gana el joint -> el servo no puede con
-		# el peso (medido: la columna obedecia con 2-8 grados de error pero
-		# las piernas se quedaban en 27-80 y el personaje en cuclillas).
-		e = error_de_rotacion(objetivo.basis * actual.basis.inverse())
-		# El amortiguamiento va contra la velocidad angular PROPIA del
-		# cuerpo.
-		omega_rel = omega_real
-		var alpha := (k * e) - (c * omega_rel)
-		alpha = alpha.limit_length(max_angular_accel)
-		if por_torque:
-			# PARQUE: la ley del servo en N*m por radian de error.
+		var pid: int = int(padres.get(id, -1))
+		var omega_nueva := Vector3.ZERO
+		if pid >= 0 and actuals.has(pid) and omegas.has(pid):
+			# --- HIJO: error RELATIVO al padre (la cadena) ---------------
+			var obj_padre: Transform3D = objetivos[pid]
+			var act_padre: Transform3D = actuals[pid]
+			var omega_padre: Vector3 = omegas[pid]
+			# Las poses RELATIVAS al padre (en el marco del padre).
+			var rel_objetivo := obj_padre.basis.inverse() * objetivo.basis
+			var rel_actual := act_padre.basis.inverse() * actual.basis
+			# OJO (medido 2026-11-04): aqui el error es el QUATERNION
+			# (eje*angulo), NO el euler. El euler de una diferencia que se
+			# acerca a 180 grados salta de golpe (la discontinuidad del
+			# euler) y el servo EXPLOTA: medido, el personaje salio
+			# disparado a 8,7 m de altura a 9,8 m/s.
 			#
-			# El error de equilibrio es `e = tau_gravedad / k`: NO depende
-			# de la inercia del cuerpo (con la ley en aceleracion,
-			# `e = tau_gravedad / (I*k)`, y con la pelvis del Shiba salian
-			# 15 GRADOS de error: el personaje se inclinaba y se hundia).
+			# El euler solo se usa en la RAIZ de la cadena (la ley de la
+			# referencia, ver mas abajo).
 			#
-			# El amortiguamiento es el CRITICO de cada cuerpo:
-			# `c = 2*zeta*sqrt(k*I)`.
-			var inercia := inercia_media(b)
-			var kt := stiffness_torque
-			if limite_estabilidad:
-				# `w_n = sqrt(k/I)` y hace falta `w_n*dt < 2` ->
-				# `k < 4*I/dt^2`. Un hueso con poca inercia (la pelvis)
-				# se doblaria con una rigidez global: se le recorta.
-				var tope := 0.8 * 4.0 * inercia / maxf(delta * delta, 0.000001)
-				kt = minf(kt, tope)
-			# El amortiguamiento critico `c = 2*zeta*sqrt(k*I)` NO SIEMPRE
-			# es estable: hace falta `c*dt/I <= 2` y en un hueso pequeno
-			# (el pie: I = 0,0024) el critico se pasa y el servo EXPLOTA
-			# (medido: el pie a 180 rad/s). Se recorta al limite de
-			# estabilidad.
-			var ct := 2.0 * damping_ratio * sqrt(maxf(kt * inercia, 0.000001))
-			var ct_max := 0.9 * 2.0 * inercia / maxf(delta, 0.000001)
-			ct = minf(ct, ct_max)
-			var torque := (kt * e) - (ct * omega_rel)
-			torque = torque.limit_length(max_torque)
-			PhysicsServer3D.body_apply_torque(b.get_rid(), torque)
-			continue
-		var omega_nueva := omega_real + alpha * delta
-		omega_nueva = omega_nueva.limit_length(max_angular_speed)
-		omega_cmd[id] = omega_nueva
+			# Y el error es RELATIVO al padre: la diferencia se calcula con
+			# las poses relativas (en el marco del padre).
+			var e := error_de_rotacion(rel_objetivo * rel_actual.inverse())
+			# La velocidad angular RELATIVA (en el marco del padre).
+			var omega_rel := act_padre.basis.inverse() * (omega_real - omega_padre)
+			var alpha := (k * e) - (c * omega_rel)
+			alpha = alpha.limit_length(max_angular_accel)
+			var omega_rel_nueva := omega_rel + alpha * delta
+			omega_rel_nueva = omega_rel_nueva.limit_length(max_angular_speed)
+			# El padre MANDA: el hijo gira con el padre mas su correccion.
+			omega_nueva = omega_padre + act_padre.basis * omega_rel_nueva
+		else:
+			# --- RAIZ de la cadena: error ABSOLUTO (la ley de la
+			#     referencia, que es la que hace que el personaje se tenga
+			#     de pie) -----------------------------------------------
+			#
+			# OJO (medido): el error es el EULER de la diferencia, como en
+			# la REFERENCIA:
+			#   `rotation_difference = target.basis * current.basis.inverse()`
+			#   `torque = hookes_law(rotation_difference.get_euler(), omega, k, c)`
+			# Con el quaternion el error es mas CORTO (apunta en la
+			# direccion real) pero tambien mas FUERTE: el pie, que esta en
+			# el suelo, no puede plantarse (el servo lo obliga a girar a la
+			# velocidad del clip) y la pierna barre a 1,4 m/s mientras el
+			# cuerpo no avanza. Con el euler el vector del error se reparte
+			# en los tres ejes y el servo cede mas: el pie se planta y el
+			# cuerpo pasa por encima.
+			# OJO (medido 2026-11-04): el error es el EULER de la
+			# diferencia, como en la REFERENCIA (vease la nota de la
+			# rama del hijo): el quaternion es mas fuerte y el pie no se
+			# planta.
+			var e := (objetivo.basis * actual.basis.inverse()).get_euler()
+			var alpha := (k * e) - (c * omega_real)
+			alpha = alpha.limit_length(max_angular_accel)
+			omega_nueva = omega_real + alpha * delta
+			omega_nueva = omega_nueva.limit_length(max_angular_speed)
+		omegas[id] = omega_nueva
 		PhysicsServer3D.body_set_state(b.get_rid(),
 			PhysicsServer3D.BODY_STATE_ANGULAR_VELOCITY, omega_nueva)
+
+
+## El ancestro mas cercano que TIENE CUERPO (el padre del joint).
+##
+## Es la misma regla que usa Godot 4.7 al crear los joints
+## (`PhysicalBoneSimulator3D::_get_physical_bone_parent`): sube por la
+## jerarquia del esqueleto hasta encontrar un hueso con cuerpo. Por eso los
+## huesos "puente" (pelvis.L, shoulder.L, foot.L) no rompen la cadena: el
+## muslo se articula con la pelvis, el brazo con el pecho y el pie con la
+## espinilla.
+static func _padre_con_cuerpo(physical_skel: Skeleton3D, id: int,
+		cuerpos: Dictionary) -> int:
+	if physical_skel == null:
+		return -1
+	var padre := physical_skel.get_bone_parent(id)
+	while padre >= 0:
+		if cuerpos.has(padre):
+			return padre
+		padre = physical_skel.get_bone_parent(padre)
+	return -1
 
 
 ## Los cuerpos ordenados de la RAIZ a las puntas (por profundidad en el
@@ -301,8 +338,7 @@ const TORQUE_SIN_INERCIA := 0.03
 
 
 ## Inercia media de un cuerpo (kg*m2). Si el motor de fisica no la da, se
-## usa un valor pequeno. (La ley actual no la usa: es una aceleracion
-## comandada, no un torque.)
+## usa un valor pequeno.
 static func inercia_media(b: PhysicalBone3D) -> float:
 	var inercia: Vector3 = PhysicsServer3D.body_get_param(b.get_rid(),
 		PhysicsServer3D.BODY_PARAM_INERTIA)

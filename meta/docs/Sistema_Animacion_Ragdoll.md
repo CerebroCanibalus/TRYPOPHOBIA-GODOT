@@ -67,10 +67,10 @@ Cada pieza es un componente con UNA responsabilidad. La raíz los compone.
 # 1) El forge mide el modelo y genera el rig (incluye los "huesos puente")
 godot --headless --path <proj> -s res://tools/ragdoll_forge/forge.gd -- \
   --model=res://assets/players/shiba/shiba_V2.glb \
-  --body=spine --head=spine.006 \
+  --body=spine --head=head \
   --hands=hand.L,hand.R --feet=foot.L,foot.R \
   --extra=spine.003,spine.005 \
-  --look=spine.005,spine.006 --lookw=0.35,0.65 \
+  --look=spine.005,head --lookw=0.35,0.65 \
   --mass=50 --name=Shiba \
   --rig=res://src/ragdoll/rig/shiba_rig_config.tres \
   --scene=res://src/player/shiba_player.tscn
@@ -303,7 +303,7 @@ hueso-cuerpo**: si solo el pelvis era `column`, `_torso()` devolvía `null` y
 y el balance no hacía NADA).
 
 → `RigForge` reparte `column` por la cadena **de la cabeza al cuerpo**
-(`spine..spine.006` completo).
+(`spine..head` completo).
 
 ### T17 — Masa real ≠ ganancia del PD
 

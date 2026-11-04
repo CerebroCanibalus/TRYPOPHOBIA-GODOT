@@ -95,6 +95,21 @@ class_name RagdollRig
 ## El peso se ACUMULA hacia la punta: el ultimo de la lista recibe el
 ## 100% del giro y los anteriores la parte que les toca (asi el cuello
 ## gira un poco y la cabeza el resto, como una persona de verdad).
+## La ZANCADA del ciclo de paseo (metros por ciclo): lo que avanza el pie
+## en el aire, de la despegue al contacto.
+##
+## Y la DURACION del ciclo (segundos). Con los dos, la VELOCIDAD NATURAL del
+## clip es `walk_stride / walk_cycle` (m/s): es el ritmo al que el pie se
+## mueve si el clip va a su ritmo natural.
+##
+## OJO (medido 2026-11-04): el TimeScale del AnimationTree NO se puede
+## calcular con `velocidad / zancada` (eso son m/s por m, no tiene
+## unidades de tiempo): hay que dividir por la velocidad NATURAL del clip,
+## `zancada / duracion`. Con la formula erronea el ciclo iba a 3,4x de su
+## ritmo (por eso los pies patinaban 3,5 m por ciclo).
+@export var walk_stride := 0.72
+@export var walk_cycle := 0.24
+
 @export var head_look_bones: PackedStringArray = PackedStringArray(["Head"])
 ## Peso POR HUESO (fraccion del giro total). Se normalizan para que sumen 1.
 @export var head_look_weights: PackedFloat32Array = PackedFloat32Array([1.0])

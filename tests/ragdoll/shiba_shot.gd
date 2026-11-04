@@ -1,71 +1,85 @@
 extends Node3D
 
-## CAPTURAS del Shiba: 1a persona y 3a persona, con la cabeza girada.
+## CAPTURA DE UNA SOLA FOTO del Shiba (diagnostico visual).
+##
+## NUNCA hace una rafaga: una foto por ejecucion. El nombre y la vista se
+## pasan por entorno:
+##   SHOT_NOMBRE=pasos1   -> tests/ragdoll/shots/pasos1.png
+##   SHOT_VISTA=derecha   -> frente | derecha | atras | izquierda
+##   SHOT_T=1.5           -> momento de la foto (s)
+##   SHOT_ANDAR=1         -> camina hasta la foto
+##
 ## Uso: Godot --path <proj> res://tests/ragdoll/shiba_shot.tscn
 ##      (sin --headless para que renderice de verdad)
-
-@export var ruta_salida := "user://shiba_shot.png"
 
 @onready var shiba: Node3D = $Shiba
 
 var _t := 0.0
-var _fase := 0
-var _capturas := 0
+var _cam: Camera3D = null
+var _nombre := "shiba"
+var _vista := "frente"
+var _momento := 1.5
+var _andar := false
+var _hecha := false
 
 
 func _ready() -> void:
-	print("[shot] listo")
+	_nombre = OS.get_environment("SHOT_NOMBRE")
+	if _nombre == "":
+		_nombre = "shiba"
+	_vista = OS.get_environment("SHOT_VISTA")
+	if _vista == "":
+		_vista = "frente"
+	var t := OS.get_environment("SHOT_T")
+	if t != "":
+		_momento = float(t)
+	_andar = OS.get_environment("SHOT_ANDAR") == "1"
+	# El rig del Shiba tiene el pie en el suelo con el nodo en y=0.
+	shiba.global_position = Vector3(0.0, 0.05, 0.0)
+	_cam = Camera3D.new()
+	_cam.fov = 50.0
+	add_child(_cam)
+	_cam.make_current()
 	get_window().grab_focus()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_colocar_camara()
+	if _andar:
+		Input.action_press("move_forward")
+	print("[shot] %s | vista=%s | t=%.2f | andar=%s" % [_nombre, _vista, _momento, str(_andar)])
 
 
 func _process(delta: float) -> void:
 	_t += delta
-	var cam := shiba.get_node_or_null("CameraPivot") as Node3D
-	if cam == null:
-		return
-
-	match _fase:
-		0:
-			# 1a persona: el personaje se queda quieto y mira alrededor.
-			if _t > 1.2:
-				_fase = 1
-				cam.rotation_degrees.y = -35.0
-				cam.rotation_degrees.x = -12.0
-				print("[shot] girando la cabeza a la izquierda")
-		1:
-			if _t > 2.2:
-				_fase = 2
-				_capturar("1persona")
-		2:
-			if _t > 2.6:
-				_fase = 3
-				cam.call("toggle_third_person")
-				print("[shot] modo 3a persona")
-		3:
-			if _t > 4.0:
-				_fase = 4
-				_capturar("3persona")
-		4:
-			if _t > 4.4:
-				_fase = 5
-				# Caminar para ver el ciclo de paseo.
-				Input.action_press("move_forward")
-		5:
-			if _t > 6.0:
-				_fase = 6
-				Input.action_release("move_forward")
-				_capturar("caminando")
-		6:
-			if _t > 6.4:
-				get_tree().quit()
+	if _andar:
+		_colocar_camara()
+	if not _hecha and _t >= _momento:
+		_hecha = true
+		_capturar()
 
 
-func _capturar(nombre: String) -> void:
+func _colocar_camara() -> void:
+	var p := shiba.global_position
+	var off := Vector3.ZERO
+	match _vista:
+		"frente":
+			off = Vector3(0.0, 0.55, -2.4)
+		"derecha":
+			off = Vector3(2.4, 0.55, 0.0)
+		"atras":
+			off = Vector3(0.0, 0.55, 2.4)
+		"izquierda":
+			off = Vector3(-2.4, 0.55, 0.0)
+	_cam.global_position = p + off
+	_cam.look_at(p + Vector3(0.0, 0.45, 0.0), Vector3.UP)
+
+
+func _capturar() -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	var ruta := "res://tests/ragdoll/shots/shiba_%s.png" % nombre
+	var ruta := "res://tests/ragdoll/shots/%s.png" % _nombre
 	DirAccess.make_dir_recursive_absolute("res://tests/ragdoll/shots")
 	var err := img.save_png(ruta)
-	print("[shot] ", nombre, " -> ", ruta, " err=", err, " (", img.get_width(), "x", img.get_height(), ")")
-	_capturas += 1
+	print("[shot] ", ruta, " err=", err)
+	if _andar:
+		Input.action_release("move_forward")
+	get_tree().quit()

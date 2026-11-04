@@ -1,6 +1,51 @@
 extends EditorNode3DGizmoPlugin
 class_name EditableSkeletonGizmo
-signal recorded_bones_changed
+
+## Se emite al terminar un arrastre de huesos, con los indices de los huesos
+## cuya pose cambio. Lo consume el plugin para saber que huesos keyar.
+signal recorded_bones_changed(bone_indices: Array)
+
+## Nombre que reporta el gizmo NATIVO de Godot para los Skeleton3D.
+##
+## El gizmo nativo dibuja sus propios huesos (una malla con el esqueleto) y se
+## SOLAPA con los del armature editor. Este es su `get_gizmo_name()`, y sirve
+## para distinguirlo al apagar/encender los gizmos de un nodo.
+const NATIVE_GIZMO_NAME := "Skeleton3D"
+
+
+## Oculta o muestra los gizmos AJENOS a este addon en un Skeleton3D.
+##
+## Godot registra un gizmo propio ("Skeleton3D") que dibuja los huesos como una
+## malla, ademas del gizmo de este addon. Al usar el armature editor los dos se
+## dibujan a la vez y se solapan, y el resultado parece el editor de huesos
+## nativo en vez de los puntos redondos del armature editor.
+##
+## Se recorren los gizmos del nodo y se apagan todos los que NO son nuestro.
+## La comparacion es por IDENTIDAD del plugin (`self`), que es la unica forma
+## fiable desde script: el nombre del gizmo nativo no esta expuesto a GDScript
+## (solo existe el virtual `_get_gizmo_name`).
+##
+## `set_hidden(true)` esconde la instancia y ademas queda memorizado en ella,
+## asi que sobrevive a los redibujados posteriores del gizmo.
+##
+## NOTA: el gizmo nativo se RECREA cada vez que Godot pide gizmos para el
+## nodo, y en ese momento se le aplica el estado global del plugin (el que
+## el usuario controla desde el menu "Gizmos" del viewport). Por eso hay que
+## volver a ocultarlo tras cada `update_gizmos()`; asi el addon manda sobre la
+## visualizacion mientras el armature editor este activo.
+##
+## @param skeleton Skeleton3D al que aplicarlo.
+## @param hidden true para ocultar, false para volver a mostrar.
+func set_foreign_gizmos_hidden(skeleton: Skeleton3D, hidden: bool) -> void:
+	if skeleton == null:
+		return
+	for gizmo in skeleton.get_gizmos():
+		var editor_gizmo := gizmo as EditorNode3DGizmo
+		if editor_gizmo == null:
+			continue
+		if editor_gizmo.get_plugin() == self:
+			continue
+		editor_gizmo.set_hidden(hidden)
 
 var _unit_sphere : ArrayMesh
 var _hover_id := -1
@@ -14,6 +59,13 @@ var _drag_active := false
 var last_transform = Transform3D.IDENTITY
 var snap_enabled = true
 var snap_amount = .1
+
+## Si es false, el gizmo dibuja SOLO los puntos redondos de las articulaciones
+## (los "puntitos") y no los cuerpos octaedricos de los huesos.
+##
+## El gizmo NATIVO de Godot dibuja sus propios huesos aparte; ese se apaga
+## aparte (ver `set_foreign_gizmos_hidden`).
+var show_bone_bodies: bool = true
 
 func _is_node_selected(node: Node) -> bool:
 	var selection := EditorInterface.get_selection()
@@ -111,6 +163,13 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	var skeleton := gizmo.get_node_3d() as Skeleton3D
 	if skeleton == null:
 		return
+
+	# El gizmo NATIVO de Godot se recrea en cada `update_gizmos()` y recibe el
+	# estado global del menu "Gizmos" del viewport. Aqui se vuelve a ocultar si
+	# el usuario pidio solo los puntos, para que no reaparezcan los huesos.
+	if not show_bone_bodies:
+		set_foreign_gizmos_hidden(skeleton, true)
+
 	if not _is_node_selected(skeleton):
 		return
 
@@ -180,14 +239,18 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 			else get_material("joint_hover") if _hover_id == joint_id \
 			else get_material("joint_normal")
 			
-			if children.size() == 1 or skeleton.get_bone_children(child_bone).size() == 0:
-				gizmo.add_mesh(
-					_create_bone_octahedron(head, tail),
-					bone_mat,
-					Transform3D.IDENTITY
-				)
-			else:
-				_add_dashed_line(gizmo, head, tail, bone_mat, length * 0.12, length * 0.08)
+			# El cuerpo del hueso (octaedro o linea discontinua) es opcional:
+			# con `show_bone_bodies = false` solo se ven los puntitos de las
+			# articulaciones, que es lo que se quiere al editar poses.
+			if show_bone_bodies:
+				if children.size() == 1 or skeleton.get_bone_children(child_bone).size() == 0:
+					gizmo.add_mesh(
+						_create_bone_octahedron(head, tail),
+						bone_mat,
+						Transform3D.IDENTITY
+					)
+				else:
+					_add_dashed_line(gizmo, head, tail, bone_mat, length * 0.12, length * 0.08)
 
 			var radius := 0.025
 			var joint_xf := Transform3D(
@@ -323,6 +386,7 @@ func _commit_subgizmos(gizmo, ids, restores, cancel):
 
 	var skeleton := gizmo.get_node_3d() as Skeleton3D
 	var changed := false
+	var changed_bones: Array = []
 
 	_undo_redo.create_action("Transform Bones")
 
@@ -333,6 +397,7 @@ func _commit_subgizmos(gizmo, ids, restores, cancel):
 
 		if before_pose != after_pose:
 			changed = true
+			changed_bones.append(i)
 			_undo_redo.add_do_method(
 				skeleton,
 				"set_bone_pose",
@@ -366,6 +431,10 @@ func _commit_subgizmos(gizmo, ids, restores, cancel):
 
 	if changed:
 		_undo_redo.commit_action()
+
+	# Avisa de los huesos que se han movido, para que el plugin pueda keyarlos.
+	if not changed_bones.is_empty():
+		recorded_bones_changed.emit(changed_bones)
 
 	_drag_active = false
 

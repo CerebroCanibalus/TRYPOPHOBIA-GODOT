@@ -20,7 +20,7 @@ class_name FpClip
 @export var active_clip := true
 
 var _clip_materials := {}     ## material original -> material de recorte
-var _entries: Array = []      ## [MeshInstance3D, Mesh, Array[Material]]
+var _entries: Array = []      ## [{mi: MeshInstance3D, originals: Array[Material]}]
 
 
 ## Recoge las mallas del cuerpo (las que llevan el skin).
@@ -32,7 +32,7 @@ func collect_meshes(root: Node) -> void:
 		var mi := n as MeshInstance3D
 		if mi.skin == null:
 			continue
-		_entries.append([mi, mi.mesh, []] as Array)
+		_entries.append({"mi": mi, "originals": []})
 
 
 ## Prepara los materiales de recorte (duplica mesh y skin).
@@ -45,27 +45,29 @@ func setup() -> void:
 		push_warning("[FpClip] shader de recorte no encontrado: %s" % shader_path)
 		return
 	for entry in _entries:
-		var mi: MeshInstance3D = entry[0]
-		var mesh: Mesh = entry[1]
+		var mi: MeshInstance3D = entry["mi"]
+		var mesh: Mesh = mi.mesh
 		if mesh == null:
 			continue
+		# El mesh se duplica para poder cambiar los materiales de UNA
+		# instancia sin tocar el recurso compartido por las dos (la fisica
+		# y la animada).
 		if not mesh.resource_local_to_scene:
 			var dup := mesh.duplicate() as Mesh
 			if dup != null:
 				mi.mesh = dup
-				mesh = dup
 		# El SKIN tambien hay que duplicarlo (ver la nota de arriba).
 		if mi.skin != null:
 			mi.skin = mi.skin.duplicate()
-		var originals: Array[Material] = []
-		for s in mesh.get_surface_count():
-			var orig := mesh.surface_get_material(s)
+		var originals: Array = []
+		for s in mi.mesh.get_surface_count():
+			var orig := mi.mesh.surface_get_material(s)
 			originals.append(orig)
 			if orig == null:
 				continue
 			if not _clip_materials.has(orig):
 				_clip_materials[orig] = _make_material(shader, orig)
-		entry[2] = originals
+		entry["originals"] = originals
 
 
 ## Activa o desactiva el recorte (1a / 3a persona).
@@ -75,23 +77,25 @@ func set_active(v: bool) -> void:
 
 
 ## Aplica (o restaura) los materiales de recorte.
+##
+## OJO (medido) — el material se aplica POR INSTANCIA con
+## `set_surface_override_material()`, NO con `mesh.surface_set_material()`:
+## ese metodo modifica el RECURSO COMPARTIDO del mesh, y las dos
+## instancias del modelo (la fisica "Physical" y la animada "Animated")
+## comparten el mismo `ArrayMesh`. El recorte acababa puesto en la malla
+## de la ANIMADA (que esta oculta) mientras la VISIBLE se quedaba sin
+## recortar -> el modelo tapaba la camara en 1a persona (medido).
 func apply_materials() -> void:
 	var r := radius if active_clip else 0.0
 	for entry in _entries:
-		var mi: MeshInstance3D = entry[0]
-		var mesh: Mesh = entry[1]
-		var originals: Array = entry[2]
-		var ov := mi.material_override
-		if ov is ShaderMaterial:
-			(ov as ShaderMaterial).set_shader_parameter("clip_radius", r)
-			continue
+		var mi: MeshInstance3D = entry["mi"]
+		var originals: Array = entry["originals"]
 		for s in originals.size():
 			var orig: Material = originals[s]
 			var m: Material = orig
 			if active_clip and orig != null and _clip_materials.has(orig):
 				m = _clip_materials[orig]
-			if s < mesh.get_surface_count():
-				mesh.surface_set_material(s, m)
+			mi.set_surface_override_material(s, m)
 	for key in _clip_materials.keys():
 		var mat: ShaderMaterial = _clip_materials[key]
 		mat.set_shader_parameter("clip_radius", r)

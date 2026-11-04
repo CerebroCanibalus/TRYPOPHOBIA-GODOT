@@ -1,248 +1,260 @@
-[gd_resource type="Resource" script_class="RagdollRig" format=3 uid="uid://d17wsyvrw8y2a"]
+[gd_resource type="Resource" script_class="RagdollRig" format=3 uid="uid://dy4yomln5w1mv"]
 
 [ext_resource type="Script" uid="uid://b5u1in213ft8a" path="res://src/ragdoll/rig/ragdoll_bone.gd" id="1_imc3o"]
 [ext_resource type="Script" uid="uid://c2ocu6hif13oc" path="res://src/ragdoll/rig/ragdoll_rig.gd" id="2_2msxu"]
 
-[sub_resource type="Resource" id="Resource_5ydty"]
+[sub_resource type="Resource" id="Resource_imc3o"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine"
 shape = 0
-mass = 4.4
 size = Vector3(0.3, 0.26, 0.28)
-radius = 0.18
 offset = 0.15
+mass = 4.4
+pd_gain = 2.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "breast.*")
+colision_con = PackedStringArray()
+group = "column"
+
+[sub_resource type="Resource" id="Resource_2msxu"]
+script = ExtResource("1_imc3o")
+bone_name = &"spine.001"
+shape = 0
+size = Vector3(0.28, 0.24, 0.26)
+offset = 0.08239428
+mass = 3.85
+pd_gain = 2.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "breast.*")
+colision_con = PackedStringArray()
+group = "column"
+
+[sub_resource type="Resource" id="Resource_5ydty"]
+script = ExtResource("1_imc3o")
+bone_name = &"spine.002"
+shape = 0
+size = Vector3(0.26, 0.22, 0.24)
+offset = 0.0712118
+mass = 3.3
+pd_gain = 2.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "breast.*")
+colision_con = PackedStringArray()
 group = "column"
 
 [sub_resource type="Resource" id="Resource_jo1am"]
 script = ExtResource("1_imc3o")
-bone_name = &"spine.001"
+bone_name = &"spine.003"
 shape = 0
-mass = 3.85
-size = Vector3(0.28, 0.24, 0.26)
-radius = 0.05
-height = 0.16478856
-offset = 0.08239428
+size = Vector3(0.26, 0.22, 0.24)
+offset = 0.08458592
+mass = 3.3
+pd_gain = 2.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "breast.*")
+colision_con = PackedStringArray()
 group = "column"
 
 [sub_resource type="Resource" id="Resource_sulih"]
 script = ExtResource("1_imc3o")
-bone_name = &"thigh.R"
-shape = 1
-mass = 3.52
-size = Vector3(0.13, 0.2, 0.15)
-radius = 0.08491045534610749
-height = 0.38595662
-offset = 0.19297831
-pd_gain = 3.0
-group = "leg"
+bone_name = &"spine.004"
+shape = 0
+size = Vector3(0.14, 0.14, 0.12)
+offset = 0.029453397
+mass = 0.55
+pd_gain = 2.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "breast.*")
+colision_con = PackedStringArray()
+group = "column"
 
 [sub_resource type="Resource" id="Resource_kbwev"]
 script = ExtResource("1_imc3o")
-bone_name = &"thigh.L"
-shape = 1
-mass = 3.52
-size = Vector3(0.13, 0.2, 0.15)
-radius = 0.08491045534610749
-height = 0.38595662
-offset = 0.19297831
-pd_gain = 3.0
-group = "leg"
+bone_name = &"spine.005"
+shape = 0
+size = Vector3(0.14, 0.12, 0.12)
+offset = 0.029055059
+mass = 0.5
+pd_gain = 2.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "breast.*")
+colision_con = PackedStringArray()
+group = "column"
 
 [sub_resource type="Resource" id="Resource_4bi6l"]
 script = ExtResource("1_imc3o")
-bone_name = &"spine.002"
-shape = 0
-mass = 3.3
-size = Vector3(0.26, 0.22, 0.24)
-radius = 0.05
-height = 0.1424236
-offset = 0.0712118
+bone_name = &"head"
+shape = 2
+radius = 0.11
+offset = 0.03
+mass = 0.825
+pd_gain = 2.0
+swing = 90.0
+twist = 100.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*")
+colision_con = PackedStringArray()
 group = "column"
 
 [sub_resource type="Resource" id="Resource_dudj6"]
 script = ExtResource("1_imc3o")
-bone_name = &"shin.R"
-shape = 1
-mass = 2.88
-size = Vector3(0.11, 0.2, 0.13)
-radius = 0.08810608565807343
-height = 0.4004822
-offset = 0.2002411
+bone_name = &"shoulder.L"
+shape = 0
+size = Vector3(0.14, 0.12, 0.12)
+height = 0.21489331
+offset = 0.107446656
+mass = 1.5
 pd_gain = 3.0
-group = "leg"
+sin_colision_con = PackedStringArray("spine*", "shoulder.*")
+colision_con = PackedStringArray()
 
 [sub_resource type="Resource" id="Resource_q56bh"]
 script = ExtResource("1_imc3o")
-bone_name = &"shin.L"
-shape = 1
-mass = 2.88
-size = Vector3(0.11, 0.2, 0.13)
-radius = 0.08810608565807343
-height = 0.4004822
-offset = 0.2002411
-pd_gain = 3.0
-group = "leg"
+bone_name = &"upper_arm.L"
+radius = 0.055
+height = 0.28615618
+offset = 0.14307809
+pd_gain = 1.5
+twist = 90.0
+sin_colision_con = PackedStringArray("spine.002", "spine.003", "spine.004", "spine.005", "head", "shoulder.L", "shoulder.R")
+colision_con = PackedStringArray("spine", "spine.001", "thigh.L", "thigh.R", "shin.L", "shin.R")
+group = "arm"
 
 [sub_resource type="Resource" id="Resource_3pdbp"]
 script = ExtResource("1_imc3o")
-bone_name = &"foot.L"
-shape = 1
-mass = 1.3
-size = Vector3(0.12, 0.07, 0.22)
-radius = 0.07
-height = 0.24
-offset = 0.08548235
-pd_gain = 4.0
+bone_name = &"forearm.L"
+radius = 0.05
+height = 0.338
+offset = 0.169
+mass = 0.8
+pd_gain = 1.5
+twist = 90.0
+sin_colision_con = PackedStringArray("spine.002", "spine.003", "spine.004", "spine.005", "head", "shoulder.L", "shoulder.R", "upper_arm.L", "upper_arm.R")
+colision_con = PackedStringArray("spine", "spine.001", "thigh.L", "thigh.R", "shin.L", "shin.R")
+group = "arm"
 
 [sub_resource type="Resource" id="Resource_7a44n"]
 script = ExtResource("1_imc3o")
-bone_name = &"foot.R"
-shape = 1
-mass = 1.3
-size = Vector3(0.12, 0.07, 0.22)
-radius = 0.07
-height = 0.24
-offset = 0.08548238
-pd_gain = 4.0
+bone_name = &"hand.L"
+radius = 0.04
+height = 0.1
+offset = 0.04
+mass = 0.25
+twist = 90.0
+friction = 0.4
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "upper_arm.L", "upper_arm.R")
+colision_con = PackedStringArray()
+group = "arm"
 
 [sub_resource type="Resource" id="Resource_ct52m"]
-script = ExtResource("1_imc3o")
-bone_name = &"spine.003"
-shape = 0
-mass = 3.3
-size = Vector3(0.26, 0.22, 0.24)
-radius = 0.05
-height = 0.16917184
-offset = 0.08458592
-group = "column"
-
-[sub_resource type="Resource" id="Resource_ssg7x"]
-script = ExtResource("1_imc3o")
-bone_name = &"spine.004"
-shape = 0
-mass = 0.55
-size = Vector3(0.14, 0.058906794, 0.12)
-radius = 0.06
-height = 0.14
-offset = 0.029453397
-pd_gain = 3.0
-group = "column"
-
-[sub_resource type="Resource" id="Resource_o6eqy"]
 script = ExtResource("1_imc3o")
 bone_name = &"shoulder.R"
 shape = 0
 size = Vector3(0.14, 0.12, 0.12)
-radius = 0.05
 height = 0.21489331
 offset = 0.107446656
 mass = 1.5
+pd_gain = 3.0
+sin_colision_con = PackedStringArray("spine*", "shoulder.*")
+colision_con = PackedStringArray()
+
+[sub_resource type="Resource" id="Resource_ssg7x"]
+script = ExtResource("1_imc3o")
+bone_name = &"upper_arm.R"
+radius = 0.055
+height = 0.28615618
+offset = 0.14307809
+pd_gain = 1.5
+twist = 90.0
+sin_colision_con = PackedStringArray("spine.002", "spine.003", "spine.004", "spine.005", "head", "shoulder.L", "shoulder.R")
+colision_con = PackedStringArray("spine", "spine.001", "thigh.R", "thigh.L", "shin.R", "shin.L")
+group = "arm"
+
+[sub_resource type="Resource" id="Resource_o6eqy"]
+script = ExtResource("1_imc3o")
+bone_name = &"forearm.R"
+radius = 0.05
+height = 0.338
+offset = 0.169
+mass = 0.8
+pd_gain = 1.5
+twist = 90.0
+sin_colision_con = PackedStringArray("spine.002", "spine.003", "spine.004", "spine.005", "head", "shoulder.L", "shoulder.R", "upper_arm.L", "upper_arm.R")
+colision_con = PackedStringArray("spine", "spine.001", "thigh.R", "thigh.L", "shin.R", "shin.L")
+group = "arm"
 
 [sub_resource type="Resource" id="Resource_bcvwr"]
 script = ExtResource("1_imc3o")
-bone_name = &"shoulder.L"
-shape = 0
-size = Vector3(0.14, 0.12, 0.12)
-radius = 0.05
-height = 0.21489334
-offset = 0.10744667
-mass = 1.5
+bone_name = &"hand.R"
+radius = 0.04
+height = 0.1
+offset = 0.04
+mass = 0.25
+twist = 90.0
+friction = 0.4
+sin_colision_con = PackedStringArray("spine*", "shoulder.*", "upper_arm.L", "upper_arm.R")
+colision_con = PackedStringArray()
+group = "arm"
 
 [sub_resource type="Resource" id="Resource_ya7tw"]
 script = ExtResource("1_imc3o")
-bone_name = &"upper_arm.R"
-shape = 1
-radius = 0.055
-height = 0.28615618
-offset = 0.14307809
-pd_gain = 1.5
-group = "arm"
+bone_name = &"thigh.L"
+radius = 0.084910455
+height = 0.38595662
+offset = 0.19297831
+mass = 3.52
+pd_gain = 3.0
+twist = 90.0
+friction = 0.3
+sin_colision_con = PackedStringArray("spine*", "thigh.L", "thigh.R")
+colision_con = PackedStringArray()
+group = "leg"
 
 [sub_resource type="Resource" id="Resource_jdab8"]
 script = ExtResource("1_imc3o")
-bone_name = &"upper_arm.L"
-shape = 1
-radius = 0.055
-height = 0.28615618
-offset = 0.14307809
-pd_gain = 1.5
-group = "arm"
+bone_name = &"shin.L"
+radius = 0.07
+height = 0.56
+offset = 0.25
+mass = 2.88
+pd_gain = 3.0
+twist = 90.0
+friction = 0.5
+sin_colision_con = PackedStringArray("shin.L", "shin.R", "thigh.L", "thigh.R")
+colision_con = PackedStringArray()
+group = "leg"
 
 [sub_resource type="Resource" id="Resource_j8k34"]
 script = ExtResource("1_imc3o")
-bone_name = &"spine.005"
-shape = 0
-mass = 0.5
-size = Vector3(0.14, 0.058110118, 0.12)
-radius = 0.055
-height = 0.12
-offset = 0.029055059
+bone_name = &"thigh.R"
+radius = 0.084910455
+height = 0.38595662
+offset = 0.19297831
+mass = 3.52
 pd_gain = 3.0
-group = "column"
+twist = 90.0
+friction = 0.3
+sin_colision_con = PackedStringArray("spine*", "thigh.R", "thigh.L")
+colision_con = PackedStringArray()
+group = "leg"
 
 [sub_resource type="Resource" id="Resource_p32v4"]
 script = ExtResource("1_imc3o")
-bone_name = &"forearm.R"
-shape = 1
-radius = 0.05
-height = 0.30263332
-offset = 0.15131666
-mass = 0.8
-pd_gain = 1.5
-group = "arm"
-
-[sub_resource type="Resource" id="Resource_mv251"]
-script = ExtResource("1_imc3o")
-bone_name = &"forearm.L"
-shape = 1
-radius = 0.05
-height = 0.30263326
-offset = 0.15131663
-mass = 0.8
-pd_gain = 1.5
-group = "arm"
-
-[sub_resource type="Resource" id="Resource_qx8ch"]
-script = ExtResource("1_imc3o")
-bone_name = &"spine.006"
-shape = 2
-mass = 0.825
-radius = 0.11
-offset = 0.03
-group = "column"
-
-[sub_resource type="Resource" id="Resource_ppbnq"]
-script = ExtResource("1_imc3o")
-bone_name = &"hand.R"
-shape = 1
-size = Vector3(0.07, 0.05, 0.09)
-radius = 0.06
-height = 0.1
-offset = 0.017550778
-mass = 0.4
-group = "arm"
-
-[sub_resource type="Resource" id="Resource_qa70m"]
-script = ExtResource("1_imc3o")
-bone_name = &"hand.L"
-shape = 1
-size = Vector3(0.07, 0.05, 0.09)
-radius = 0.06
-height = 0.1
-offset = 0.017550727
-mass = 0.4
-group = "arm"
+bone_name = &"shin.R"
+radius = 0.07
+height = 0.56
+offset = 0.25
+mass = 2.88
+pd_gain = 3.0
+twist = 90.0
+friction = 0.5
+sin_colision_con = PackedStringArray("shin.R", "shin.L", "thigh.R", "thigh.L")
+colision_con = PackedStringArray()
+group = "leg"
 
 [resource]
 script = ExtResource("2_2msxu")
 model_path = "res://assets/players/shiba/shiba_V2.glb"
 skeleton_path_in_model = "metarig/Skeleton3D"
 body_bone_name = &"spine"
-head_bone_name = &"spine.006"
+head_bone_name = &"head"
 grab_bone_left_name = &"forearm.L"
 grab_bone_right_name = &"forearm.R"
-on_floor_left_bone_name = &"foot.L"
-on_floor_right_bone_name = &"foot.R"
+on_floor_left_bone_name = &"shin.L"
+on_floor_right_bone_name = &"shin.R"
 ik_arm_left = {
 "end": &"hand.L",
 "mid": &"forearm.L",
@@ -253,15 +265,17 @@ ik_arm_right = {
 "mid": &"forearm.R",
 "root": &"upper_arm.R"
 }
-arm_name_token = "upper_arm.R"
-leg_name_token = ""
+arm_name_token = "upper_arm"
+leg_name_token = "thigh"
 lean_body_suffix = "spine"
-lean_head_suffix = "spine.006"
+lean_head_suffix = "head"
 clip_idle = &"IDLE"
 clip_walk = &"walk_full"
 clip_grab_lower = &"lean_back"
 clip_grab_middle = &"IDLE"
 clip_grab_upper = &"lean_forward"
-head_look_bones = PackedStringArray("spine.005", "spine.006")
-head_look_weights = PackedFloat32Array(0.35, 0.65)
-physical_bones = Array[ExtResource("1_imc3o")]([SubResource("Resource_5ydty"), SubResource("Resource_jo1am"), SubResource("Resource_sulih"), SubResource("Resource_kbwev"), SubResource("Resource_4bi6l"), SubResource("Resource_dudj6"), SubResource("Resource_q56bh"), SubResource("Resource_3pdbp"), SubResource("Resource_7a44n"), SubResource("Resource_ct52m"), SubResource("Resource_ssg7x"), SubResource("Resource_o6eqy"), SubResource("Resource_bcvwr"), SubResource("Resource_ya7tw"), SubResource("Resource_jdab8"), SubResource("Resource_j8k34"), SubResource("Resource_p32v4"), SubResource("Resource_mv251"), SubResource("Resource_qx8ch"), SubResource("Resource_ppbnq"), SubResource("Resource_qa70m")])
+walk_stride = 0.32
+walk_cycle = 0.58
+head_look_bones = PackedStringArray("head")
+head_look_weights = PackedFloat32Array(1)
+physical_bones = Array[ExtResource("1_imc3o")]([SubResource("Resource_imc3o"), SubResource("Resource_2msxu"), SubResource("Resource_5ydty"), SubResource("Resource_jo1am"), SubResource("Resource_sulih"), SubResource("Resource_kbwev"), SubResource("Resource_4bi6l"), SubResource("Resource_dudj6"), SubResource("Resource_q56bh"), SubResource("Resource_3pdbp"), SubResource("Resource_7a44n"), SubResource("Resource_ct52m"), SubResource("Resource_ssg7x"), SubResource("Resource_o6eqy"), SubResource("Resource_bcvwr"), SubResource("Resource_ya7tw"), SubResource("Resource_jdab8"), SubResource("Resource_j8k34"), SubResource("Resource_p32v4")])

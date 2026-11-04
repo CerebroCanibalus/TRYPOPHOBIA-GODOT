@@ -37,13 +37,20 @@ signal murio
 ## script funcione: la libreria se monta sola.
 
 var skeleton: RagdollSkeleton       ## Cuerpos fisicos y simulator.
-var motor: RagdollMotor             ## El PD que lleva los cuerpos a la pose.
+var motor: RagdollMotor             ## El servo que lleva los cuerpos a la pose.
 var mirror: PoseMirror              ## Copia las poses de la fisica al mesh.
 var driver: AnimationDriver         ## AnimationPlayer + AnimationTree.
 var head_look: HeadLook             ## La cabeza que sigue a la camara.
-var arm_ik: ArmIK                   ## Los brazos que se estiran al puntero.
 var fp_clip: FpClip                 ## El recorte de 1a persona.
-var balance: BalanceController      ## El equilibrio (upright + centro de masas).
+##
+## NO hay componente de IK de brazos (`TwoBoneIK3D`): MEDIDO (2026-11-04) que
+## el modificador de Godot NO escribe la pose en este esqueleto (con la
+## influencia a 1,0 la mano del esqueleto animado se queda en la pose del
+## clip: y=0,839 colgando). El estiron del brazo lo hace el SERVO, sobre el
+## objetivo (`_estirar_brazo_agarrado`), que es lo que de verdad mueve al
+## personaje. Y NO hay `BalanceController`: el servo con objetivo absoluto ya
+## mantiene al personaje de pie, y el balance le devolvia a la pelvis el par
+## de todos los hijos (medido: la pelvis giraba a 40 rad/s y se volcaba).
 
 ## === ESTADISTICAS (Yuki Romero: Velocidad Baja · Stamina 50 · Salud 300)
 ## Los valores viven en `stats_shiba.tres`; la escena la asigna.
@@ -57,6 +64,16 @@ var is_sprinting := false
 const JUMP_STRENGTH := 70.0
 const SPEED := 50.0
 const DAMPING := 0.9
+## Aceleracion horizontal (m/s2) hasta la velocidad de las stats.
+const ACELERACION := 60.0
+## El empuje por tick, como factor de la velocidad deseada.
+##
+## La velocidad de equilibrio del empuje de la REFERENCIA es
+## PUSH*dt/(1-amortiguacion): con amortiguacion 0,9 a 60 Hz, el factor
+## es 6 (o sea, PUSH = velocidad_deseada * 6).
+const PUSH_FACTOR := 60.0
+## La amortiguacion horizontal por frame (la de la referencia: 0,9).
+const AMORTIGUACION := 0.9
 ## Escala de velocidad horizontal dentro del agua.
 const NADO_ESCALA := 0.5
 ## Empuje vertical de nado en m/s2.
@@ -83,15 +100,13 @@ const SALIDA_AGUA := 8.0
 ## OJO — el tope de velocidad angular es de DECENAS de rad/s, no de 6: con
 ## 6 el servo no puede mover un hueso grande en un frame y el personaje se
 ## ve "aguado" (los brazos y el pecho parece que no siguen al ragdoll).
-@export var max_angular_speed := 40.0
+@export var max_angular_speed := 9999.0
 ## Escala de los brazos que NO estan agarrando (1 = igual que el resto).
-@export var arm_spring_scale := 0.5
-## El controlador de balance (upright + centro de masas + muelle de
-## altura) esta DESACTIVADO por defecto: la ley del servo (objetivo
-## absoluto en mundo) ya mantiene al personaje de pie, y el balance le
-## devolvia a la pelvis el par de todos los hijos: la ponia a girar a
-## 40 rad/s y el personaje se volcaba (medido).
-@export var balance_enabled := false
+##
+## MEDIDO (2026-11-04): con 0,25-0,5 los brazos se CAEN por la gravedad
+## (el servo no los sujeta) y el personaje aparece con los brazos caidos.
+## Con 1 los brazos se quedan en la pose del clip (el IDLE).
+@export var arm_spring_scale := 1.0
 
 ## === MIRADA DE CABEZA ===================================================
 @export var head_look_enabled := true
@@ -107,12 +122,12 @@ const SALIDA_AGUA := 8.0
 @export var lean_share_head := 0.25
 
 ## === IK DE BRAZOS ======================================================
+## NO hay componente de IK (`TwoBoneIK3D`): MEDIDO (2026-11-04) que el
+## modificador de Godot NO escribe la pose en este esqueleto (con la
+## influencia a 1,0 la mano del esqueleto animado se queda en la pose del
+## clip: y=0,839 colgando). El estiron lo hace el SERVO, sobre el objetivo
+## (`_estirar_brazo_agarrado`).
 @export var ik_enabled := true
-@export var ik_pole_offset := Vector3(0.30, -0.50, -0.30)
-@export var ik_influence := 1.0
-@export var ik_influence_fade_speed := 4.0
-@export var arm_reach_auto := true
-@export var arm_reach_margin := 0.92
 
 ## === RECORTE DE 1a PERSONA ============================================
 @export var fp_clip_radius := 0.20
@@ -124,6 +139,10 @@ var walking := false
 var is_on_floor := false
 var can_jump := true
 var active_arm_left := false
+## El ULTIMO punto que dio el puntero (y cuando): si nadie lo
+## actualiza, el IK usa el punto por defecto de la camara.
+var _puntero_punto := Vector3.ZERO
+var _puntero_momento := -999.0
 var active_arm_right := false
 var grabbing_arm_left := false
 var grabbing_arm_right := false
@@ -266,15 +285,9 @@ func _crear_componentes() -> void:
 	head_look = HeadLook.new()
 	head_look.name = "HeadLook"
 	add_child(head_look)
-	arm_ik = ArmIK.new()
-	arm_ik.name = "ArmIK"
-	add_child(arm_ik)
 	fp_clip = FpClip.new()
 	fp_clip.name = "FpClip"
 	add_child(fp_clip)
-	balance = BalanceController.new()
-	balance.name = "BalanceController"
-	add_child(balance)
 
 	# --- Motor ---------------------------------------------------------
 	# La rigidez y el amortiguamiento los gobierna el MOTOR (una sola
@@ -289,12 +302,8 @@ func _crear_componentes() -> void:
 	head_look.smoothing = head_look_smoothing
 
 	# --- IK ------------------------------------------------------------
-	arm_ik.enabled = ik_enabled
-	arm_ik.pole_offset = ik_pole_offset
-	arm_ik.influence = ik_influence
-	arm_ik.influence_fade_speed = ik_influence_fade_speed
-	arm_ik.reach_auto = arm_reach_auto
-	arm_ik.reach_margin = arm_reach_margin
+	# No hay componente de IK: el estiron lo hace el servo (ver
+	# `_estirar_brazo_agarrado`).
 
 	# --- Recorte -------------------------------------------------------
 	fp_clip.radius = fp_clip_radius
@@ -310,7 +319,6 @@ func _crear_componentes() -> void:
 	driver.setup(rig_config, animation_player, animation_tree, animated_skel,
 		_ruta_del_esqueleto_animado(), self)
 	head_look.setup(rig_config, animated_skel, camera_pivot)
-	arm_ik.setup(rig_config, animated_skel, camera_pivot, hand_target_l, hand_target_r)
 
 	# --- Recorte de 1a persona ------------------------------------------
 	fp_clip.collect_meshes(physical_skel)
@@ -421,29 +429,13 @@ func _physics_process(delta: float) -> void:
 		_mover_cuerpo(dir, delta)
 	_calcular_suelo()
 	_actualizar_agua()
-	# La altura objetivo del balance se captura EN EL PRIMER CONTACTO CON
-	# EL SUELO (no al aparecer): el objetivo es la altura de pie sobre el
-	# suelo real. Se ancla al SUELO que hay DEBAJO de la pelvis (raycast),
-	# no a la posicion de los pies: si el personaje se estrella de espaldas
-	# los pies quedan altos y la captura nunca ocurriria (el balance entero
-	# se quedaria apagado y el ragdoll se quedaria tumbado, medido).
-	if balance != null and not balance.is_captured() \
-			and animated_skel != null and rig_config != null:
-		var suelo_y := _suelo_bajo_pelvis()
-		if not is_inf(suelo_y):
-			var pelvis_id := animated_skel.find_bone(rig_config.body_bone_name)
-			var pie_ids: Array[int] = [
-				animated_skel.find_bone(rig_config.on_floor_left_bone_name),
-				animated_skel.find_bone(rig_config.on_floor_right_bone_name)]
-			balance.capture_target(physical_bone_body, animated_skel,
-				pelvis_id, pie_ids, suelo_y)
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
 		physical_bone_body.linear_velocity.y += JUMP_STRENGTH
 		current_stamina = maxf(current_stamina - stats.jump_stamina_cost, 0.0)
 		if jump_timer:
 			jump_timer.start()
 		can_jump = false
-	driver.set_walking(walking)
+	driver.set_walking(walking, _velocidad_deseada())
 	_actualizar_rumbo_del_cuerpo(dir, delta)
 	head_look.update(delta)
 	# El PD (y el espejo de las poses) van en el tick de FISICA: es donde
@@ -458,11 +450,45 @@ func _physics_process(delta: float) -> void:
 	if not _alineado and driver.animation_started():
 		_alineado = true
 		_alinear_con_la_animacion()
+		# La regla de colision por POSE (la que excluye los pares de
+		# huesos que se solapan en la pose de JUEGO): se aplica ahora que
+		# la animacion ya esta escribiendo la pose. Antes, el solver
+		# expandia los brazos contra el torso y el personaje salia
+		# disparado 2,4 m hacia arriba (medido).
+		skeleton.aplicar_excepciones_por_pose(animated_skel)
 		# Y se pone DE PIE sobre el suelo: sin esto el personaje nace
 		# flotando medio metro (la pose del clip lo deja por encima de su
 		# origen) y el golpe contra el suelo lo tumba (medido).
 		_colocar_en_el_suelo()
 		mirror.capture_offset(physical_skel, physical_bone_body)
+
+
+## La velocidad horizontal que el personaje DEBERIA llevar (m/s).
+##
+## El ciclo de paso se escala con la velocidad DESEADA, no con la real: si
+## se escala con la real, el ciclo se frena a si mismo (el cuerpo no
+## avanza -> el ciclo va lento -> las piernas no giran al ritmo del
+## cuerpo -> los joints se tensan -> el cuerpo no avanza). Medido: con la
+## real el Shiba se quedaba en 0,9 m/s.
+func _velocidad_deseada() -> float:
+	var vel := stats.sprint_speed if is_sprinting else stats.walk_speed
+	if agua != null and agua.sumergido:
+		vel *= NADO_ESCALA
+	return vel
+
+
+## La velocidad horizontal REAL del cuerpo (m/s).
+##
+## El ciclo de paso se escala con la REAL, no con la objetivo: si el ciclo
+## va mas rapido que el cuerpo, los pies patinan (el pie se planta en el
+## suelo y el cuerpo se queda atras) y el rozamiento frena al personaje.
+## (Con la velocidad REAL no hay circulo vicioso: el avance del cuerpo lo
+## pone el EMPUJE a la pelvis, no el ciclo de paso.)
+func _velocidad_horizontal() -> float:
+	if physical_bone_body == null:
+		return 0.0
+	var v := RagdollMotor.body_linear_velocity(physical_bone_body)
+	return Vector2(v.x, v.z).length()
 
 
 ## Direccion de movimiento en el espacio de la CAMARA (lo que espera un
@@ -495,16 +521,38 @@ func _mover_cuerpo(dir: Vector3, delta: float) -> void:
 	# En el agua se nada: mas lento, y el arrastre del WaterBody (hijo,
 	# corre DESPUES de este script) se encarga del resto.
 	var en_agua := agua != null and agua.sumergido
-	# Yuki es de Velocidad Baja: el multiplicador va respecto a 5 m/s (que
-	# es el walk_speed neutro de `CharacterStats`).
-	var vel_mult := (stats.sprint_speed if is_sprinting else stats.walk_speed) / 5.0
-	var vel := SPEED * (NADO_ESCALA if en_agua else 1.0) * vel_mult
-	# La velocidad se lee del SERVIDOR de fisica: la del nodo no se actualiza
-	# en este motor.
+	# La velocidad sale de las STATS del personaje (3 m/s andando, 5,5
+	# esprintando).
+	var vel := stats.sprint_speed if is_sprinting else stats.walk_speed
+	if en_agua:
+		vel *= NADO_ESCALA
+	#
+	# EL EMPUJE ES ACUMULATIVO, como en la REFERENCIA: `v += dir*SPEED*dt`
+	# y luego amortiguacion 0,9. Es ACUMULATIVO por una razon medida: el
+	# solver de joints frena la pelvis cada tick (el cono de la columna
+	# la inmoviliza), y con un `move_toward` (idempotente) el empuje se
+	# pierde en cada frame: el personaje se quedaba en 0,4 m/s con un
+	# objetivo de 1,7 (medido). Acumulando, la velocidad crece hasta el
+	# equilibrio aunque el solver frene parte.
+	#
+	# El equilibrio es `v_obj * dt / (1 - amortiguacion)`: con la
+	# amortiguacion 0,9 el factor es 10, asi que se empuja con
+	# `v_obj * dt * 10` para que el equilibrio sea exactamente `v_obj`
+	# (igual a 30 que a 144 fps).
+	# El equilibrio es `v = a*D/(1-D)`: para que el equilibrio sea
+	# exactamente `vel`, el paso que se suma tiene que ser
+	# `a = vel*(1-D)/D` (un valor CONSTANTE, no depende del framerate).
+	#
+	# MEDIDO (2026-11-04): con `a = vel*delta/(1-D)` el equilibrio salia
+	# 1,5 veces la velocidad pedida (medido: 1,54 m/s con un objetivo de
+	# 1,1) y ademas dependia de los fps.
 	var v := RagdollMotor.body_linear_velocity(physical_bone_body)
-	v += dir * vel * delta
-	v *= Vector3(DAMPING, 1, DAMPING)
-	physical_bone_body.linear_velocity = v
+	var paso := vel * (1.0 - AMORTIGUACION) / AMORTIGUACION
+	var vx := (v.x + dir.x * paso) * AMORTIGUACION
+	var vz := (v.z + dir.z * paso) * AMORTIGUACION
+	PhysicsServer3D.body_set_state(physical_bone_body.get_rid(),
+		PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY,
+		Vector3(vx, v.y, vz))
 	if not en_agua:
 		return
 	# Salida del agua: `jump` con la cabeza FUERA da un impulso UNICO hacia
@@ -626,8 +674,10 @@ func _actualizar_pd() -> void:
 	# de pie y el balance le devolvia a la pelvis el par de todos los
 	# hijos (medido: la pelvis giraba a 40 rad/s y el personaje se
 	# volcaba). El PD pone la pose; el balance solo estorba.
-	if balance_enabled and balance != null:
-		balance.apply(skeleton.bones, physical_bone_body, rig_config, _pies())
+	# NO hay balance (upright + centro de masas + muelle de altura): la ley
+	# del servo con objetivo absoluto ya mantiene al personaje de pie y el
+	# balance le devolvia a la pelvis el par de todos los hijos (medido: la
+	# pelvis giraba a 40 rad/s y el personaje se volcaba).
 	motor.drive(skeleton.bones, objetivos, _grupos(), get_physics_process_delta_time(),
 		_ganancias(), physical_skel)
 	mirror.mirror(physical_skel, animated_skel, skeleton.bones, physical_bone_body)
@@ -641,28 +691,113 @@ func _calcular_objetivos() -> Dictionary:
 		var id := b.get_bone_id()
 		if id < 0:
 			continue
-		# TRAMPA: el cache del IK solo se llena cuando el IK escribe (con
-		# influencia 0 no se dispara la senal y se queda congelado en la
-		# pose del primer frame). Con el IK activo se usa el cache; si no,
-		# la pose ACTUAL del esqueleto animado.
+		# La pose objetivo es la de la ANIMACION (el esqueleto ANIMADO).
 		var pose := driver.pose_of(id)
-		if arm_ik != null and arm_ik.is_active():
-			pose = driver.pose_of(id)
 		# OJO — DOS REGLAS DE MARCO (medidas y documentadas por Godot):
 		#   * `get_bone_global_pose()` es RELATIVA AL ESQUELETO, no al
 		#     mundo ("it is not the actual global/world transform of the
 		#     bone", class_skeleton3d).
 		#   * El servidor de fisica devuelve transformaciones en MUNDO.
-		# Para que el PD compare peras con peras, el objetivo se pasa a
-		# MUNDO multiplicando por el transform global del esqueleto
-		# animado. (quitar ese `global_transform` fue un error: la base
-		# del esqueleto animado es identidad, por eso "tampoco cambiaba
-		# nada" — el bug real estaba en el espejo, ver pose_mirror.gd).
+		# El marco es el del esqueleto maestro (ver `PoseMirror.follow_pelvis`:
+		# el maestro SIGUE al cuerpo, no se coloca sobre el, asi que no hay
+		# lazo y el objetivo es ABSOLUTO: la pose del clip en el mundo).
 		var objetivo: Transform3D = animated_skel.global_transform * pose
 		objetivo = _aplicar_lean(b, objetivo)
 		objetivo = head_look.apply(b, objetivo)
 		out[id] = objetivo
+	_estirar_brazo_agarrado(out)
 	return out
+
+
+## El marco en el que se aplica la pose del clip: la ORIENTACION del
+## esqueleto animado, pero con el ORIGEN en la pelvis del CUERPO.
+##
+## OJO (medido 2026-11-04) — POR QUE NO SE USA `animated_skel.global_transform`:
+## el `PoseMirror` mueve el esqueleto (el fisico y el animado) para que
+## sigan a la pelvis del cuerpo. Si el objetivo se calculara con la
+## posicion REAL del esqueleto maestro, el lazo seria:
+##   el servo lleva el cuerpo al objetivo -> el espejo mueve el maestro
+##   -> el objetivo se mueve -> el servo lo persigue...
+## Con un tick de retraso eso es una OSCILACION DE PERIODO 2: medido, la
+## pelvis subia a 2,41 m y volvia a 0,30 m una y otra vez (el personaje
+## "se movia horripilantemente").
+##
+## Anclando el origen a la pelvis del CUERPO, el objetivo depende del
+## cuerpo y no del maestro: no hay lazo, y el clip sigue al personaje.
+func _base_de_objetivos() -> Transform3D:
+	var m := animated_skel.global_transform if animated_skel != null else Transform3D.IDENTITY
+	if physical_bone_body == null or animated_skel == null or rig_config == null:
+		return m
+	var pelvis := RagdollMotor.body_transform(physical_bone_body).origin
+	# La posicion del hueso de la pelvis DENTRO del esqueleto (la pose del
+	# clip): para colocar el maestro sobre la pelvis del cuerpo.
+	var pid := animated_skel.find_bone(rig_config.body_bone_name)
+	var p_rel := Vector3.ZERO
+	if pid >= 0:
+		p_rel = animated_skel.get_bone_global_pose(pid).origin
+	return Transform3D(m.basis, pelvis - m.basis * p_rel)
+
+
+## ESTIRA el brazo que agarra hacia el puntero.
+##
+## MEDIDO (2026-11-04): el `TwoBoneIK3D` de Godot NO escribe la pose en
+## este esqueleto (con la influencia a 1,0 la mano del esqueleto animado
+## se queda en la pose del clip: y=0,839 colgando, medido). Por eso el
+## estirón se hace AQUI, en el objetivo del servo, que es lo que de
+## verdad mueve al personaje.
+##
+## Sin clic, los brazos se quedan en la pose del IDLE (el servo los
+## sujeta: `arm_spring_scale = 1`). Con clic, la CADENA ENTERA del brazo
+## (humero + antebrazo + mano) se rota alrededor del hombro para que
+## apunte al puntero.
+func _estirar_brazo_agarrado(out: Dictionary) -> void:
+	if not (active_arm_left or active_arm_right):
+		return
+	if rig_config == null or animated_skel == null:
+		return
+	var punto := _puntero_punto
+	if Time.get_ticks_msec() / 1000.0 - _puntero_momento > 0.5:
+		punto = _punto_de_mano_por_defecto()
+	for lado in ["L", "R"]:
+		var agarra := active_arm_left if lado == "L" else active_arm_right
+		if not agarra:
+			continue
+		var cadena: Dictionary = rig_config.ik_arm_left if lado == "L" \
+			else rig_config.ik_arm_right
+		var raiz := animated_skel.find_bone(cadena["root"])
+		var medio := animated_skel.find_bone(cadena["mid"])
+		var mano := animated_skel.find_bone(cadena["end"])
+		if raiz < 0 or medio < 0 or mano < 0:
+			continue
+		if not (out.has(raiz) and out.has(medio) and out.has(mano)):
+			continue
+		var hombro: Vector3 = out[raiz].origin
+		var dir_actual: Vector3 = (out[mano].origin - hombro).normalized()
+		var dir_objetivo: Vector3 = punto - hombro
+		if dir_objetivo.length() < 0.05:
+			continue
+		dir_objetivo = dir_objetivo.normalized()
+		# El puntero tiene que estar POR DELANTE del personaje: si esta
+		# detras, el brazo no puede girar el ombro (medido: el brazo se
+		# lanzaba hacia atras y el hombro se descoyuntaba).
+		var frente: Vector3 = animated_skel.global_transform.basis.z
+		if dir_objetivo.dot(frente) < 0.25:
+			continue
+		var eje: Vector3 = dir_actual.cross(dir_objetivo)
+		if eje.length() < 0.0001:
+			continue
+		eje = eje.normalized()
+		var ang := acos(clampf(dir_actual.dot(dir_objetivo), -1.0, 1.0))
+		# TOPE del giro: el brazo es una articulacion, no una catapulta.
+		#
+		# MEDIDO (2026-11-04): sin tope, con el raton pulsado la mano se
+		# iba a 4,6 m de altura (a 4 m del cuerpo) y el brazo entero
+		# seguia el gesto: el personaje se descoyuntaba.
+		ang = minf(ang, deg_to_rad(65.0))
+		var rot := Transform3D(Basis(Quaternion(eje, ang)), hombro)
+		var fija := Transform3D(Basis.IDENTITY, -hombro)
+		for id in [raiz, medio, mano]:
+			out[id] = rot * fija * out[id]
 
 
 ## Los grupos de cada hueso (para el motor: los brazos se relajan).
@@ -682,19 +817,6 @@ func _ganancias() -> Dictionary:
 	for b in skeleton.bones:
 		var bone := rig_config.bone(b.bone_name)
 		out[b.get_bone_id()] = bone.pd_gain if bone != null else 1.0
-	return out
-
-
-func _pies() -> Array[PhysicalBone3D]:
-	var out: Array[PhysicalBone3D] = []
-	if rig_config == null:
-		return out
-	var l := skeleton.find_in_skeleton(rig_config.on_floor_left_bone_name)
-	var r := skeleton.find_in_skeleton(rig_config.on_floor_right_bone_name)
-	if l != null:
-		out.append(l)
-	if r != null:
-		out.append(r)
 	return out
 
 
@@ -751,19 +873,21 @@ func _alinear_con_la_animacion() -> void:
 
 ## El PUNTERO avisa aqui (duck typing: `root.has_method("update_hand_targets")`).
 ##
-## Sin este metodo el IK de brazos se queda con la influencia por defecto
-## (1.0) y los brazos se estiran al puntero SIEMPRE: el personaje camina
-## con el brazo derecho levantado y las manos parece que no estan
-## conectadas con los brazos (medido).
-##
-## El  + "clic" +  es el que decide: con el raton pulsado el brazo se estira
-## hacia el puntero; sin el, la influencia baja a 0 y los brazos siguen al
-## clip (como en el script original).
+## El punto es el que decide: con el raton pulsado el brazo se estira hacia
+## el puntero; sin el, los brazos siguen el clip (la pose del IDLE).
 func update_hand_targets(world_point: Vector3, _has_target: bool) -> void:
-	if arm_ik == null:
-		return
-	arm_ik.update_targets(world_point, active_arm_left, active_arm_right,
-		get_physics_process_delta_time())
+	_puntero_punto = world_point
+	_puntero_momento = Time.get_ticks_msec() / 1000.0
+
+
+## El punto al que apuntan las manos cuando NO hay puntero: por delante
+## de la camara, a la altura de los hombros.
+func _punto_de_mano_por_defecto() -> Vector3:
+	if camera_pivot == null:
+		return global_position
+	var cam := camera_pivot.global_position
+	var fwd := -camera_pivot.global_transform.basis.z
+	return cam + fwd * 0.35
 
 
 ## === AGARRE ============================================================
@@ -854,6 +978,8 @@ func _colocar_en_el_suelo() -> void:
 	if is_inf(min_y):
 		return
 	var d := suelo_y - min_y
+	print("[RagdollCharacter] colocar en el suelo: suelo_y=%.3f fondo_colliders=%.3f delta=%.3f" % [
+		suelo_y, min_y, d])
 	if absf(d) < 0.002:
 		return
 	_desplazar(Vector3(0.0, d, 0.0))
@@ -870,6 +996,7 @@ func _fondo_de_los_colliders() -> float:
 		var xf := RagdollMotor.body_transform(b)
 		if xf == Transform3D.IDENTITY:
 			continue
+		var local_min := INF
 		for c in b.find_children("*", "CollisionShape3D", true, false):
 			var cs := c as CollisionShape3D
 			if cs == null or cs.shape == null:
@@ -879,7 +1006,10 @@ func _fondo_de_los_colliders() -> float:
 			for i in 8:
 				var esquina: Vector3 = aabb.get_endpoint(i)
 				var mundo: float = (xf * local * esquina).y
-				min_y = minf(min_y, mundo)
+				local_min = minf(local_min, mundo)
+		print("[RagdollCharacter] collider %s: cuerpo.y=%.3f fondo=%.3f" % [
+			String(b.bone_name), xf.origin.y, local_min])
+		min_y = minf(min_y, local_min)
 	return min_y
 
 
