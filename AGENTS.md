@@ -1579,12 +1579,28 @@ línea por tick** (363 líneas en 15 s).
 **Pendiente (medido, no supuesto):**
 - `_base_de_objetivos()` sigue **sin llamarse**: el brazo ya no depende de él,
   pero el maestro sigue fijo en el mundo para el resto del clip.
-- Velocidad **0.65 m/s** con `walk_speed = 1.1`: es tema del controlador
-  (fase A: `CharacterBody3D`).
 - El `shiba_rig_config.tres` **sigue listando 19 huesos** (física duplicada que
   el runtime ignora). La verdad es la escena.
 - `tests/ragdoll/shiba_test.gd` sigue **vacío** y su `.tscn` instancia el
   `ragdoll_character.tscn` viejo (Character.glb), no el Shiba.
+
+**Fase 2 (2026-11-04): ley única + `CharacterBody3D`.**
+- `RagdollMotor`: **UNA ley**, servo en cadena con error RELATIVO al padre y
+  quaternion siempre. Se probó el absoluto y **falla**: `hand.R` a 90° (la mano
+  no tiene track y perseguía una orientación de mundo mientras el antebrazo se
+  movía). k=4000, c=80, tope 40 rad/s, aceleración **20000** (con 4000 el pecho
+  se iba a 37° cuando el brazo estira).
+- `CharacterBody3D` **`Logic` HERMANO** del ragdoll (no cambia la jerarquía):
+  autoridad **horizontal** con `move_and_slide`. El ragdoll lo sigue por
+  **teleport del delta** (visual); el `TimeScale` del ciclo de paso cancela el
+  avance y los pies parecen plantados.
+- Medido: **dXZ 3.37 m en 3 s = 1.12 m/s** (objetivo 1.1); `up_col` 0.968;
+  columna 9.3°, muslo 8.8°, espinilla 3.0°; pecho 24.6° durante el estirón del
+  brazo (reacción). El máximo de 92° es `hand.R` (vuelo/pre-alineación).
+- **Limitación honesta:** la cápsula **no lleva gravedad**. Al apoyarla quedaba
+  1 cm dentro del `Floor` y `move_and_slide` se trababa (6 contactos con normal
+  UP, velocidad conservada y posición quieta). Es autoridad horizontal; el
+  suelo y el salto los lleva el ragdoll. Escaleras y desniveles: pendiente.
 
 ---
 

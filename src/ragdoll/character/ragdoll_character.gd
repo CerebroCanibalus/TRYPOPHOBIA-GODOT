@@ -61,18 +61,11 @@ var health := 0.0
 var is_sprinting := false
 
 ## === MOVIMIENTO ========================================================
-const JUMP_STRENGTH := 70.0
-const SPEED := 50.0
-const DAMPING := 0.9
-## Aceleracion horizontal (m/s2) hasta la velocidad de las stats.
-const ACELERACION := 60.0
-## El empuje por tick, como factor de la velocidad deseada.
-##
-## La velocidad de equilibrio del empuje de la REFERENCIA es
-## PUSH*dt/(1-amortiguacion): con amortiguacion 0,9 a 60 Hz, el factor
-## es 6 (o sea, PUSH = velocidad_deseada * 6).
-const PUSH_FACTOR := 60.0
-## La amortiguacion horizontal por frame (la de la referencia: 0,9).
+## Autoridad de movimiento: un `CharacterBody3D` HERMANO del ragdoll (no
+## cambia la jerarquia). El ragdoll (visual) lo sigue; el suelo, las
+## paredes y las escaleras los resuelve `move_and_slide`.
+const JUMP_SPEED := 5.0
+## La amortiguacion horizontal del empuje (la de la referencia: 0,9).
 const AMORTIGUACION := 0.9
 ## Escala de velocidad horizontal dentro del agua.
 const NADO_ESCALA := 0.5
@@ -80,7 +73,6 @@ const NADO_ESCALA := 0.5
 const NADO_EMPUJE := 12.0
 ## Impulso UNICO de salida del agua (m/s hacia arriba).
 const SALIDA_AGUA := 8.0
-
 ## El cuerpo sigue a la camara (como el script ORIGINAL y la
 ## referencia) o mira hacia donde camina.
 ##
@@ -92,21 +84,11 @@ const SALIDA_AGUA := 8.0
 ## Velocidad de giro del cuerpo (rad/s).
 @export var body_turn_speed := 7.0
 
-## === MOTOR (ganos del servo) ===========================================
+## === MOTOR ===
 ##
-## La rigidez y el amortiguamiento NO se configuran aqui: los gobierna el
-## `RagdollMotor` (una sola fuente).
-##
-## OJO — el tope de velocidad angular es de DECENAS de rad/s, no de 6: con
-## 6 el servo no puede mover un hueso grande en un frame y el personaje se
-## ve "aguado" (los brazos y el pecho parece que no siguen al ragdoll).
-@export var max_angular_speed := 9999.0
-## Escala de los brazos que NO estan agarrando (1 = igual que el resto).
-##
-## MEDIDO (2026-11-04): con 0,25-0,5 los brazos se CAEN por la gravedad
-## (el servo no los sujeta) y el personaje aparece con los brazos caidos.
-## Con 1 los brazos se quedan en la pose del clip (el IDLE).
-@export var arm_spring_scale := 1.0
+## La ley, la rigidez, el amortiguamiento y los topes los gobierna el
+## `RagdollMotor` (una sola fuente). El personaje NO los sobreescribe: si
+## hay que afinarlos, se tocan en el motor.
 
 ## === MIRADA DE CABEZA ===================================================
 @export var head_look_enabled := true
@@ -149,6 +131,9 @@ var grabbing_arm_right := false
 var grabbed_object: Node3D = null
 
 var agua: WaterBody = null
+## La AUTORIDAD de movimiento (CharacterBody3D). Es un nodo HERMANO del
+## ragdoll: no cambia la jerarquia de la escena.
+var logic: CharacterBody3D = null
 var oxigeno: Oxygen = null
 var _cabeza_fisica: Node3D = null
 var _salto_evento := false
@@ -234,6 +219,7 @@ func _suelo_bajo_pelvis() -> float:
 
 
 func _resolver_refs() -> void:
+	logic = get_node_or_null("Logic") as CharacterBody3D
 	if physical_skel == null:
 		physical_skel = _buscar_esqueleto("Physical")
 	if animated_skel == null:
@@ -290,10 +276,7 @@ func _crear_componentes() -> void:
 	add_child(fp_clip)
 
 	# --- Motor ---------------------------------------------------------
-	# La rigidez y el amortiguamiento los gobierna el MOTOR (una sola
-	# fuente): son los del servo de velocidad con objetivo absoluto.
-	motor.max_angular_speed = max_angular_speed
-	motor.arm_spring_scale = arm_spring_scale
+	# La ley, la rigidez y los topes los gobierna el MOTOR (una sola fuente).
 
 	# --- Mirada --------------------------------------------------------
 	head_look.enabled = head_look_enabled
@@ -426,11 +409,14 @@ func _physics_process(delta: float) -> void:
 		current_stamina = minf(current_stamina + stats.stamina_regen_rate * delta,
 			stats.max_stamina)
 	if physical_bone_body != null:
+		_actualizar_logic(dir, delta)
 		_mover_cuerpo(dir, delta)
 	_calcular_suelo()
 	_actualizar_agua()
+	# Salto: lo lleva el RAGDOLL (la capsula es solo horizontal). El
+	# `is_on_floor` sale de los ShapeCast de las espinillas.
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
-		physical_bone_body.linear_velocity.y += JUMP_STRENGTH
+		physical_bone_body.linear_velocity.y += JUMP_SPEED
 		current_stamina = maxf(current_stamina - stats.jump_stamina_cost, 0.0)
 		if jump_timer:
 			jump_timer.start()
@@ -517,10 +503,54 @@ func _direccion_de_movimiento() -> Vector3:
 	return dir.normalized()
 
 
+## Mueve la AUTORIDAD (`CharacterBody3D`) en HORIZONTAL con `move_and_slide`.
+##
+## OJO (medido): la capsula NO lleva gravedad. Al colocarla sobre el suelo
+## quedaba 1 cm DENTRO del `Floor` y `move_and_slide` se trababa (6
+## colisiones con normal UP y velocidad conservada pero posicion quieta).
+## El suelo visual y el salto los lleva el ragdoll; la capsula solo manda
+## en XZ, que es lo que hace falta para paredes y esquinas.
+func _actualizar_logic(dir: Vector3, _delta: float) -> void:
+	if logic == null:
+		return
+	# En el agua manda el ragdoll (nado); la capsula no empuja.
+	if agua != null and agua.sumergido:
+		return
+	var vel := stats.sprint_speed if is_sprinting else stats.walk_speed
+	logic.velocity.x = dir.x * vel
+	logic.velocity.z = dir.z * vel
+	logic.velocity.y = 0.0
+	logic.move_and_slide()
+
+
+## El ragdoll SIGUE a la capsula en POSICION (es VISUAL): se traslada el
+## mismo delta a todos los cuerpos, sin tocar velocidades ni orientaciones.
+## El ciclo de paso (TimeScale = velocidad real / natural) hace que los pies
+## parezcan plantados aunque el cuerpo avance. :v
+func _seguir_logic(_delta: float) -> void:
+	if logic == null or physical_bone_body == null:
+		return
+	var p := RagdollMotor.body_transform(physical_bone_body).origin
+	var d := Vector3(logic.global_position.x - p.x, 0.0,
+		logic.global_position.z - p.z)
+	if d.length_squared() < 1e-10:
+		return
+	for b in skeleton.bones:
+		var xf := RagdollMotor.body_transform(b)
+		xf.origin += d
+		PhysicsServer3D.body_set_state(b.get_rid(),
+			PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+
+
 func _mover_cuerpo(dir: Vector3, delta: float) -> void:
 	# En el agua se nada: mas lento, y el arrastre del WaterBody (hijo,
 	# corre DESPUES de este script) se encarga del resto.
 	var en_agua := agua != null and agua.sumergido
+	# En tierra, si hay `Logic` (CharacterBody3D), la autoridad es el: el
+	# ragdoll solo lo sigue. Sin `Logic` (escenas viejas) se usa el empuje.
+	if not en_agua and logic != null:
+		_seguir_logic(delta)
+		return
 	# La velocidad sale de las STATS del personaje (3 m/s andando, 5,5
 	# esprintando).
 	var vel := stats.sprint_speed if is_sprinting else stats.walk_speed
@@ -591,6 +621,11 @@ func _calcular_suelo() -> void:
 			if on_floor_right.get_collision_normal(i).y > 0.5:
 				is_on_floor = true
 				break
+	# La capsula (`Logic`) es la autoridad del suelo: si ella pisa, el
+	# personaje esta en el suelo aunque los ShapeCast de las espinillas no
+	# vean nada (escalones, bordes).
+	if logic != null and logic.is_on_floor():
+		is_on_floor = true
 
 
 func _actualizar_agua() -> void:
@@ -679,7 +714,7 @@ func _actualizar_pd() -> void:
 	# balance le devolvia a la pelvis el par de todos los hijos (medido: la
 	# pelvis giraba a 40 rad/s y el personaje se volcaba).
 	motor.drive(skeleton.bones, objetivos, _grupos(), get_physics_process_delta_time(),
-		_ganancias(), physical_skel)
+		physical_skel)
 	mirror.mirror(physical_skel, animated_skel, skeleton.bones, physical_bone_body)
 
 
@@ -852,18 +887,6 @@ func _grupos() -> Dictionary:
 	var out := {}
 	for b in skeleton.bones:
 		out[b.get_bone_id()] = rig_config.group_of(b.bone_name) if rig_config != null else ""
-	return out
-
-
-## La ganancia del PD de cada hueso: un hueso que SOPORTA mas carga (la
-## pelvis, el pecho) necesita un PD mas fuerte o la gravedad lo tumba.
-func _ganancias() -> Dictionary:
-	var out := {}
-	if rig_config == null:
-		return out
-	for b in skeleton.bones:
-		var bone := rig_config.bone(b.bone_name)
-		out[b.get_bone_id()] = bone.pd_gain if bone != null else 1.0
 	return out
 
 
