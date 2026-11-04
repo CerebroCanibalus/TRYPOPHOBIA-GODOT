@@ -69,6 +69,9 @@ class_name RagdollRig
 ## `lean_share_body` se aplica a huesos cuyo nombre TERMINA en este string.
 @export var lean_body_suffix: String = "Body"
 @export var lean_head_suffix: String = "Head"
+## Token que marca un PIE (para el "foot lock"): un pie apoyado no se sirve
+## contra el clip, se queda donde esta. `"foot"` cubre `foot.L` / `foot.R`.
+@export var foot_name_token: String = "foot"
 
 ## -----------------------------------------------------------------------
 ## ---- CLIPS --------------------------------------------------------------
@@ -181,3 +184,9 @@ func group_of(bone_name: StringName) -> String:
 	if leg_name_token != "" and n.contains(leg_name_token):
 		return "leg"
 	return ""
+
+
+## ¿Este hueso es un PIE? Se usa para el "foot lock": un pie apoyado no se
+## sirve contra el clip, se queda donde esta (ver `_calcular_objetivos`). :v
+func is_foot(bone_name: StringName) -> bool:
+	return foot_name_token != "" and String(bone_name).contains(foot_name_token)

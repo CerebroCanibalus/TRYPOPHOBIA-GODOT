@@ -704,6 +704,13 @@ func _calcular_objetivos() -> Dictionary:
 		var objetivo: Transform3D = animated_skel.global_transform * pose
 		objetivo = _aplicar_lean(b, objetivo)
 		objetivo = head_look.apply(b, objetivo)
+		# PIE PLANTADO: si el pie toca el suelo, el objetivo es su PROPIA pose
+		# fisica. Asi el servo no pelea con el suelo (medido: 96 grados de
+		# error en foot.R y omega desperdiciada). En el aire vuelve al clip.
+		if rig_config != null and rig_config.is_foot(b.bone_name) \
+				and _pie_en_suelo(b):
+			var boff: Transform3D = b.get("body_offset")
+			objetivo = RagdollMotor.body_transform(b) * boff.affine_inverse()
 		out[id] = objetivo
 	_estirar_brazo_agarrado(out)
 	return out
@@ -771,8 +778,18 @@ func _estirar_brazo_agarrado(out: Dictionary) -> void:
 			continue
 		if not (out.has(raiz) and out.has(medio) and out.has(mano)):
 			continue
+		# OJO (medido): `out[raiz].origin` es el maestro, que se queda en el
+		# spawn. La direccion del brazo se mide con las posiciones FISICAS o,
+		# al caminar, el hombro esta 1 m atras y el brazo apunta mal.
+		var cuerpo_raiz := _cuerpo_de(raiz)
+		var cuerpo_mano := _cuerpo_de(mano)
 		var hombro: Vector3 = out[raiz].origin
-		var dir_actual: Vector3 = (out[mano].origin - hombro).normalized()
+		var mano_fisica: Vector3 = out[mano].origin
+		if cuerpo_raiz != null:
+			hombro = _posicion_fisica(cuerpo_raiz)
+		if cuerpo_mano != null:
+			mano_fisica = _posicion_fisica(cuerpo_mano)
+		var dir_actual: Vector3 = (mano_fisica - hombro).normalized()
 		var dir_objetivo: Vector3 = punto - hombro
 		if dir_objetivo.length() < 0.05:
 			continue
@@ -798,6 +815,36 @@ func _estirar_brazo_agarrado(out: Dictionary) -> void:
 		var fija := Transform3D(Basis.IDENTITY, -hombro)
 		for id in [raiz, medio, mano]:
 			out[id] = rot * fija * out[id]
+
+
+## El cuerpo fisico cuyo bone_id coincide (mismo id que el animado).
+func _cuerpo_de(id: int) -> PhysicalBone3D:
+	for b in skeleton.bones:
+		if b.get_bone_id() == id:
+			return b
+	return null
+
+
+## La pose del HUESO en mundo a partir del cuerpo (deshace `body_offset`).
+func _posicion_fisica(b: PhysicalBone3D) -> Vector3:
+	var boff: Transform3D = b.get("body_offset")
+	return (RagdollMotor.body_transform(b) * boff.affine_inverse()).origin
+
+
+## ¿El pie apoya en el suelo? Raycast desde el hueso del pie hacia abajo.
+## La mascara 1 (mundo) ignora los propios huesos (capa 2). :v
+func _pie_en_suelo(b: PhysicalBone3D) -> bool:
+	if b == null:
+		return false
+	var mundo := get_world_3d()
+	if mundo == null:
+		return false
+	var boff: Transform3D = b.get("body_offset")
+	var p := (RagdollMotor.body_transform(b) * boff.affine_inverse()).origin
+	var q := PhysicsRayQueryParameters3D.create(p, p + Vector3.DOWN * 0.18)
+	q.collision_mask = 1
+	q.collide_with_areas = false
+	return not mundo.direct_space_state.intersect_ray(q).is_empty()
 
 
 ## Los grupos de cada hueso (para el motor: los brazos se relajan).

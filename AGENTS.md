@@ -1565,13 +1565,22 @@ la máscara de la escena (5 = mundo + interactuables) manda. Se acabó la sopa d
 excepciones por AABB. Y se quitó el `print("[MOTOR] ...")` que escribía **una
 línea por tick** (363 líneas en 15 s).
 
+**Hecho después (2026-11-04, fase 1):**
+- **Foot lock:** si el pie toca suelo (raycast 0.18 m, máscara mundo), su
+  objetivo es su **propia pose física** → el servo no pelea con el suelo. El
+  error máximo de ~100° que queda es del **vuelo** (el clip levanta el talón),
+  no del apoyo.
+- **Brazo:** la dirección se mide con las posiciones **físicas** (hombro y
+  mano), no con el maestro estático. Medido: la mano que agarra sube
+  **+0.258 m** (antes +0.039) y la que no agarra se queda (-0.027).
+- Velocidad andando **0.55 → 0.65 m/s**; el pie pasa de **+0.03** (patinaba) a
+  **−0.23** (se planta y el cuerpo pasa por encima).
+
 **Pendiente (medido, no supuesto):**
-- `foot.R` 95°: el pie está **plantado** y el servo lo quiere girar con el clip.
-  Necesita IK de pie o excluirlo del servo cuando toca suelo.
-- `_base_de_objetivos()` sigue **sin llamarse**: la mano física queda 1,1 m
-  detrás de su objetivo al caminar (el maestro está fijo en el mundo).
-- Velocidad andando **0.54 m/s** con `walk_speed = 1.1`: el empuje y la fricción
-  del pie se pelean; es tema del controlador (fase A: `CharacterBody3D`).
+- `_base_de_objetivos()` sigue **sin llamarse**: el brazo ya no depende de él,
+  pero el maestro sigue fijo en el mundo para el resto del clip.
+- Velocidad **0.65 m/s** con `walk_speed = 1.1`: es tema del controlador
+  (fase A: `CharacterBody3D`).
 - El `shiba_rig_config.tres` **sigue listando 19 huesos** (física duplicada que
   el runtime ignora). La verdad es la escena.
 - `tests/ragdoll/shiba_test.gd` sigue **vacío** y su `.tscn` instancia el
