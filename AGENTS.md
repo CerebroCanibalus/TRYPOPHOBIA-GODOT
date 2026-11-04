@@ -1516,3 +1516,91 @@ Shiba son las de **inclinaciÃ³n** (`lean_back` / `IDLE` / `lean_forward`).
 - Soltada **desde el aire**, la caida aplasta la pose; el spawn real es de pie
   en el suelo y ahi se sostiene.
 - La cabeza gira con la camara y la 3a persona funciona (tecla V).
+
+---
+
+## 🎯 RAGDOLL — LEY DE CONTROL Y TEST CANÓNICO (2026-11-03)
+
+> **El `tools/ragdoll_playground/` es EL TEST CANÓNICO del ragdoll.** Cualquier
+> cambio en el ragdoll (ley, rig, masas, joints) se mide AHÍ: usa la MISMA
+> librería (`src/ragdoll/`) y el MISMO motor de física que el juego.
+> El test imprime la telemetría REAL (del servidor de física) y un veredicto.
+
+### La LEY: servo de VELOCIDAD con objetivo ABSOLUTO en mundo
+
+`src/ragdoll/runtime/ragdoll_motor.gd` (k=3000, c=80, tope de ω 40 rad/s):
+
+```
+actual   = pose del HUESO en MUNDO  (cuerpo del servidor * body_offset^-1)
+objetivo = pose del HUESO en MUNDO de la ANIMACIÓN
+e        = eje*angulo de (objetivo * actual^-1)      [MUNDO]
+alpha    = k*e - c*omega                             [rad/s2]
+omega   += alpha*dt                                  [rad/s]
+```
+
+Es la ley del proyecto de referencia (`tools/active_ragdoll_reference`), la
+ÚNICA que aguanta con Box3D. La librería la había cambiado por un PD por
+torque con error RELATIVO al padre, pares e inercias de subárbol + un
+controlador de balance: **eso fue lo que la cagó** (medido: la pelvis giraba
+a 40 rad/s y el personaje se volcaba).
+
+### GOTA — el tope de `max_angular_speed` (6 rad/s) mataba el servo
+
+Con 6 rad/s el servo no puede girar un hueso grande en un frame: el
+personaje se ve **"aguado"** y los brazos y el pecho **parecen no seguir al
+ragdoll**. El tope tiene que ser de **decenas** (40).
+
+### GOTA — la MASA decide si el personaje se tiene en pie (medido)
+
+El error de equilibrio del servo en aceleración es `e = tau_g /(I*k)`. Con la
+pelvis del Shiba (8 kg en una caja de 30 cm, I = 0,11 kg*m2) sosteniendo
+**30 kg de tronco** a 0,3 m (88 N*m) salían **15 GRADOS de error en la
+pelvis**: el personaje se inclinaba y se hundía (medido: `pel_y` 0,9 -> 0,26).
+
+**Reparto que SÍ aguanta** (medido: `pel_y` 0,75 estable, `up_col` 0,95,
+error del muslo 0-1,3 grados):
+
+| Grupo | Antes | Ahora |
+|---|---|---|
+| Columna (7 huesos) | 30 kg | **16,7 kg** (tronco ligero) |
+| Piernas (6 huesos) | 9,6 kg | **14,9 kg** (las que SOPORTAN) |
+| Brazos (8 huesos) | 7,1 kg | 7,1 kg |
+| **Total** | 46,9 kg | 38,7 kg |
+
+Regla: **el tronco es ligero y las piernas son pesadas**. El hueso que
+SOPORTA necesita inercia; el que se MUEVE, no.
+
+### GOTA — el apoyo se calcula con los COLLIDERS, no con los huesos
+
+El collider va a MEDIA HUESO (`body_offset`): su fondo queda centímetros por
+DEBAJO del origen del hueso. Si el personaje se coloca con los orígenes de
+los huesos, el collider del pie nace DENTRO del suelo y el solver lo expulsa
+de una patada (medido: el pie gira 50 grados y se pone a girar a 13 rad/s en
+el frame 3, y de ahí venía el "aguado"). `_colocar_en_el_suelo()` usa
+`_fondo_de_los_colliders()`.
+
+OJO: `Shape3D` **no tiene `get_aabb()`** en Godot 4.7 → usar
+`WaterShapeTest.aabb_de(shape)`.
+
+### GOTA — el modelo mira a +Z y la cámara a -Z (el personaje andaba de espaldas)
+
+El nodo `Animated` lleva un giro de **180 grados en Y**, así que el yaw GLOBAL
+del esqueleto es `gamma - rotation.y` (no `rotation.y`). Con
+`atan2(dir.x, dir.z)` el personaje miraba **exactamente al revés**
+(medido: `dot(frente_del_modelo, camara) = -1.000`).
+
+`_calibrar_rumbo()` mide la constante `gamma` de la escena al montar, así que
+el rumbo es correcto en cualquier rig.
+
+### GOTA — `max_angular_accel` del motor es el tope del servo, no del PD
+
+`motor.max_angular_accel` (4000 rad/s2) topa la aceleración que se pide en
+un tick; `motor.max_torque` (400 N*m) el torque de la ley por torque
+(`por_torque`, **experimental y OFF**: con damping crítico sin tope el servo
+explota en los huesos pequeños, y con tope no llega al error de equilibrio).
+
+### GOTA — el balance controller está DESACTIVADO (`balance_enabled = false`)
+
+El servo con objetivo absoluto ya mantiene al personaje de pie; el balance
+(upright + centro de masas + muelle de altura) le devolvía a la pelvis el par
+de todos los hijos y la ponía a girar a 40 rad/s (medido).

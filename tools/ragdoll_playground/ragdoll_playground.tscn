@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://by0j2xnat0m5a"]
 
 [ext_resource type="Script" uid="uid://bn7byu7wi4vsg" path="res://tools/ragdoll_playground/ragdoll_playground.gd" id="1_pg"]
-[ext_resource type="PackedScene" uid="uid://d2rk5vejwcwdf" path="res://src/ragdoll/scenes/ragdoll_character.tscn" id="2_ch"]
+[ext_resource type="PackedScene" uid="uid://hd7ltfufcvh" path="res://src/player/shiba_player.tscn" id="2_206fg"]
 [ext_resource type="PackedScene" uid="uid://cwkhojdh3yo07" path="res://tools/ragdoll_playground/physics_box.tscn" id="3_box"]
 [ext_resource type="PackedScene" uid="uid://tr8au3nscake" path="res://tools/body_debugger/body_debugger.tscn" id="4_206fg"]
 
@@ -49,6 +49,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("floor_mesh")
 surface_material_override/0 = SubResource("floor_mat")
 
+[node name="Shiba" parent="Floor" unique_id=35073120 instance=ExtResource("2_206fg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34462595, 0.014879301, 3.286798)
+
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1356114607]
 transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
 light_energy = 1.705
@@ -58,9 +61,6 @@ shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1222724344]
 environment = SubResource("env")
-
-[node name="RagdollCharacter" parent="." unique_id=1809384552 instance=ExtResource("2_ch")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
 [node name="Pillars" type="Node3D" parent="." unique_id=460506807]
 

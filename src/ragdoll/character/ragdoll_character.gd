@@ -68,17 +68,26 @@ const SALIDA_AGUA := 8.0
 ## Velocidad de giro del cuerpo (rad/s).
 @export var body_turn_speed := 7.0
 
-## === MOTOR (ganos del PD) ==============================================
+## === MOTOR (ganos del servo) ===========================================
 ##
 ## La rigidez y el amortiguamiento NO se configuran aqui: los gobierna el
-## `RagdollMotor` (una sola fuente). El PD es por TORQUE (N*m por radian)
-## y su amortiguamiento es el CRITICO de cada cuerpo.
-@export var max_angular_speed := 6.0
+## `RagdollMotor` (una sola fuente).
+##
+## OJO — el tope de velocidad angular es de DECENAS de rad/s, no de 6: con
+## 6 el servo no puede mover un hueso grande en un frame y el personaje se
+## ve "aguado" (los brazos y el pecho parece que no siguen al ragdoll).
+@export var max_angular_speed := 40.0
 ## Escala de los brazos que NO estan agarrando (1 = igual que el resto).
-@export var arm_spring_scale := 1.0
+@export var arm_spring_scale := 0.5
+## El controlador de balance (upright + centro de masas + muelle de
+## altura) esta DESACTIVADO por defecto: la ley del servo (objetivo
+## absoluto en mundo) ya mantiene al personaje de pie, y el balance le
+## devolvia a la pelvis el par de todos los hijos: la ponia a girar a
+## 40 rad/s y el personaje se volcaba (medido).
+@export var balance_enabled := false
 
 ## === MIRADA DE CABEZA ===================================================
-@export var head_look_enabled := true
+@export var head_look_enabled := false
 @export var head_yaw_max_degrees := 55.0
 @export var head_pitch_max_degrees := 30.0
 @export var head_look_smoothing := 0.12
@@ -124,6 +133,8 @@ var on_floor_right: ShapeCast3D = null
 var l_grab_area: Area3D = null
 var r_grab_area: Area3D = null
 var physical_bone_body: PhysicalBone3D = null
+## Constante de calibracion del rumbo (ver `_calibrar_rumbo`).
+var _yaw_gamma := 0.0
 
 
 func _ready() -> void:
@@ -260,7 +271,7 @@ func _crear_componentes() -> void:
 
 	# --- Motor ---------------------------------------------------------
 	# La rigidez y el amortiguamiento los gobierna el MOTOR (una sola
-	# fuente): ahora son un PD por TORQUE (N*m), no un PD por aceleracion.
+	# fuente): son los del servo de velocidad con objetivo absoluto.
 	motor.max_angular_speed = max_angular_speed
 	motor.arm_spring_scale = arm_spring_scale
 
@@ -301,6 +312,7 @@ func _crear_componentes() -> void:
 
 	# --- Camara ---------------------------------------------------------
 	_resolver_camara()
+	_calibrar_rumbo()
 	print("[RagdollCharacter] READY | huesos=%d | cuerpo=%s | config=%s" % [
 		skeleton.bones.size(),
 		str(rig_config.body_bone_name if rig_config != null else "-"),
@@ -433,6 +445,10 @@ func _physics_process(delta: float) -> void:
 	if not _alineado and driver.animation_started():
 		_alineado = true
 		_alinear_con_la_animacion()
+		# Y se pone DE PIE sobre el suelo: sin esto el personaje nace
+		# flotando medio metro (la pose del clip lo deja por encima de su
+		# origen) y el golpe contra el suelo lo tumba (medido).
+		_colocar_en_el_suelo()
 		mirror.capture_offset(physical_skel, physical_bone_body)
 
 
@@ -545,13 +561,39 @@ func _actualizar_rumbo_del_cuerpo(dir: Vector3, delta: float) -> void:
 
 
 ## Yaw objetivo del cuerpo: el de la direccion de marcha, con inercia.
+##
+## OJO — el yaw del esqueleto ANIMADO va AL REVES (medido: el personaje
+## caminaba de espaldas, `dot(frente_del_modelo, camara) = -1`).
+##
+## El nodo `Animated` lleva un giro de 180 grados en Y (el modelo se
+## importa con el frente en +Z y el juego mira hacia -Z), asi que el yaw
+## GLOBAL del esqueleto es `gamma - rotation.y`, no `rotation.y`. La
+## constante `gamma` se mide de la escena al montar (`_calibrar_rumbo`),
+## para que elrumbo sea correcto en CUALQUIER rig, tenga el giro que tenga.
 func _calcular_yaw_del_cuerpo(dir: Vector3, moving: bool, delta: float) -> float:
 	var actual := animated_skel.rotation.y
 	if not moving or dir.is_zero_approx():
 		return actual
-	var objetivo := atan2(dir.x, dir.z)
+	# El frente del modelo es su +Z local: el yaw global que lo apunta a
+	# `dir` es `atan2(dir.x, dir.z)`.
+	var objetivo := _yaw_gamma - atan2(dir.x, dir.z)
 	var d := wrapf(objetivo - actual, -PI, PI)
 	return actual + clampf(d, -body_turn_speed * delta, body_turn_speed * delta)
+
+
+## Mide la constante de rumbo del esqueleto animado.
+##
+## La relacion entre el yaw LOCAL (`rotation.y`) y el yaw GLOBAL es
+## `global = gamma - local` (el signo lo pone el giro de 180 grados del
+## nodo padre). Se mide con el esqueleto como esta y se aplica a todos los
+## rigs.
+func _calibrar_rumbo() -> void:
+	if animated_skel == null:
+		return
+	var b := animated_skel.global_transform.basis
+	# El yaw global se lee del eje Z de la base (una rotacion pura en Y).
+	var yaw_global := atan2(b.z.x, b.z.z)
+	_yaw_gamma = yaw_global + animated_skel.rotation.y
 
 
 ## === EL PD ==============================================================
@@ -566,9 +608,13 @@ func _actualizar_pd() -> void:
 	if ragdoll_mode or skeleton == null or driver == null:
 		return
 	var objetivos := _calcular_objetivos()
-	# El balance se SUMA al PD (no lo sustituye): el PD pone la pose, el
-	# balance decide si se aguanta.
-	balance.apply(skeleton.bones, physical_bone_body, rig_config, _pies())
+	# El balance (upright + centro de masas + muelle de altura) esta
+	# DESACTIVADO por defecto: la ley del servo ya mantiene al personaje
+	# de pie y el balance le devolvia a la pelvis el par de todos los
+	# hijos (medido: la pelvis giraba a 40 rad/s y el personaje se
+	# volcaba). El PD pone la pose; el balance solo estorba.
+	if balance_enabled and balance != null:
+		balance.apply(skeleton.bones, physical_bone_body, rig_config, _pies())
 	motor.drive(skeleton.bones, objetivos, _grupos(), get_physics_process_delta_time(),
 		_ganancias(), physical_skel)
 	mirror.mirror(physical_skel, animated_skel, skeleton.bones, physical_bone_body)
@@ -672,7 +718,19 @@ func _alinear_con_la_animacion() -> void:
 		var id := b.get_bone_id()
 		if id < 0:
 			continue
-		var xf := animated_skel.global_transform * animated_skel.get_bone_global_pose(id)
+		# OJO (medido) — el cuerpo NO esta en el origen del hueso: esta a
+		# MEDIA HUESO, y ese desplazamiento es el `body_offset` (en espacio
+		# de hueso). Godot coloca el cuerpo como
+		# `esqueleto * pose_del_hueso * body_offset`.
+		#
+		# Si se colocara en el origen del hueso, la cadena entera naceria
+		# COMPRIMIDA (media hueso menos por eslabon) y los cuerpos se
+		# solaparian: el solver los separaba a tiros y la pelvis saltaba
+		# de 0,83 a 1,36 m en un frame (medido: el personaje se aplastaba
+		# contra el suelo y el muelle de altura lo deformaba).
+		var off: Transform3D = b.get("body_offset")
+		var xf := animated_skel.global_transform \
+			* animated_skel.get_bone_global_pose(id) * off
 		PhysicsServer3D.body_set_state(b.get_rid(), PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
 		PhysicsServer3D.body_set_state(b.get_rid(), PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY, Vector3.ZERO)
 		PhysicsServer3D.body_set_state(b.get_rid(), PhysicsServer3D.BODY_STATE_ANGULAR_VELOCITY, Vector3.ZERO)
@@ -731,6 +789,85 @@ func parar() -> void:
 		return
 	physical_bone_body.linear_velocity = Vector3.ZERO
 	physical_bone_body.angular_velocity = Vector3.ZERO
+
+
+## Coloca al personaje DE PIE sobre el suelo.
+##
+## MEDIDO: la pose de la ANIMACION deja al personaje 0,5 m por encima de
+## su propio origen (el clip del modelo mueve el hueso raiz), asi que al
+## nacer queda flotando medio metro: el muelle de altura lo tira contra el
+## suelo a 5,7 m/s y el golpe lo tumba (medido: el tronco acababa
+## INVERTIDO, con la cabeza 0,5 m por debajo de la pelvis).
+##
+## Se baja el personaje (raiz + TODOS los cuerpos) hasta que el pie de la
+## pose de animacion apoya en el suelo real. Es la misma referencia que
+## usa el muelle de altura para calcular su objetivo, asi que despues de
+## colocarse el muelle queda en equilibrio y no golpea al personaje.
+func _colocar_en_el_suelo() -> void:
+	if skeleton == null or rig_config == null:
+		return
+	var pelvis := skeleton.bone_of(rig_config.body_bone_name)
+	if pelvis == null:
+		return
+	var suelo_y := _suelo_bajo_pelvis()
+	if is_inf(suelo_y):
+		return
+	# El punto MAS BAJO de los COLLIDERS (no de los huesos).
+	#
+	# MEDIDO: el collider va a MEDIA HUESO (ody_offset), asi que su
+	# fondo queda centimetros por DEBAJO del origen del hueso. Si se
+	# calcula el apoyo con los origenes de los huesos, el collider del
+	# pie nace DENTRO del suelo y el solver lo expulsa de una patada: el
+	# pie gira 50 grados y se pone a girar a 13 rad/s (medido en el frame
+	# 3) y de ahi viene que el personaje se vea "aguado".
+	var min_y := _fondo_de_los_colliders()
+	if is_inf(min_y):
+		return
+	var d := suelo_y - min_y
+	if absf(d) < 0.002:
+		return
+	_desplazar(Vector3(0.0, d, 0.0))
+
+
+## El punto mas BAJO de todos los colliders del ragdoll (en mundo).
+##
+## Se lee del SERVIDOR de fisica (la transform del cuerpo) y de la forma
+## de cada colision (el AABB local de la forma y su transform respecto al
+## cuerpo, que es dato de la ESCENA y no cambia).
+func _fondo_de_los_colliders() -> float:
+	var min_y := INF
+	for b in skeleton.bones:
+		var xf := RagdollMotor.body_transform(b)
+		if xf == Transform3D.IDENTITY:
+			continue
+		for c in b.find_children("*", "CollisionShape3D", true, false):
+			var cs := c as CollisionShape3D
+			if cs == null or cs.shape == null:
+				continue
+			var local := cs.transform
+			var aabb: AABB = WaterShapeTest.aabb_de(cs.shape)
+			for i in 8:
+				var esquina: Vector3 = aabb.get_endpoint(i)
+				var mundo: float = (xf * local * esquina).y
+				min_y = minf(min_y, mundo)
+	return min_y
+
+
+## Desplaza la raiz y TODOS los cuerpos fisicos (la raiz sola no mueve el
+## ragdoll: los cuerpos viven en el servidor de fisica).
+func _desplazar(d: Vector3) -> void:
+	if d.length_squared() < 1e-10:
+		return
+	global_position += d
+	for b in skeleton.bones:
+		var xf := RagdollMotor.body_transform(b)
+		xf.origin += d
+		PhysicsServer3D.body_set_state(b.get_rid(),
+			PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+		PhysicsServer3D.body_set_state(b.get_rid(),
+			PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY, Vector3.ZERO)
+		PhysicsServer3D.body_set_state(b.get_rid(),
+			PhysicsServer3D.BODY_STATE_ANGULAR_VELOCITY, Vector3.ZERO)
 
 
 ## Hooke's law angular: torque de resorte amortiguado (delegado al motor).

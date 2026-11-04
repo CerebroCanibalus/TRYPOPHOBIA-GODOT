@@ -29,16 +29,21 @@ class_name BalanceController
 ## con los brazos abiertos).
 ## Ganancia del torque UPRIGHT (N*m por radian de error). El torso se
 ## endereza hacia la vertical del mundo.
-@export var upright_strength := 150.0
+##
+## MEDIDO: el personaje se caia HACIA DELANTE con el centro de masas 11 cm
+## por delante de los pies. El momento de la gravedad sobre la base de
+## apoyo es de unos 50 N*m, asi que la ganancia tiene que ser de ese
+## orden para poder corregirlo.
+@export var upright_strength := 250.0
 ## Ganancia del torque de desplazamiento del centro de masas (N*m por metro).
-@export var com_strength := 15000.0
+@export var com_strength := 1200.0
 ## Amortiguamiento angular (N*m*s/rad).
 ##
 ## OJO: el amortiguamiento es EXPLICITO, asi que tiene que cumplir
 ## `c * dt / I <= 2` para ser estable. Con la inercia del tronco (0,012)
 ## eso da `c <= 1,5`: por eso es 1,2 y no 120 (medido: con 120 el torso
 ## se ponia a vibrar y no se sostenia).
-@export var damping := 1.2
+@export var damping := 20.0
 ## Rigidez del muelle vertical que SOSTIENE al personaje (N/m). El PD solo
 ## controla la ORIENTACION: sin este muelle el torso queda erguido pero
 ## tumbado en el suelo (medido: pelvis a 0,18 m en vez de 0,83).
@@ -55,7 +60,13 @@ class_name BalanceController
 @export var max_torque := 120.0
 ## Tope de aceleracion angular del torso (rad/s2). El torque del
 ## balance se limita con I * este valor.
-@export var max_accel := 300.0
+##
+## La pelvis esta ANCLADA al suelo por las piernas: su giro no la hace
+## girar a ella sola, la hace girar a todo el cuerpo. Por eso el tope
+## tiene que ser alto (con 300 el tope eran 31 N*m y no llegaban los ~50
+## N*m que pide el momento de la gravedad: medido, el tronco se quedaba a
+## 45 grados de la vertical).
+@export var max_accel := 3000.0
 ## Tope del empuje vertical (N) del muelle que sostiene al personaje.
 ## Tiene que superar el peso (50 kg ~ 490 N) o el personaje no se levanta.
 @export var max_force := 1500.0
@@ -146,15 +157,24 @@ func apply(bones: Array[PhysicalBone3D], pelvis_body: PhysicalBone3D,
 	var torque := eje_up * minf(ang, deg_to_rad(60.0)) * upright_strength
 
 	# --- 2) CoM SHIFT: el centro de masas sobre la base de apoyo -------
+	#
+	# OJO (medido) — el eje estaba MAL: se usaba el lateral del torso
+	# (`fwd x UP`), que es PERPENDICULAR a la direccion del desvio, asi
+	# que el termino solo corregia los desvios laterales y el personaje se
+	# caia HACIA DELANTE (medido: el centro de masas estaba 11 cm por
+	# delante de los pies y nadie lo corregia).
+	#
+	# El eje correcto es `desvio x UP`: es el eje cuyo giro lleva el centro
+	# de masas de vuelta sobre la base de apoyo (el momento de la gravedad
+	# es `-m*g*(desvio x UP)`, asi que hay que aplicar el contrario).
 	var com := _centro_de_masas(bones)
 	var apoyo := _base_de_apoyo(feet)
 	if com != Vector3.ZERO and apoyo != Vector3.ZERO:
 		var desvio := com - apoyo
 		desvio.y = 0.0
-		# El torso se inclina hacia el lado del desvio (el peso tira de vuelta).
-		var fwd := xf.basis.z.normalized()
-		var lateral := fwd.cross(Vector3.UP).normalized()
-		torque += lateral * desvio.dot(lateral) * com_strength
+		var eje_com := desvio.cross(Vector3.UP)
+		if eje_com.length() > 0.0001:
+			torque += eje_com.normalized() * desvio.length() * com_strength
 
 	torque -= omega * damping
 	# Tope por ACELERACION (igual que el PD): el torque del balance se
@@ -177,22 +197,22 @@ func apply(bones: Array[PhysicalBone3D], pelvis_body: PhysicalBone3D,
 		PhysicsServer3D.body_apply_force(pelvis_body.get_rid(), Vector3.UP * clampf(f, -max_force, max_force))
 
 
-## El TORSO: el hueso de la columna con mas masa (el pecho). Es el que hay
-## que enderezar: los mas altos (cuello, cabeza) no.
+## El TORSO: la RAIZ de la cadena (el hueso "cuerpo" del rig).
+##
+## OJO (medido) — antes era "el hueso de la columna con mas masa" (el
+## pecho). Eso esta MAL: un torque en mitad de la cadena dobla el tronco
+## en vez de enderezar el cuerpo. Lo que define la verticalidad del
+## PERSONA es la pelvis: es la raiz, y la cadena cuelga de ella.
+##
+## (La excepcion anterior -excluir el hueso "cuerpo" para que `_torso()`
+## no devolviera null- era un parche por otro bug, no un criterio.)
 func _torso(bones: Array[PhysicalBone3D], rig: RagdollRig) -> PhysicalBone3D:
 	if rig == null:
 		return null
-	var mejor: PhysicalBone3D = null
-	var mejor_masa := -1.0
 	for b in bones:
-		if String(rig.group_of(b.bone_name)) != "column":
-			continue
 		if b.bone_name == rig.body_bone_name:
-			continue
-		if b.mass > mejor_masa:
-			mejor_masa = b.mass
-			mejor = b
-	return mejor
+			return b
+	return null
 
 
 ## Centro de masas (media ponderada por la masa de los cuerpos).

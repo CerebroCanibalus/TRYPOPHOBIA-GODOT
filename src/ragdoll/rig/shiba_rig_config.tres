@@ -1,229 +1,236 @@
-[gd_resource type="Resource" script_class="RagdollRig" format=3]
+[gd_resource type="Resource" script_class="RagdollRig" format=3 uid="uid://d17wsyvrw8y2a"]
 
-[ext_resource type="Script" path="res://src/ragdoll/rig/ragdoll_bone.gd" id="1_imc3o"]
-[ext_resource type="Script" path="res://src/ragdoll/rig/ragdoll_rig.gd" id="2_2msxu"]
+[ext_resource type="Script" uid="uid://b5u1in213ft8a" path="res://src/ragdoll/rig/ragdoll_bone.gd" id="1_imc3o"]
+[ext_resource type="Script" uid="uid://c2ocu6hif13oc" path="res://src/ragdoll/rig/ragdoll_rig.gd" id="2_2msxu"]
 
 [sub_resource type="Resource" id="Resource_5ydty"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine"
 shape = 0
-size = Vector3(0.26, 0.2, 0.22)
+mass = 4.4
+size = Vector3(0.3, 0.26, 0.28)
 radius = 0.18
 offset = 0.15
-mass = 2.6
-pd_gain = 32.5
 group = "column"
 
 [sub_resource type="Resource" id="Resource_jo1am"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine.001"
 shape = 0
-size = Vector3(0.2, 0.16478856, 0.18)
+mass = 3.85
+size = Vector3(0.28, 0.24, 0.26)
 radius = 0.05
 height = 0.16478856
 offset = 0.08239428
-mass = 5.9
-pd_gain = 18.009171435683406
 group = "column"
 
 [sub_resource type="Resource" id="Resource_sulih"]
 script = ExtResource("1_imc3o")
 bone_name = &"thigh.R"
+shape = 1
+mass = 3.52
+size = Vector3(0.13, 0.2, 0.15)
 radius = 0.08491045534610749
 height = 0.38595662
 offset = 0.19297831
-mass = 1.2
-pd_gain = 3.61536517244462
+pd_gain = 3.0
 group = "leg"
 
 [sub_resource type="Resource" id="Resource_kbwev"]
 script = ExtResource("1_imc3o")
 bone_name = &"thigh.L"
+shape = 1
+mass = 3.52
+size = Vector3(0.13, 0.2, 0.15)
 radius = 0.08491045534610749
 height = 0.38595662
 offset = 0.19297831
-mass = 1.2
-pd_gain = 3.615365009621006
+pd_gain = 3.0
 group = "leg"
 
 [sub_resource type="Resource" id="Resource_4bi6l"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine.002"
 shape = 0
-size = Vector3(0.2, 0.1424236, 0.18)
+mass = 3.3
+size = Vector3(0.26, 0.22, 0.24)
 radius = 0.05
 height = 0.1424236
 offset = 0.0712118
-mass = 5.9
-pd_gain = 16.883778067506004
 group = "column"
 
 [sub_resource type="Resource" id="Resource_dudj6"]
 script = ExtResource("1_imc3o")
 bone_name = &"shin.R"
+shape = 1
+mass = 2.88
+size = Vector3(0.11, 0.2, 0.13)
 radius = 0.08810608565807343
 height = 0.4004822
 offset = 0.2002411
-mass = 1.3
-pd_gain = 2.5610370865915746
+pd_gain = 3.0
 group = "leg"
 
 [sub_resource type="Resource" id="Resource_q56bh"]
 script = ExtResource("1_imc3o")
 bone_name = &"shin.L"
+shape = 1
+mass = 2.88
+size = Vector3(0.11, 0.2, 0.13)
 radius = 0.08810608565807343
 height = 0.4004822
 offset = 0.2002411
-mass = 1.3
-pd_gain = 2.5610369237679604
+pd_gain = 3.0
 group = "leg"
 
 [sub_resource type="Resource" id="Resource_3pdbp"]
 script = ExtResource("1_imc3o")
 bone_name = &"foot.L"
-radius = 0.05
-height = 0.1709647
+shape = 1
+mass = 1.3
+size = Vector3(0.12, 0.07, 0.22)
+radius = 0.07
+height = 0.24
 offset = 0.08548235
-mass = 0.35
-pd_gain = 1.4670288859446252
+pd_gain = 4.0
 
 [sub_resource type="Resource" id="Resource_7a44n"]
 script = ExtResource("1_imc3o")
 bone_name = &"foot.R"
-radius = 0.05
-height = 0.17096476
+shape = 1
+mass = 1.3
+size = Vector3(0.12, 0.07, 0.22)
+radius = 0.07
+height = 0.24
 offset = 0.08548238
-mass = 0.35
-pd_gain = 1.4670290487682394
+pd_gain = 4.0
 
 [sub_resource type="Resource" id="Resource_ct52m"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine.003"
 shape = 0
-size = Vector3(0.2, 0.16917184, 0.18)
+mass = 3.3
+size = Vector3(0.26, 0.22, 0.24)
 radius = 0.05
 height = 0.16917184
 offset = 0.08458592
-mass = 5.9
-pd_gain = 15.91112210303367
 group = "column"
 
 [sub_resource type="Resource" id="Resource_ssg7x"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine.004"
 shape = 0
+mass = 0.55
 size = Vector3(0.14, 0.058906794, 0.12)
-radius = 0.05
-height = 0.058906794
+radius = 0.06
+height = 0.14
 offset = 0.029453397
-mass = 0.7
-pd_gain = 3.2991456258253966
+pd_gain = 3.0
 group = "column"
 
 [sub_resource type="Resource" id="Resource_o6eqy"]
 script = ExtResource("1_imc3o")
 bone_name = &"shoulder.R"
 shape = 0
-size = Vector3(0.12, 0.21489331, 0.1)
+size = Vector3(0.14, 0.12, 0.12)
 radius = 0.05
 height = 0.21489331
 offset = 0.107446656
-mass = 0.9
-pd_gain = 6.5826596733144145
+mass = 1.5
 
 [sub_resource type="Resource" id="Resource_bcvwr"]
 script = ExtResource("1_imc3o")
 bone_name = &"shoulder.L"
 shape = 0
-size = Vector3(0.12, 0.21489334, 0.1)
+size = Vector3(0.14, 0.12, 0.12)
 radius = 0.05
 height = 0.21489334
 offset = 0.10744667
-mass = 0.9
-pd_gain = 6.582658960961102
+mass = 1.5
 
 [sub_resource type="Resource" id="Resource_ya7tw"]
 script = ExtResource("1_imc3o")
 bone_name = &"upper_arm.R"
-radius = 0.06295435905456544
+shape = 1
+radius = 0.055
 height = 0.28615618
 offset = 0.14307809
-mass = 0.7
-pd_gain = 2.7042999877126688
+pd_gain = 1.5
 group = "arm"
 
 [sub_resource type="Resource" id="Resource_jdab8"]
 script = ExtResource("1_imc3o")
 bone_name = &"upper_arm.L"
-radius = 0.06295435905456544
+shape = 1
+radius = 0.055
 height = 0.28615618
 offset = 0.14307809
-mass = 0.7
-pd_gain = 2.704299550124205
+pd_gain = 1.5
 group = "arm"
 
 [sub_resource type="Resource" id="Resource_j8k34"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine.005"
 shape = 0
+mass = 0.5
 size = Vector3(0.14, 0.058110118, 0.12)
-radius = 0.05
-height = 0.058110118
+radius = 0.055
+height = 0.12
 offset = 0.029055059
-mass = 0.7
-pd_gain = 2.8968524373775355
+pd_gain = 3.0
 group = "column"
 
 [sub_resource type="Resource" id="Resource_p32v4"]
 script = ExtResource("1_imc3o")
 bone_name = &"forearm.R"
-radius = 0.06657932937145233
+shape = 1
+radius = 0.05
 height = 0.30263332
 offset = 0.15131666
-mass = 0.6
-pd_gain = 1.92259944674215
+mass = 0.8
+pd_gain = 1.5
 group = "arm"
 
 [sub_resource type="Resource" id="Resource_mv251"]
 script = ExtResource("1_imc3o")
 bone_name = &"forearm.L"
-radius = 0.06657931625843048
+shape = 1
+radius = 0.05
 height = 0.30263326
 offset = 0.15131663
-mass = 0.6
-pd_gain = 1.9225990091536864
+mass = 0.8
+pd_gain = 1.5
 group = "arm"
 
 [sub_resource type="Resource" id="Resource_qx8ch"]
 script = ExtResource("1_imc3o")
 bone_name = &"spine.006"
 shape = 2
-radius = 0.1
+mass = 0.825
+radius = 0.11
 offset = 0.03
-mass = 0.9
-pd_gain = 2.5
-swing = 90.0
-twist = 100.0
 group = "column"
 
 [sub_resource type="Resource" id="Resource_ppbnq"]
 script = ExtResource("1_imc3o")
 bone_name = &"hand.R"
-radius = 0.05
-height = 0.035101555
+shape = 1
+size = Vector3(0.07, 0.05, 0.09)
+radius = 0.06
+height = 0.1
 offset = 0.017550778
-mass = 0.15
-pd_gain = 1.095887864435216
+mass = 0.4
 group = "arm"
 
 [sub_resource type="Resource" id="Resource_qa70m"]
 script = ExtResource("1_imc3o")
 bone_name = &"hand.L"
-radius = 0.05
-height = 0.035101455
+shape = 1
+size = Vector3(0.07, 0.05, 0.09)
+radius = 0.06
+height = 0.1
 offset = 0.017550727
-mass = 0.15
-pd_gain = 1.095887589670367
+mass = 0.4
 group = "arm"
 
 [resource]

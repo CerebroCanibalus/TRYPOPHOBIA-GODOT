@@ -1,9 +1,8 @@
 [gd_scene format=3 uid="uid://b3hrysl24dftc"]
 
 [ext_resource type="Script" uid="uid://txxbwtp1c36t" path="res://tests/ragdoll/shiba_test.gd" id="1_o6qmg"]
-[ext_resource type="PackedScene" path="res://src/player/shiba_player.tscn" id="2_j5a23"]
+[ext_resource type="PackedScene" uid="uid://hd7ltfufcvh" path="res://src/player/shiba_player.tscn" id="2_j5a23"]
 [ext_resource type="Resource" uid="uid://b5tjx2vtjfuhh" path="res://src/player/stats_shiba.tres" id="4_o6qmg"]
-[ext_resource type="Resource" path="res://src/ragdoll/rig/shiba_rig_config.tres" id="4_wfiht"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fb1fl"]
 size = Vector3(60, 1, 60)
@@ -41,10 +40,8 @@ light_energy = 1.4
 environment = SubResource("Environment_g8ypc")
 
 [node name="Shiba" parent="." unique_id=1218804823 instance=ExtResource("2_j5a23")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
-rig_config = ExtResource("4_wfiht")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5237956, 0)
 stats = ExtResource("4_o6qmg")
-angular_spring_stiffness = 3000.0
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1376790914]
 
