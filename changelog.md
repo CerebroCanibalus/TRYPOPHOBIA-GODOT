@@ -147,3 +147,44 @@ la cámara y la 3ª persona mide 3,66 m.
 
 **Pendiente:** controlador de balance (el personaje queda algo agachado) y el twist
 de la clavícula.
+
+## 2026-11-03 — RAGDOLL: la ley de control, el test canónico y los brazos
+
+**El fallo de fondo era la LEY de control.** La librería había sustituido el
+servo de velocidad con objetivo absoluto (el del proyecto de referencia, el
+único que aguanta con Box3D) por un PD por torque con error relativo al
+padre, pares, inercias de subárbol y un controlador de balance aparte.
+Medido: la pelvis giraba a 40 rad/s y el personaje se volcaba.
+
+**Qué se ha hecho:**
+
+- `ragdoll_motor.gd`: servo de velocidad con objetivo **absoluto en mundo**
+  (k=3000, c=80, tope de 40 rad/s). El tope de 6 rad/s era el que hacía que
+  el personaje se viera "aguado" (el servo no podía girar un hueso grande en
+  un frame).
+- `ragdoll_character.gd`:
+  - el balance controller **desactivado** (le devolvía a la pelvis el par de
+    todos sus hijos);
+  - el apoyo se calcula con los **colliders** y no con los orígenes de los
+    huesos (el collider va a media hueso: nacía dentro del suelo y el solver
+    lo expulsaba de una patada — el pie salía a 13 rad/s);
+  - el **yaw del cuerpo** corregido (`_calibrar_rumbo`): el modelo mira a +Z
+    y la cámara a -Z, así que el personaje andaba **de espaldas**
+    (medido: `dot(frente, cámara) = -1.000` → ahora `+1.000`);
+  - el cuerpo **sigue a la cámara** por defecto (`body_follows_camera`), como
+    el script original;
+  - **`update_hand_targets()`**: el puntero lo llama por duck typing; sin ese
+    método el IK se quedaba con influencia 1 y los brazos se estiraban
+    siempre (brazo derecho levantado, manos "desconectadas").
+- `shiba_rig_config.tres` + `shiba_player.tscn`: **reparto de masas** medido
+  (tronco ligero, piernas pesadas) y colliders coherentes con el rig.
+- `tools/ragdoll_playground/`: ahora es el **TEST CANÓNICO** del ragdoll
+  (telemetría real del servidor de física y veredicto).
+
+**Medido (Shiba, 5 s):** pelvis 0,75 m estable · columna 0,95 · error del
+muslo 0-1,3° · tronco y piernas 1-13° · ω del cuerpo 0,2 rad/s.
+Con el rig de referencia: pelvis 1,63 m constante, ω 0,1.
+
+**Pendiente:** los pies siguen con ~65° de error de orientación (el collider
+del pie es una cápsula sobre un hueso inclinado 38°) y las manos con ~70°
+(el IK apagado las deja seguir al clip, pero la质量 del collider es justa).

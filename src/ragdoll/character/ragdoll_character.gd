@@ -64,7 +64,14 @@ const NADO_EMPUJE := 12.0
 ## Impulso UNICO de salida del agua (m/s hacia arriba).
 const SALIDA_AGUA := 8.0
 
-@export var body_follows_camera := false
+## El cuerpo sigue a la camara (como el script ORIGINAL y la
+## referencia) o mira hacia donde camina.
+##
+## Con true (original): `animated_skel.rotation.y = camera_pivot.rotation.y`.
+## OJO: el modelo mira a +Z y la camara a -Z, pero el nodo Animated lleva
+## un giro de 180 grados en Y, asi que con esta linea el modelo mira
+## EXACTAMENTE donde mira la camara (medido: dot(frente, cam_fwd) = 1.000).
+@export var body_follows_camera := true
 ## Velocidad de giro del cuerpo (rad/s).
 @export var body_turn_speed := 7.0
 
@@ -394,6 +401,12 @@ func _input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	if ragdoll_mode:
 		return
+	# El estado de los botones tambien se sondea aqui (y no solo en
+	# _input): el input sintetico (Input.action_press) no dispara
+	# eventos, asi que con el solo _input los brazos no se estiraban
+	# nunca (medido).
+	active_arm_left = Input.is_action_pressed("grab_left")
+	active_arm_right = Input.is_action_pressed("grab_right")
 	walking = false
 	var dir := _direccion_de_movimiento()
 	# Sprint: gasta stamina; si se acaba, vuelve a paso de tortuga.
@@ -734,6 +747,23 @@ func _alinear_con_la_animacion() -> void:
 		PhysicsServer3D.body_set_state(b.get_rid(), PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
 		PhysicsServer3D.body_set_state(b.get_rid(), PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY, Vector3.ZERO)
 		PhysicsServer3D.body_set_state(b.get_rid(), PhysicsServer3D.BODY_STATE_ANGULAR_VELOCITY, Vector3.ZERO)
+
+
+## El PUNTERO avisa aqui (duck typing: `root.has_method("update_hand_targets")`).
+##
+## Sin este metodo el IK de brazos se queda con la influencia por defecto
+## (1.0) y los brazos se estiran al puntero SIEMPRE: el personaje camina
+## con el brazo derecho levantado y las manos parece que no estan
+## conectadas con los brazos (medido).
+##
+## El  + "clic" +  es el que decide: con el raton pulsado el brazo se estira
+## hacia el puntero; sin el, la influencia baja a 0 y los brazos siguen al
+## clip (como en el script original).
+func update_hand_targets(world_point: Vector3, _has_target: bool) -> void:
+	if arm_ik == null:
+		return
+	arm_ik.update_targets(world_point, active_arm_left, active_arm_right,
+		get_physics_process_delta_time())
 
 
 ## === AGARRE ============================================================

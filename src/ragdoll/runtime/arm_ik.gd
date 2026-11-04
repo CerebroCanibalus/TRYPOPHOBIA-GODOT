@@ -107,13 +107,21 @@ func current_reach() -> float:
 
 ## Actualiza los objetivos de las manos y la influencia.
 ##
-## `world_point` = punto del puntero. `clicked` = si algun brazo esta
-## agarrando (con click los brazos se estiran; sin click siguen al clip).
-func update_targets(world_point: Vector3, clicked: bool, delta: float) -> void:
+## `world_point` = punto del puntero.
+## `clicked_l` / `clicked_r` = si ese brazo esta agarrando (con el raton
+## pulsado el brazo se estira hacia el puntero; sin el, los brazos siguen
+## al clip).
+##
+## OJO: el brazo que NO esta agarrando NO se estira: su objetivo es SU
+## propia mano (la del clip). Si no, los dos brazos se estiran siempre y el
+## personaje camina con los brazos por delante (medido).
+func update_targets(world_point: Vector3, clicked_l: bool, clicked_r: bool,
+		delta: float) -> void:
 	if ik == null or target_l == null or target_r == null:
 		return
 	if _l_arm_id < 0 or _r_arm_id < 0:
 		return
+	var clicked := clicked_l or clicked_r
 	var want := influence if clicked else 0.0
 	ik.set_influence(move_toward(ik.get_influence(), want, influence_fade_speed * delta))
 	if not clicked:
@@ -129,6 +137,10 @@ func update_targets(world_point: Vector3, clicked: bool, delta: float) -> void:
 	var r_root: Vector3 = animated_skel.get_bone_global_pose(_r_arm_id).origin
 	var l_goal: Vector3 = l_root + fwd * alcance + drop
 	var r_goal: Vector3 = r_root + fwd * alcance + drop
+	if not clicked_l and _l_hand_id >= 0:
+		l_goal = animated_skel.get_bone_global_pose(_l_hand_id).origin
+	if not clicked_r and _r_hand_id >= 0:
+		r_goal = animated_skel.get_bone_global_pose(_r_hand_id).origin
 	target_l.global_position = b * l_goal
 	target_r.global_position = b * r_goal
 

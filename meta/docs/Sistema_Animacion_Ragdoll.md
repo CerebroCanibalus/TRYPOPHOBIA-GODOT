@@ -532,3 +532,112 @@ eslabón y el `max_angular_accel` de los huesos de la columna, que es el
 5. Con el body_debugger: `rest = 0` en todos los huesos (los dos rigs coinciden).
 6. El personaje cae y **queda de pie** (pelvis ~0,7-0,9 m tras el aterrizaje).
 7. La cabeza gira con la cámara y la 3ª persona mide lo que debe.
+
+---
+
+## 4quater. LO QUE SE ROMPIÓ AL CONVERTIRLO EN LIBRERÍA (2026-11-03)
+
+> **Esta es la sección más importante del documento.** Todo lo de arriba
+> (T1-T24) describe un ragdoll que funcionaba con el script monolito. Al
+> pasarlo a `src/ragdoll/` se cambió **la ley de control** y se rompió.
+
+### T25 — LA LEY: servo de VELOCIDAD con objetivo ABSOLUTO en mundo
+
+```
+actual   = pose del HUESO en MUNDO  (cuerpo del servidor * body_offset^-1)
+objetivo = pose del HUESO en MUNDO de la ANIMACIÓN
+e        = eje*ángulo de (objetivo * actual^-1)      [MUNDO]
+alpha    = k*e - c*omega                             [rad/s2]
+omega   += alpha*dt                                  [rad/s]
+```
+
+Es la ley de `tools/active_ragdoll_reference` (k=3000, c=80) y la ÚNICA que
+aguanta con Box3D. Lo que la librería puso en su lugar (PD por torque con
+error RELATIVO al padre, torque aplicado como PAR, dos inercias y un
+controlador de balance con upright + centro de masas + muelle de altura) **no
+funciona**: medido, la pelvis giraba a 40 rad/s constantes desde el primer
+frame (el balance le devolvía el par de todos los hijos con un tope de
+aceleración de 3000 rad/s2) y el personaje se volcaba.
+
+**Variantes medidas y DESCARTADAS:**
+
+| Variante | Resultado |
+|---|---|
+| Error por articulación (relativo al padre) | el servo y los joints se pelean: la columna obedece (2-8°) pero las piernas no (27-80°) |
+| Heredar la velocidad del padre (servo jerárquico) | se amplifica por la cadena (errores de 160°) |
+| Ley por torque (N·m/rad) con tope por cuerpo | el damping crítico sin tope EXPLOTA en los huesos pequeños (180 rad/s); con tope no llega al error de equilibrio |
+| Límites cónicos de Box3D (5° o 180°) | **no se aplican**: el resultado es idéntico |
+
+### T26 — el tope de `max_angular_speed` (6 rad/s) mataba el servo
+
+Con 6 rad/s el servo no puede girar un hueso grande en un frame: el personaje
+se ve "aguado" y **los brazos y el pecho parece que no siguen al ragdoll**
+(el síntoma que llevó a pensar que el rig estaba mal). El tope tiene que ser
+de **decenas** de rad/s (40).
+
+### T27 — la MASA decide si el personaje se tiene en pie
+
+El error de equilibrio del servo en aceleración es `e = tau_g /(I*k)`. Con la
+pelvis del Shiba (8 kg en una caja de 30 cm → I = 0,11 kg·m²) sosteniendo
+**30 kg de tronco** a 0,3 m (88 N·m) salían **15 GRADOS de error en la
+pelvis**: se inclinaba y se hundía (`pel_y` 0,9 → 0,26).
+
+**Regla: el tronco es LIGERO y las piernas son PESADAS.** El hueso que SOPORTA
+necesita inercia; el que se mueve, no. Reparto medido (Shiba, 38,7 kg):
+columna 16,7 kg · piernas 14,9 kg · brazos 7,1 kg.
+
+### T28 — el apoyo se calcula con los COLLIDERS, no con los huesos
+
+El collider va a MEDIA HUESO (`body_offset`): su fondo queda centímetros por
+DEBAJO del origen del hueso. Si el personaje se coloca con los orígenes de
+los huesos, el collider del pie nace DENTRO del suelo y el solver lo expulsa
+de una patada (medido: el pie gira 50° y se pone a girar a 13 rad/s en el
+frame 3 — de ahí venía el "aguado" y el "se hace un montón de tiras").
+
+→ `_colocar_en_el_suelo()` usa `_fondo_de_los_colliders()`.
+
+OJO: `Shape3D` **no tiene `get_aabb()`** en Godot 4.7 → `WaterShapeTest.aabb_de()`.
+
+### T29 — el modelo mira a +Z y la cámara a -Z (el personaje andaba de espaldas)
+
+El nodo `Animated` lleva un giro de **180° en Y**, así que el yaw GLOBAL del
+esqueleto es `gamma - rotation.y` (no `rotation.y`). Con
+`atan2(dir.x, dir.z)` el personaje miraba exactamente al revés (medido:
+`dot(frente_del_modelo, cámara) = -1.000`).
+
+→ `_calibrar_rumbo()` mide `gamma` de la escena al montar (así vale para
+cualquier rig) y el cuerpo **sigue a la cámara** por defecto
+(`body_follows_camera = true`, como el script original).
+
+### T30 — el IK de brazos necesita `update_hand_targets`
+
+El puntero avisa por duck typing (`root.has_method("update_hand_targets")`).
+Sin ese método el `TwoBoneIK3D` se queda con su influencia por defecto
+(**1.0**) y los brazos se estiran al puntero **siempre**: el personaje camina
+con el brazo derecho levantado y las manos parecen **desconectadas** de los
+brazos.
+
+→ `RagdollCharacter.update_hand_targets()` lo delega en
+`ArmIK.update_targets(punto, click_izq, click_der, dt)`: con el ratón
+soltado la influencia baja a 0 (los brazos siguen al clip); con el ratón
+pulsado sube a 1; y el brazo que **no** agarra NO se estira (su objetivo es
+su propia mano).
+
+El estado de los botones se sondea en `_physics_process` (el input sintético
+`Input.action_press` no dispara eventos, así que con el solo `_input` los
+brazos no se estiraban nunca).
+
+### 4quater-bis. ESTADO MEDIDO (2026-11-03)
+
+| Métrica | Antes (ley PD por torque) | Ahora (servo absoluto) |
+|---|---|---|
+| `up_col` (verticalidad de la columna) | **−0,9** (invertida) | **0,95** |
+| `pel_y` (altura de la pelvis) | 0,26 → se hundía | **0,75 estable** |
+| Error del muslo | 40-60° | **0-1,3°** |
+| Error del tronco | 20-29° | 1-7° |
+| ω del cuerpo | 40 rad/s (trompo) | **0,2 rad/s** |
+| Rig de referencia (10 huesos) | — | pelvis 1,63 m constante, ω 0,1 |
+
+**Pendiente honesto:** los pies siguen con ~65° de error de orientación (el
+collider del pie es una cápsula sobre un hueso inclinado 38°) y las manos con
+~70°. El torso y las piernas (lo que sostiene al personaje) están resueltos.

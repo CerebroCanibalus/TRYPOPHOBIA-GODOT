@@ -1604,3 +1604,33 @@ explota en los huesos pequeños, y con tope no llega al error de equilibrio).
 El servo con objetivo absoluto ya mantiene al personaje de pie; el balance
 (upright + centro de masas + muelle de altura) le devolvía a la pelvis el par
 de todos los hijos y la ponía a girar a 40 rad/s (medido).
+
+### GOTA — el IK de brazos necesita `update_hand_targets` (el puntero lo llama)
+
+El puntero (`ragdoll_pointer.gd`) avisa por **duck typing**:
+`root.has_method("update_hand_targets")`. Si ese metodo NO existe, el IK se
+queda con la influencia por defecto (**1.0**) y los brazos se estiran al
+puntero **SIEMPRE**: el personaje camina con el brazo derecho levantado y las
+manos parecen **desconectadas** de los brazos (medido).
+
+`RagdollCharacter.update_hand_targets()` lo implementa y delega en
+`ArmIK.update_targets(punto, click_izq, click_der, dt)`:
+
+- Con el raton **soltado** la influencia baja a 0 y los brazos siguen al clip.
+- Con el raton **pulsado** la influencia sube a 1 y el brazo se estira.
+- El brazo que **no** esta agarrando NO se estira: su objetivo es su propia
+  mano (si no, los dos brazos se estiran siempre).
+
+El estado de los botones se sondea en `_physics_process` (y no solo en
+`_input`): el input sintetico (`Input.action_press`) no dispara eventos, asi
+que con el solo `_input` los brazos no se estiraban nunca (medido).
+
+### El cuerpo sigue a la CAMARA (como el script original)
+
+`body_follows_camera = true` (por defecto): `animated_skel.rotation.y =
+camera_pivot.rotation.y`. Es lo que hacia el script original y la
+referencia, y **ya es correcto** con el giro de 180 grados del nodo
+`Animated` (medido: `dot(frente_del_modelo, cam_fwd) = 1.000`).
+
+El otro modo (el cuerpo gira hacia donde camina) necesita la correccion de
+`gamma` de `_calibrar_rumbo()`.
