@@ -505,11 +505,12 @@ func _direccion_de_movimiento() -> Vector3:
 
 ## Mueve la AUTORIDAD (`CharacterBody3D`) en HORIZONTAL con `move_and_slide`.
 ##
-## OJO (medido): la capsula NO lleva gravedad. Al colocarla sobre el suelo
-## quedaba 1 cm DENTRO del `Floor` y `move_and_slide` se trababa (6
-## colisiones con normal UP y velocidad conservada pero posicion quieta).
-## El suelo visual y el salto los lleva el ragdoll; la capsula solo manda
-## en XZ, que es lo que hace falta para paredes y esquinas.
+## OJO (medido): la capsula NO lleva gravedad propia. La altura la fija un
+## RAYCAST al suelo (`_suelo_logic`) 5 cm por encima: asi la capsula no
+## penetra el `Floor` (1 cm dentro trababa `move_and_slide`: 6 contactos con
+## normal UP, velocidad conservada y posicion quieta) y las rampas/escalones
+## los sube el fondo redondeado de la capsula. El salto sigue siendo del
+## ragdoll.
 func _actualizar_logic(dir: Vector3, _delta: float) -> void:
 	if logic == null:
 		return
@@ -520,7 +521,29 @@ func _actualizar_logic(dir: Vector3, _delta: float) -> void:
 	logic.velocity.x = dir.x * vel
 	logic.velocity.z = dir.z * vel
 	logic.velocity.y = 0.0
+	# Altura por raycast: la capsula queda 5 cm sobre el suelo real.
+	var suelo := _suelo_logic()
+	if not is_inf(suelo):
+		logic.global_position.y = suelo + 0.05
 	logic.move_and_slide()
+
+
+## Altura del suelo debajo de la capsula (INF si no hay). Mascara 1 (mundo):
+## los huesos (capa 2) y los props (capa 3) no cuentan como suelo.
+func _suelo_logic() -> float:
+	if logic == null:
+		return INF
+	var mundo := get_world_3d()
+	if mundo == null:
+		return INF
+	var p := logic.global_position + Vector3.UP * 1.0
+	var q := PhysicsRayQueryParameters3D.create(p, p + Vector3.DOWN * 2.0)
+	q.collision_mask = 1
+	q.collide_with_areas = false
+	var hit := mundo.direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return INF
+	return float(hit["position"].y)
 
 
 ## El ragdoll SIGUE a la capsula en POSICION (es VISUAL): se traslada el

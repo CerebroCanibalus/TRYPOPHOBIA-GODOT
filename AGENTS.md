@@ -1597,10 +1597,15 @@ línea por tick** (363 líneas en 15 s).
 - Medido: **dXZ 3.37 m en 3 s = 1.12 m/s** (objetivo 1.1); `up_col` 0.968;
   columna 9.3°, muslo 8.8°, espinilla 3.0°; pecho 24.6° durante el estirón del
   brazo (reacción). El máximo de 92° es `hand.R` (vuelo/pre-alineación).
-- **Limitación honesta:** la cápsula **no lleva gravedad**. Al apoyarla quedaba
-  1 cm dentro del `Floor` y `move_and_slide` se trababa (6 contactos con normal
-  UP, velocidad conservada y posición quieta). Es autoridad horizontal; el
-  suelo y el salto los lleva el ragdoll. Escaleras y desniveles: pendiente.
+- **Suelo (fase 3):** la cápsula **no lleva gravedad**; la altura la fija un
+  **raycast al suelo** (`_suelo_logic`) **5 cm por encima**. Así no penetra el
+  `Floor` (1 cm dentro trababa `move_and_slide`: 6 contactos con normal UP,
+  velocidad conservada y posición quieta) y las rampas/escalones los sube el
+  fondo redondeado de la cápsula. El salto sigue siendo del ragdoll.
+- **Pecho:** `spine.003` varía **24–44°** durante el estirón del brazo
+  (reacción). En la corrida con suelo: 43.8° = cono (30° relativo) + pelvis
+  (11.8°). Candidato: fusionar el pecho en la pelvis (**14 cuerpos**, como la
+  referencia) o subir la ganancia del grupo `column`.
 
 ---
 
