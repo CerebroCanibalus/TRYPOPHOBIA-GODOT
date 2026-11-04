@@ -94,7 +94,7 @@ const SALIDA_AGUA := 8.0
 @export var balance_enabled := false
 
 ## === MIRADA DE CABEZA ===================================================
-@export var head_look_enabled := false
+@export var head_look_enabled := true
 @export var head_yaw_max_degrees := 55.0
 @export var head_pitch_max_degrees := 30.0
 @export var head_look_smoothing := 0.12
