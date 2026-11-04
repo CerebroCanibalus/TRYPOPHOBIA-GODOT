@@ -1602,10 +1602,53 @@ línea por tick** (363 líneas en 15 s).
   `Floor` (1 cm dentro trababa `move_and_slide`: 6 contactos con normal UP,
   velocidad conservada y posición quieta) y las rampas/escalones los sube el
   fondo redondeado de la cápsula. El salto sigue siendo del ragdoll.
-- **Pecho:** `spine.003` varía **24–44°** durante el estirón del brazo
-  (reacción). En la corrida con suelo: 43.8° = cono (30° relativo) + pelvis
-  (11.8°). Candidato: fusionar el pecho en la pelvis (**14 cuerpos**, como la
-  referencia) o subir la ganancia del grupo `column`.
+
+**Fase 4 (2026-11-04): escaleras medidas + el pecho, cerrado.**
+
+- **`tests/ragdoll/escaleras_test.tscn`** (nuevo test canónico de desniveles:
+  peldaños de **20/30/40 cm**, `tests/ragdoll/escaleras_test.gd`). Resultado:
+  **PASS 3/3, exit 0**.
+- **STEP ASSIST** en `_actualizar_logic`: con `velocity.y = 0` la cápsula **NO
+  sube escalones** (se quedaba pegada a la cara del peldaño de 20 cm, a 0.25 m).
+  El redondeo solo trepa si algo la empuja hacia abajo. Ahora la altura se
+  decide con **dos rayos**: centro y **delante** (`STEP_SONDA = 0.32`) en la
+  dirección de marcha, y si el de delante sube ≤ `MAX_PASO = 0.45` se sube de
+  golpe; al bajar se interpola (`BAJADA_TAU = 14`).
+- **El ragdoll sube Y baja con la cápsula** (`_seguir_logic`): antes solo se
+  teleportaba en XZ y con los peldaños **se quedaba a 1.15 m flotando**. Sube
+  seco (≤ `MAX_PASO`/tick), baja suave y **solo apoyado**; el offset
+  pelvis↔cápsula se **calibra solo** (`_offset_pelvis`, 0.75).
+- **Pecho (`spine.003`) — cerrado como COMPROMISO, no como bug abierto.** El
+  máximo global del playground es **transitorio** (el objetivo del brazo salta
+  65°): el playground ahora reporta el error **por fase**. Medido:
+
+  | Palanca | Pecho | Hombro | Veredicto |
+  |---|---|---|---|
+  | `k=2500`, `c=100` | 53° | — | `up_col` 0.25 (se cae) |
+  | `column_spring_scale=1.5` | 41° | 24° | descoloca todo |
+  | **cono 12/10** | **13°** | **32°** | el error se muda al hombro |
+  | **cono 20/15** (el que se queda) | **24°** | **9°** | mejor reparto |
+  | cono 30/20 | 42° | 25° | el pecho se dobla |
+
+  **Conclusión medida: el error del pecho NO es ganancia, es REPARTO.** Subir o
+  bajar `k` empeora (k=4000 ya está en `ω_n·dt ≈ 1.05`); estrechar el cono
+  endereza el pecho y carga el hombro. Se queda **cono 20/15**. Por eso **NO**
+  se fusiona el pecho en la pelvis (14 cuerpos): se perdería la cápsula del
+  torso (colisión con paredes) y el error se iría al eslabón siguiente.
+
+**Gotas nuevas (medidas 2026-11-04):**
+
+- **`CollisionShape3D` tiene que ser hijo DIRECTO del `CollisionObject3D`.**
+  Bajo un `Node3D` intermedio Godot **no lo asocia** al cuerpo y el suelo no
+  colisiona con nada. Medido al generar el banco: la pelvis caía al vacío
+  (−1099 m) mientras el `Logic` andaba.
+- **`--quit-after` NO hace avanzar la física en headless** (corre el idle a
+  tope y el reloj de física solo avanza lo que dura el proceso). Los tests con
+  fases de segundos llevan **auto-quit propio** (`get_tree().quit()`), no
+  `--quit-after`.
+- **`heren.scene save` guarda la escena que tenga abierta el editor** y la
+  reescribe (grados→radianes con ruido float32, mueve subrecursos y hasta
+  materializa nodos del GLB). No usarlo "para ver" con una escena abierta.
 
 ---
 

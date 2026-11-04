@@ -65,6 +65,17 @@ var is_sprinting := false
 ## cambia la jerarquia). El ragdoll (visual) lo sigue; el suelo, las
 ## paredes y las escaleras los resuelve `move_and_slide`.
 const JUMP_SPEED := 5.0
+## Altura de la capsula sobre el suelo que pisa (evita penetrar el `Floor`).
+const ALTURA_SOBRE_SUELO := 0.05
+## Distancia a la que se sondea el suelo por delante (radio de la capsula +
+## margen): es el STEP ASSIST.
+const STEP_SONDA := 0.32
+## Peldano maximo que sube la capsula y que el ragdoll puede acompanar.
+const MAX_PASO := 0.45
+## Desnivel minimo para que el ragdoll se deje subir (evita micro-tirones).
+const ALTURA_ESCALON_MIN := 0.12
+## Rapidez con la que la capsula BAJA un desnivel (1/s).
+const BAJADA_TAU := 14.0
 ## La amortiguacion horizontal del empuje (la de la referencia: 0,9).
 const AMORTIGUACION := 0.9
 ## Escala de velocidad horizontal dentro del agua.
@@ -134,6 +145,10 @@ var agua: WaterBody = null
 ## La AUTORIDAD de movimiento (CharacterBody3D). Es un nodo HERMANO del
 ## ragdoll: no cambia la jerarquia de la escena.
 var logic: CharacterBody3D = null
+## Diferencia pelvica entre la pelvis fisica y la capsula (`Logic`) cuando el
+## ragdoll esta de pie. Se calibra sola en el primer apoyo: asi el teleport
+## vertical sirve para cualquier rig.
+var _offset_pelvis := 0.75
 var oxigeno: Oxygen = null
 var _cabeza_fisica: Node3D = null
 var _salto_evento := false
@@ -508,10 +523,15 @@ func _direccion_de_movimiento() -> Vector3:
 ## OJO (medido): la capsula NO lleva gravedad propia. La altura la fija un
 ## RAYCAST al suelo (`_suelo_logic`) 5 cm por encima: asi la capsula no
 ## penetra el `Floor` (1 cm dentro trababa `move_and_slide`: 6 contactos con
-## normal UP, velocidad conservada y posicion quieta) y las rampas/escalones
-## los sube el fondo redondeado de la capsula. El salto sigue siendo del
-## ragdoll.
-func _actualizar_logic(dir: Vector3, _delta: float) -> void:
+## normal UP, velocidad conservada y posicion quieta).
+##
+## OJO — STEP ASSIST (medido 2026-11-04): con `velocity.y = 0` la capsula NO
+## sube escalones; se queda pegada a la cara del peldano (el personaje se
+## paraba a 0.25 m del escalon de 20 cm y ya no avanzaba). El fondo redondeado
+## solo trepa si algo la empuja hacia abajo. Por eso la altura se decide con
+## DOS rayos: el del centro y el de DELANTE en la direccion de marcha. Si el de
+## delante esta mas alto y la diferencia cabe en `MAX_PASO`, se sube.
+func _actualizar_logic(dir: Vector3, delta: float) -> void:
 	if logic == null:
 		return
 	# En el agua manda el ragdoll (nado); la capsula no empuja.
@@ -521,22 +541,35 @@ func _actualizar_logic(dir: Vector3, _delta: float) -> void:
 	logic.velocity.x = dir.x * vel
 	logic.velocity.z = dir.z * vel
 	logic.velocity.y = 0.0
-	# Altura por raycast: la capsula queda 5 cm sobre el suelo real.
-	var suelo := _suelo_logic()
+	var suelo := _suelo_logic(logic.global_position)
+	if dir.length_squared() > 1e-4 and not is_inf(suelo):
+		var sonda := logic.global_position + dir.normalized() * STEP_SONDA
+		var delante := _suelo_logic(sonda)
+		if not is_inf(delante) and delante > suelo and delante - suelo <= MAX_PASO:
+			suelo = delante
 	if not is_inf(suelo):
-		logic.global_position.y = suelo + 0.05
+		var objetivo_y := suelo + ALTURA_SOBRE_SUELO
+		if objetivo_y > logic.global_position.y:
+			# Subir un peldano: de golpe (es un plano, no hay rampa).
+			logic.global_position.y = objetivo_y
+		else:
+			# Bajar: suave, para que un borde no sea un tiron.
+			logic.global_position.y = lerpf(logic.global_position.y, objetivo_y,
+				1.0 - exp(-BAJADA_TAU * delta))
 	logic.move_and_slide()
 
 
-## Altura del suelo debajo de la capsula (INF si no hay). Mascara 1 (mundo):
+## Altura del suelo debajo de un punto (INF si no hay). Mascara 1 (mundo):
 ## los huesos (capa 2) y los props (capa 3) no cuentan como suelo.
-func _suelo_logic() -> float:
+func _suelo_logic(punto: Vector3 = Vector3.INF) -> float:
 	if logic == null:
 		return INF
+	if punto == Vector3.INF:
+		punto = logic.global_position
 	var mundo := get_world_3d()
 	if mundo == null:
 		return INF
-	var p := logic.global_position + Vector3.UP * 1.0
+	var p := punto + Vector3.UP * 1.0
 	var q := PhysicsRayQueryParameters3D.create(p, p + Vector3.DOWN * 2.0)
 	q.collision_mask = 1
 	q.collide_with_areas = false
@@ -556,6 +589,21 @@ func _seguir_logic(_delta: float) -> void:
 	var p := RagdollMotor.body_transform(physical_bone_body).origin
 	var d := Vector3(logic.global_position.x - p.x, 0.0,
 		logic.global_position.z - p.z)
+	# SUBIR (escalones): si la capsula ha ganado altura, el ragdoll se queda
+	# abajo y acaba con los pies dentro del peldano. Se sube SOLO, nunca se
+	# baja (caer es cosa de la gravedad) y se topa a `MAX_PASO` por tick.
+	if is_on_floor and p.y - logic.global_position.y > 0.0:
+		_offset_pelvis = lerpf(_offset_pelvis,
+			p.y - logic.global_position.y, 0.05)
+	var objetivo_y := logic.global_position.y + _offset_pelvis
+	var delta_y := objetivo_y - p.y
+	if delta_y > ALTURA_ESCALON_MIN:
+		# Peldano arriba: sube hasta el tope por tick.
+		d.y = minf(delta_y, MAX_PASO)
+	elif delta_y < -ALTURA_ESCALON_MIN and is_on_floor:
+		# Peldano abajo: se baja SUAVE y solo apoyado (si va por el aire,
+		# la gravedad ya lo trae y forzarlo seria un tiron).
+		d.y = maxf(delta_y, -MAX_PASO) * 0.25
 	if d.length_squared() < 1e-10:
 		return
 	for b in skeleton.bones:

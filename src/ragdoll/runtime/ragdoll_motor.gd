@@ -47,11 +47,11 @@ class_name RagdollMotor
 ## (`PhysicalBoneSimulator3D::_get_physical_bone_parent` sube por la
 ## jerarquia), asi que el servo y la fisica comparten jerarquia.
 ##
-## TRAMPA — el tope de velocidad angular: con 6 rad/s el servo no puede mover
+## TRAMPA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â el tope de velocidad angular: con 6 rad/s el servo no puede mover
 ## un hueso grande en un frame y el personaje se ve "aguado". El tope es de
 ## decenas (40).
 ##
-## TRAMPA — comparar pose de HUESO con pose de CUERPO: el cuerpo puede no
+## TRAMPA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â comparar pose de HUESO con pose de CUERPO: el cuerpo puede no
 ## estar en el origen del hueso (`body_offset`). Se deshace antes de comparar.
 
 ## Rigidez del servo (rad/s2 por radian de error).
@@ -68,6 +68,19 @@ class_name RagdollMotor
 @export var max_angular_speed := 40.0
 ## Escala de rigidez y amortiguamiento de los brazos (1 = igual que el resto).
 @export var arm_spring_scale := 1.0
+## Escala de rigidez de la COLUMNA (1 = igual que el resto).
+##
+## MEDIDO (2026-11-04): subirla EMPEORA. Con 1.5 el pecho pasa de 24 a 41
+## grados y el cuerpo entero se descoloca (omega 3.75 rad/s, muslo 15.5
+## grados). La razon es la del tope de estabilidad: `w_n*dt = sqrt(k)*dt` y con
+## k=4000 ya esta en 1.05 (el limite). k=2500/c=100 tambien empeora (pecho 53
+## grados y `up_col` cae a 0.25). El rango util de `stiffness` es este.
+##
+## El error del pecho NO se arregla con ganancia: es un REPARTO. Con el cono
+## del pecho a 12 grados el pecho baja a 13 grados pero el hombro sube a 32;
+## con 30 el pecho se va a 44 y el hombro queda en 5. El compromiso medido es
+## el cono 20/15 (pecho 24, hombro 8.7) y es el que lleva la escena.
+@export var column_spring_scale := 1.0
 ## Tope de la aceleracion angular (rad/s2) que se puede pedir en un tick.
 ## MEDIDO (2026-11-04): con 4000 el pecho se quedaba a 37 grados cuando el
 ## brazo estira (la reaccion del agarre). Con 20000 vuelve a 16.
@@ -111,9 +124,14 @@ func drive(bones: Array[PhysicalBone3D], objetivos: Dictionary,
 		var omega_real := body_angular_velocity(b)
 		var k := stiffness
 		var c := damping
-		if String(grupos.get(id, "")) == "arm":
+		var grupo := String(grupos.get(id, ""))
+		if grupo == "arm":
 			k *= arm_spring_scale
 			c *= arm_spring_scale
+		elif grupo == "column":
+			k *= column_spring_scale
+			# Amortiguamiento critico: c ~ sqrt(k).
+			c *= sqrt(column_spring_scale)
 		var pid: int = int(padres.get(id, -1))
 		var omega_nueva := Vector3.ZERO
 		if pid >= 0 and actuals.has(pid) and omegas.has(pid):
@@ -208,7 +226,7 @@ static func torque_de(b: PhysicalBone3D, alpha: Vector3) -> Vector3:
 	return xf.basis * t_local
 
 
-## Ley de Hooke con amortiguamiento: `k·x - c·v`.
+## Ley de Hooke con amortiguamiento: `kÃƒâ€šÃ‚Â·x - cÃƒâ€šÃ‚Â·v`.
 static func hookes_law(desplazamiento: Vector3, velocidad: Vector3,
 		rigidez: float, amortiguamiento: float) -> Vector3:
 	return (rigidez * desplazamiento) - (amortiguamiento * velocidad)

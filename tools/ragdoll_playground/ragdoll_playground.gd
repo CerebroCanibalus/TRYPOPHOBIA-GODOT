@@ -85,6 +85,10 @@ var _ik_influencia := 0.0
 var _err_max := 0.0
 var _err_hueso := ""
 var _err_por_hueso := {}
+## Error maximo del pecho (`spine.003`) y del brazo (`upper_arm.L`) por FASE.
+## El transitorio del estiron no debe mezclarse con el error estacionario.
+var _err_fase_pecho := {}
+var _err_fase_brazo := {}
 var _pos_caminar := Vector3.ZERO
 
 const DEBUG_ACTIONS := [
@@ -413,6 +417,14 @@ func _errores() -> void:
 		var e := rad_to_deg(RagdollMotor.error_de_rotacion(
 			obj.basis * actual.basis.inverse()).length())
 		_err_por_hueso[String(b.bone_name)] = e
+		# OJO: el maximo GLOBAL mezcla el transitorio del estiron (el objetivo
+		# del brazo salta 65 grados de golpe) con el error estacionario. Por
+		# eso se guarda por FASE: en reposo y andando es donde el torso tiene
+		# que estar recto.
+		if String(b.bone_name) == "spine.003":
+			_err_fase_pecho[_fase] = maxf(float(_err_fase_pecho.get(_fase, 0.0)), e)
+		elif String(b.bone_name) == "upper_arm.L":
+			_err_fase_brazo[_fase] = maxf(float(_err_fase_brazo.get(_fase, 0.0)), e)
 		if e > _err_max:
 			_err_max = e
 			_err_hueso = String(b.bone_name)
@@ -482,6 +494,13 @@ func _veredicto() -> void:
 	print("  vel media del PIE = %.2f m/s  (cuerpo %.2f) -> patinaje %+.2f m/s" % [
 		vel_pie, vel_media, vel_pie - vel_media])
 	print("  error max de orientacion = %.1f grados  (hueso: %s)" % [_err_max, _err_hueso])
+	# Por FASE: el maximo global es el transitorio del estiron (el objetivo del
+	# brazo salta 65 grados). Lo que se juzga es el error ESTACIONARIO.
+	var nombres_fase := { Fase.REPOSO: "reposo", Fase.CAMINAR: "andando", Fase.BRAZOS: "brazos" }
+	for f in [Fase.REPOSO, Fase.CAMINAR, Fase.BRAZOS]:
+		if _err_fase_pecho.has(f) or _err_fase_brazo.has(f):
+			print("    fase %-8s pecho=%5.1f  brazo=%5.1f" % [nombres_fase[f],
+				float(_err_fase_pecho.get(f, 0.0)), float(_err_fase_brazo.get(f, 0.0))])
 	for n in ["spine", "spine.002", "spine.003", "shoulder.L", "upper_arm.L", "forearm.L", "hand.L", "thigh.L", "shin.L"]:
 		if _err_por_hueso.has(n):
 			print("    err %-12s = %5.1f grados" % [n, _err_por_hueso[n]])

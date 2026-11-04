@@ -1,0 +1,106 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/ragdoll/escaleras_test.gd" id="1_g7gwm"]
+[ext_resource type="PackedScene" path="res://src/player/shiba_player.tscn" id="2_sgpfq"]
+[ext_resource type="Script" path="res://src/ragdoll/character/ragdoll_character.gd" id="3_a2pn2"]
+[ext_resource type="Resource" path="res://src/ragdoll/rig/shiba_rig_config.tres" id="4_7daug"]
+[ext_resource type="Resource" path="res://src/player/stats_shiba.tres" id="5_ployf"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dj7w8"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kko08"]
+albedo_color = Color(0.32, 0.34, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xnrnl"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gm60u"]
+size = Vector3(2, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gustu"]
+albedo_color = Color(0.85, 0.55, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v2aeb"]
+size = Vector3(2, 0.2, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ormuq"]
+size = Vector3(2, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_equxy"]
+albedo_color = Color(0.85, 0.65, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qyxqv"]
+size = Vector3(2, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e2wtb"]
+size = Vector3(2, 0.4, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bcc8v"]
+albedo_color = Color(0.85, 0.75, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ialdr"]
+size = Vector3(2, 0.4, 1)
+
+[node name="Escaleras" type="Node3D" unique_id=1604347273]
+script = ExtResource("1_g7gwm")
+
+[node name="Suelo" type="StaticBody3D" parent="." unique_id=1625791608]
+
+[node name="Colision" type="CollisionShape3D" parent="Suelo" unique_id=1003753649]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_dj7w8")
+
+[node name="Malla" type="MeshInstance3D" parent="Suelo" unique_id=1054486227]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+material_override = SubResource("StandardMaterial3D_kko08")
+mesh = SubResource("BoxMesh_xnrnl")
+
+[node name="Escalon_20cm" type="StaticBody3D" parent="." unique_id=49881318]
+
+[node name="Colision" type="CollisionShape3D" parent="Escalon_20cm" unique_id=1411231154]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2.5)
+shape = SubResource("BoxShape3D_gm60u")
+
+[node name="Malla" type="MeshInstance3D" parent="Escalon_20cm" unique_id=2120127229]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2.5)
+material_override = SubResource("StandardMaterial3D_gustu")
+mesh = SubResource("BoxMesh_v2aeb")
+
+[node name="Escalon_30cm" type="StaticBody3D" parent="." unique_id=420485429]
+
+[node name="Colision" type="CollisionShape3D" parent="Escalon_30cm" unique_id=3668970]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 1.5)
+shape = SubResource("BoxShape3D_ormuq")
+
+[node name="Malla" type="MeshInstance3D" parent="Escalon_30cm" unique_id=85931790]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 1.5)
+material_override = SubResource("StandardMaterial3D_equxy")
+mesh = SubResource("BoxMesh_qyxqv")
+
+[node name="Escalon_40cm" type="StaticBody3D" parent="." unique_id=1191395062]
+
+[node name="Colision" type="CollisionShape3D" parent="Escalon_40cm" unique_id=127193410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0.5)
+shape = SubResource("BoxShape3D_e2wtb")
+
+[node name="Malla" type="MeshInstance3D" parent="Escalon_40cm" unique_id=977290927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0.5)
+material_override = SubResource("StandardMaterial3D_bcc8v")
+mesh = SubResource("BoxMesh_ialdr")
+
+[node name="Sol" type="DirectionalLight3D" parent="." unique_id=540266440]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
+light_energy = 1.4
+shadow_enabled = true
+
+[node name="Shiba" type="Node3D" parent="." unique_id=35073120 node_paths=PackedStringArray("animation_player", "animation_tree") instance=ExtResource("2_sgpfq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 4.6)
+script = ExtResource("3_a2pn2")
+rig_config = ExtResource("4_7daug")
+animation_player = NodePath("Anim/AnimationPlayer")
+animation_tree = NodePath("Anim/AnimationTree")
+stats = ExtResource("5_ployf")
+body_follows_camera = false
+fp_clip_radius = 0.15
+fp_clip_meshes = PackedStringArray()
