@@ -473,15 +473,23 @@ func _veredicto() -> void:
 	print("  up_col  = %.3f  (peor en el recorrido: %.3f)" % [up, _peor_up])
 	print("  omega   = %.2f rad/s (maximo: %.2f)" % [omega, _max_omega])
 	var vel_media := 0.0
+	# SUAVIDAD: la desviacion tipica de la velocidad por tick. Un avance en
+	# diente de sierra (teleport) tiene sigma alta; un servo continuo, baja.
+	var sigma := 0.0
 	if _vel_muestras.size() > 0:
 		var suma := 0.0
 		for v in _vel_muestras:
 			suma += v
 		vel_media = suma / float(_vel_muestras.size())
+		var varianza := 0.0
+		for v in _vel_muestras:
+			varianza += pow(v - vel_media, 2.0)
+		sigma = sqrt(varianza / float(_vel_muestras.size()))
 	var zancada := 0.0
 	if _pie_max != Vector3.ZERO:
 		zancada = (_pie_max - _pie_min).length()
-	print("  vel media al andar = %.2f m/s   recorrido del pie = %.3f m" % [vel_media, zancada])
+	print("  vel media al andar = %.2f m/s  (sigma %.2f)   recorrido del pie = %.3f m" % [
+		vel_media, sigma, zancada])
 	var vel_pie := 0.0
 	if _vel_pie_muestras.size() > 0:
 		var suma := 0.0

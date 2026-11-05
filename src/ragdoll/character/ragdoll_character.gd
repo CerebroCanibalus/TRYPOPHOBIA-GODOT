@@ -76,6 +76,34 @@ const MAX_PASO := 0.45
 const ALTURA_ESCALON_MIN := 0.12
 ## Rapidez con la que la capsula BAJA un desnivel (1/s).
 const BAJADA_TAU := 14.0
+
+## === CAPA 2: BASE (muelle sobre la pelvis) ==============================
+##
+## La capsula MANDA y el ragdoll la persigue con VELOCIDAD, nunca con
+## `BODY_STATE_TRANSFORM`. El teleport reinyecta el estado del solver cada
+## tick y el avance sale en diente de sierra (los "pasitos" medidos).
+##
+## Ley: `v = v_intencion + K * (p_intencion - p_pelvis)`. Es un lazo de
+## PRIMER orden: converge en `1/K` segundos y NO oscila (equivale al
+## amortiguamiento critico sin calcularlo).
+##
+## La rigidez depende del CONTACTO, que es lo que hace un cuerpo real: con
+## los pies en el suelo las patas dan traccion; en el aire no se puede
+## cambiar el centro de masas, solo la gravedad. Por eso el aire lleva `K`
+## casi a cero (no se puede "volar" hacia el objetivo).
+const BASE_K_SUELO := 30.0
+const BASE_K_AIRE := 3.0
+## Tope de la velocidad comandada horizontal (m/s): evita catapultas si la
+## intencion salta de golpe (spawn, teletransporte de gameplay).
+const BASE_V_MAX := 6.0
+## Tope del CAMBIO de velocidad por tick (m/s). Es la aceleracion maxima que
+## "las patas" pueden dar: con 0.35 a 60 Hz son 21 m/s2. Sin el tope el lazo
+## metia 6 m/s de golpe y el ragdoll se destrozaba (medido: omega 15.8 rad/s,
+## pelvis a 0.42 m, brazos a 103 grados de error).
+const BASE_DV_MAX := 0.35
+## Rigidez del muelle de base (1/s). Es un lazo de PRIMER orden: converge en
+## `1/K` segundos. 12 -> 83 ms.
+const BASE_K := 12.0
 ## La amortiguacion horizontal del empuje (la de la referencia: 0,9).
 const AMORTIGUACION := 0.9
 ## Escala de velocidad horizontal dentro del agua.
@@ -442,6 +470,15 @@ func _physics_process(delta: float) -> void:
 	# El PD (y el espejo de las poses) van en el tick de FISICA: es donde
 	# se aplican los torques y donde se lee el estado de los cuerpos.
 	_actualizar_pd()
+	# OJO (medido 2026-11-05) — la BASE va DESPUES del espejo.
+	#
+	# `PoseMirror` escribe la pose del hueso fisico (`set_bone_global_pose`)
+	# y el `PhysicalBone3D` re-coloca su cuerpo en esa pose: la velocidad
+	# lineal que se hubiera comandado ANTES se pierde en el mismo tick.
+	# Aplicando la traslacion al final, el cambio de velocidad es lo ultimo
+	# que ven los cuerpos antes de que la fisica integre.
+	if logic != null and physical_bone_body != null:
+		_seguir_logic(delta)
 	# Primera vez: los cuerpos se colocan en la pose de la ANIMACION.
 	#
 	# Si nacen en la pose de reposo (T), el spring tiene que girarlos 90
@@ -583,44 +620,80 @@ func _suelo_logic(punto: Vector3 = Vector3.INF) -> float:
 ## mismo delta a todos los cuerpos, sin tocar velocidades ni orientaciones.
 ## El ciclo de paso (TimeScale = velocidad real / natural) hace que los pies
 ## parezcan plantados aunque el cuerpo avance. :v
+## === CAPA 2: BASE ======================================================
+##
+## Lleva la PELVIS a la capsula con un muelle en VELOCIDAD.
+##
+## Por que no teleport: `BODY_STATE_TRANSFORM` mueve los cuerpos sin cambiar
+## su velocidad, asi que el solver recibe 60 veces por segundo una
+## configuracion que "aparecio" ahi. Los contactos y los joints se recalculan
+## desde cero y el avance sale en diente de sierra: eso eran los pasitos
+## (medido 2026-11-05).
+##
+## Por que no un impulso a secas (la referencia): `linear_velocity += dir*K*dt`
+## con amortiguacion hace que la velocidad real la decidan la friccion y las
+## colisiones, no el jugador. Aqui el objetivo es una POSICION (la capsula) y
+## la velocidad se corrige contra ella cada tick.
 func _seguir_logic(_delta: float) -> void:
 	if logic == null or physical_bone_body == null:
 		return
 	var p := RagdollMotor.body_transform(physical_bone_body).origin
-	var d := Vector3(logic.global_position.x - p.x, 0.0,
-		logic.global_position.z - p.z)
-	# SUBIR (escalones): si la capsula ha ganado altura, el ragdoll se queda
-	# abajo y acaba con los pies dentro del peldano. Se sube SOLO, nunca se
-	# baja (caer es cosa de la gravedad) y se topa a `MAX_PASO` por tick.
+	var v := RagdollMotor.body_linear_velocity(physical_bone_body)
+	# Diferencia pelvis<->capsula cuando esta de pie. Se calibra sola para
+	# que el servo vertical valga para cualquier rig.
 	if is_on_floor and p.y - logic.global_position.y > 0.0:
 		_offset_pelvis = lerpf(_offset_pelvis,
 			p.y - logic.global_position.y, 0.05)
-	var objetivo_y := logic.global_position.y + _offset_pelvis
-	var delta_y := objetivo_y - p.y
-	if delta_y > ALTURA_ESCALON_MIN:
-		# Peldano arriba: sube hasta el tope por tick.
-		d.y = minf(delta_y, MAX_PASO)
-	elif delta_y < -ALTURA_ESCALON_MIN and is_on_floor:
-		# Peldano abajo: se baja SUAVE y solo apoyado (si va por el aire,
-		# la gravedad ya lo trae y forzarlo seria un tiron).
-		d.y = maxf(delta_y, -MAX_PASO) * 0.25
-	if d.length_squared() < 1e-10:
-		return
+	var objetivo := Vector3(logic.global_position.x,
+		logic.global_position.y + _offset_pelvis, logic.global_position.z)
+	# Rigidez por CONTACTO: en el suelo hay traccion; en el aire no se puede
+	# cambiar el centro de masas.
+	var k := BASE_K if is_on_floor else BASE_K * 0.25
+	var err := Vector3(objetivo.x - p.x, 0.0, objetivo.z - p.z)
+	var v_obj := Vector3(logic.velocity.x, 0.0, logic.velocity.z) + err * k
+	v_obj = v_obj.limit_length(BASE_V_MAX)
+	# Vertical: se CONSERVA la de la fisica (gravedad y salto son del ragdoll)
+	# salvo que haya un peldano que subir y el ragdoll este por debajo.
+	var dy := objetivo.y - p.y
+	# TRASLACION DEL CONJUNTO, no un impulso a la pelvis.
+	#
+	# OJO (medido 2026-11-05): `body_apply_impulse` sobre la pelvis con 6 kg
+	# se aplica (dv = -6 m/s) pero la velocidad real queda en -0.3: la pelvis
+	# esta acoplada a los otros 14 cuerpos por los joints y el solver reparte
+	# el impulso en el mismo paso. Empujar un hueso NO mueve el personaje.
+	#
+	# La traslacion correcta es repartir el MISMO delta de velocidad entre
+	# todos los cuerpos, ponderado por masa (`J = m*dv`): es un cambio de
+	# velocidad del centro de masas, no deforma la pose y el solver no tiene
+	# nada que corregir. Es la version continua del teleport: mismo efecto,
+	# sin reinyectar posiciones.
+	var dv := Vector3(v_obj.x - v.x, 0.0, v_obj.z - v.z)
+	# La VERTICAL no se sirve aqui: es de la gravedad y del salto. Servirla con
+	# un muelle de K=30 metia +3 m/s en cuanto el ragdoll se hundia 10 cm y el
+	# personaje entraba en un rebote perpetuo (medido: pel_y 0.81 -> 0.19).
+	# Los escalones los sube la CAPSULA con su step assist y el ragdoll sube
+	# con el objetivo vertical, que aqui solo se usa como referencia.
+	#
+	# TOPE DE ACELERACION: el delta por tick esta limitado a `BASE_DV_MAX`.
+	# Sin el, el lazo pedia 6 m/s de golpe y el solver repartia la sacudida
+	# entre los 15 cuerpos (medido: omega 15.8 rad/s y los brazos a 103
+	# grados del clip).
+		dv = dv.limit_length(BASE_DV_MAX)
 	for b in skeleton.bones:
-		var xf := RagdollMotor.body_transform(b)
-		xf.origin += d
-		PhysicsServer3D.body_set_state(b.get_rid(),
-			PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+		var rid := b.get_rid()
+		var masa: float = PhysicsServer3D.body_get_param(rid, PhysicsServer3D.BODY_PARAM_MASS)
+		if masa <= 0.0:
+			masa = 0.1
+		PhysicsServer3D.body_apply_impulse(rid, dv * masa)
 
 
 func _mover_cuerpo(dir: Vector3, delta: float) -> void:
 	# En el agua se nada: mas lento, y el arrastre del WaterBody (hijo,
 	# corre DESPUES de este script) se encarga del resto.
 	var en_agua := agua != null and agua.sumergido
-	# En tierra, si hay `Logic` (CharacterBody3D), la autoridad es el: el
-	# ragdoll solo lo sigue. Sin `Logic` (escenas viejas) se usa el empuje.
+	# En tierra, si hay `Logic` (CharacterBody3D), la autoridad es el y lo
+	# sigue la BASE, que corre al final del tick (ver `_physics_process`).
 	if not en_agua and logic != null:
-		_seguir_logic(delta)
 		return
 	# La velocidad sale de las STATS del personaje (3 m/s andando, 5,5
 	# esprintando).

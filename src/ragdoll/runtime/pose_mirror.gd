@@ -145,7 +145,20 @@ func follow_pelvis(physical_skel: Skeleton3D, animated_skel: Skeleton3D,
 	if d.length_squared() < 1e-12:
 		return
 	if physical_skel != null:
-		physical_skel.global_position += d
+		# OJO (medido 2026-11-05) — NO mover el esqueleto fisico.
+		#
+		# `physical_skel.global_position += d` movia el esqueleto cada tick,
+		# y los `PhysicalBone3D` son sus HIJOS: el motor re-colocaba los
+		# cuerpos en la pose del hueso, con lo que TODA velocidad lineal se
+		# anulaba. Medido: se comandaba -5.99 m/s a la pelvis (impulso) y la
+		# velocidad real seguia en +0.76; el personaje solo se movia por el
+		# teleport o por los pies empujando el suelo.
+		#
+		# La malla NO lo necesita: `set_bone_global_pose()` recibe la pose
+		# RELATIVA AL ESQUELETO y ya se le pasa el desplazamiento dentro
+		# (`inv * mundo`), asi que la malla se dibuja donde esta el cuerpo
+		# aunque el esqueleto se quede en el origen.
+		pass
 	# EL MAESTRO (el esqueleto ANIMADO, el del clip) NO se mueve.
 	#
 	# OJO (medido 2026-11-04): si el maestro sigue al cuerpo, el CICLO DE
