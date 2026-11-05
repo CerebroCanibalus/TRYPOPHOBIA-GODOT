@@ -104,6 +104,35 @@ const BASE_DV_MAX := 0.35
 ## Rigidez del muelle de base (1/s). Es un lazo de PRIMER orden: converge en
 ## `1/K` segundos. 12 -> 83 ms.
 const BASE_K := 12.0
+
+## === CAPA 4: ANCLAJE DE PIE =============================================
+##
+## El pie que PISA no sigue al clip: se clava en el punto del mundo donde
+## toco. Asi la traslacion de la capa 2 tiene de donde agarrarse (traccion
+## real) y el pie deja de patinar por construccion, no por calibrar el
+## `TimeScale`.
+##
+## Sin esto, la capa 2 empuja el cuerpo y el torso se dobla 53-60 grados
+## (medido): no hay ningun pie que transmita la fuerza al suelo, asi que la
+## cadena entera absorbe el empuje.
+##
+## La histéresis es obligatoria: un ShapeCast que parpadea suelta y agarra el
+## pie cada tick y eso son tirones.
+const PIE_K := 26.0
+## Tope de la correccion del pie (m/s). Corto: el ancla corrige, no catapulta.
+const PIE_V_MAX := 2.5
+## Longitud del sondeo bajo el pie (m).
+const PIE_SONDEO := 0.16
+## Distancia al ancla que SUELTA el pie (m): si el clip lo ha levantado, no
+## queremos arrastrar al personaje de vuelta.
+const PIE_SOLTAR := 0.4
+## Ticks sin contacto antes de soltar (histéresis).
+const PIE_TICKS_SOLTAR := 4
+## VIDA del ancla en segundos. OBLIGATORIA: sin caducidad el pie clavado
+## impide que el clip lo levante, el ancla nunca se suelta y el personaje no
+## avanza (medido: dXZ 0.19 m en 3 s). Con vida, el pie alterna apoyo (el
+## cuerpo pasa por encima) y vuelo (el clip lo recoloca delante).
+const PIE_VIDA := 0.30
 ## La amortiguacion horizontal del empuje (la de la referencia: 0,9).
 const AMORTIGUACION := 0.9
 ## Escala de velocidad horizontal dentro del agua.
@@ -177,6 +206,12 @@ var logic: CharacterBody3D = null
 ## ragdoll esta de pie. Se calibra sola en el primer apoyo: asi el teleport
 ## vertical sirve para cualquier rig.
 var _offset_pelvis := 0.75
+## Ancla de cada pie en MUNDO: `bone_id -> Vector3` (solo los pies apoyados).
+var _anclas := {}
+## Ticks sin contacto por pie (histéresis para soltar el ancla).
+var _ancla_ticks := {}
+## Edad de cada ancla en segundos (caducidad: ver `PIE_VIDA`).
+var _ancla_edad := {}
 var oxigeno: Oxygen = null
 var _cabeza_fisica: Node3D = null
 var _salto_evento := false
@@ -479,6 +514,7 @@ func _physics_process(delta: float) -> void:
 	# que ven los cuerpos antes de que la fisica integre.
 	if logic != null and physical_bone_body != null:
 		_seguir_logic(delta)
+	_anclar_pies(delta)
 	# Primera vez: los cuerpos se colocan en la pose de la ANIMACION.
 	#
 	# Si nacen en la pose de reposo (T), el spring tiene que girarlos 90
@@ -678,13 +714,104 @@ func _seguir_logic(_delta: float) -> void:
 	# Sin el, el lazo pedia 6 m/s de golpe y el solver repartia la sacudida
 	# entre los 15 cuerpos (medido: omega 15.8 rad/s y los brazos a 103
 	# grados del clip).
-		dv = dv.limit_length(BASE_DV_MAX)
+	dv = dv.limit_length(BASE_DV_MAX)
+	# Traslacion del CONJUNTO, excluyendo los pies ANCLADOS: ellos son el
+	# punto de apoyo, si se mueven con el cuerpo la pierna no rota y el
+	# personaje no avanza. Empujar solo la pelvis tampoco sirve (6 kg contra
+	# 38: se estira la cadena y el torso se dobla 42 grados; medido dXZ 0.47).
 	for b in skeleton.bones:
+		var bid := b.get_bone_id()
+		if _anclas.has(bid):
+			continue
 		var rid := b.get_rid()
 		var masa: float = PhysicsServer3D.body_get_param(rid, PhysicsServer3D.BODY_PARAM_MASS)
 		if masa <= 0.0:
 			masa = 0.1
 		PhysicsServer3D.body_apply_impulse(rid, dv * masa)
+
+
+## === CAPA 4: ANCLAJE DE PIE ============================================
+##
+## Cada pie que PISA se queda en el punto del mundo donde toco. Se le sirve
+## la POSICION de ese ancla (en velocidad, como la capa 2), no la pose del
+## clip. El cuerpo puede pasar por encima porque el pie ya no lo sigue.
+##
+## Se corre DESPUES del espejo (`PoseMirror` re-coloca los cuerpos en la pose
+## del hueso y borraria el impulso; medido 2026-11-05).
+func _anclar_pies(delta: float) -> void:
+	if skeleton == null:
+		return
+	for b in skeleton.bones:
+		var id := b.get_bone_id()
+		if id < 0:
+			continue
+		var es_pie: bool = rig_config != null and rig_config.is_foot(b.bone_name)
+		if not es_pie:
+			continue
+		var pos := _posicion_fisica(b)
+		if _pie_toca_suelo(pos):
+			_ancla_ticks.erase(id)
+			if not _anclas.has(id):
+				# Primer contacto: se clava AQUI.
+				_anclas[id] = pos
+				_ancla_edad[id] = 0.0
+				continue
+			# Caducidad: el apoyo dura lo que dura un paso. Si el ancla no
+			# caducase, el pie clavado impediria que el clip lo levantase y el
+			# personaje no avanzaria NUNCA (medido).
+			var edad := float(_ancla_edad.get(id, 0.0)) + delta
+			_ancla_edad[id] = edad
+			if edad > PIE_VIDA:
+				_anclas.erase(id)
+				_ancla_edad.erase(id)
+				continue
+			var ancla: Vector3 = _anclas[id]
+			var err := Vector3(ancla.x - pos.x, 0.0, ancla.z - pos.z)
+			# Si el clip ya lo ha levantado, el ancla queda atras: se suelta
+			# (no arrastramos al personaje de vuelta).
+			if err.length() > PIE_SOLTAR:
+				_anclas.erase(id)
+				_ancla_edad.erase(id)
+				continue
+			var v := RagdollMotor.body_linear_velocity(b)
+			var dv := (err * PIE_K) - Vector3(v.x, 0.0, v.z)
+			dv = dv.limit_length(PIE_V_MAX)
+			var masa: float = PhysicsServer3D.body_get_param(b.get_rid(),
+				PhysicsServer3D.BODY_PARAM_MASS)
+			if masa <= 0.0:
+				masa = 0.1
+			PhysicsServer3D.body_apply_impulse(b.get_rid(), dv * masa)
+		else:
+			# Histéresis: soltar solo tras N ticks sin contacto.
+			var t := int(_ancla_ticks.get(id, 0)) + 1
+			_ancla_ticks[id] = t
+			if t >= PIE_TICKS_SOLTAR:
+				_anclas.erase(id)
+				_ancla_edad.erase(id)
+
+
+## Hay suelo justo debajo del pie (mascara 1: solo mundo).
+func _pie_toca_suelo(pos: Vector3) -> bool:
+	var mundo := get_world_3d()
+	if mundo == null:
+		return false
+	var q := PhysicsRayQueryParameters3D.create(pos + Vector3.UP * 0.06,
+		pos + Vector3.DOWN * PIE_SONDEO)
+	q.collision_mask = 1
+	q.collide_with_areas = false
+	q.exclude = _rds_propios()
+	return not mundo.direct_space_state.intersect_ray(q).is_empty()
+
+
+## Los RIDs de los huesos propios (para que el sondeo del pie no choque con
+## otra parte del mismo personaje).
+func _rds_propios() -> Array[RID]:
+	var out: Array[RID] = []
+	if skeleton == null:
+		return out
+	for b in skeleton.bones:
+		out.append(b.get_rid())
+	return out
 
 
 func _mover_cuerpo(dir: Vector3, delta: float) -> void:
