@@ -74,6 +74,12 @@ var _fase_t: float = 0.0
 # --- Medidas ---------------------------------------------------------------
 var _vel_muestras: Array[float] = []
 var _vel_pie_muestras: Array[float] = []
+## Velocidad REAL medida por DIFERENCIAS DE POSICION (`dp/dt` entre ticks).
+## Es la unica que ve el teleport: `linear_velocity` no incluye un
+## `body_set_state(TRANSFORM)`, por eso la metrica clasica decia 0.71 con
+## teleport y 3.37 m de recorrido real.
+var _vel_pos_muestras: Array[float] = []
+var _pos_anterior := Vector3.ZERO
 var _pie_min := Vector3.ZERO
 var _pie_max := Vector3.ZERO
 var _pie_z0 := 0.0
@@ -291,6 +297,8 @@ func _maquetar_fases() -> void:
 				_pie_max = Vector3.ZERO
 				_vel_muestras.clear()
 				_vel_pie_muestras.clear()
+				_vel_pos_muestras.clear()
+				_pos_anterior = Vector3.ZERO
 				_mano_y_sin = _altura_mano()
 				print("[pg] FASE 1: caminando (3 s)")
 				Input.action_press("move_forward")
@@ -386,6 +394,13 @@ func _siguiente_fase(f: int) -> void:
 func _midiendo_caminata() -> void:
 	var v := RagdollMotor.body_linear_velocity(_body)
 	_vel_muestras.append(Vector2(v.x, v.z).length())
+	# La velocidad que SI ve el teleport: derivada de la posicion.
+	var p_body := RagdollMotor.body_transform(_body).origin
+	if _pos_anterior != Vector3.ZERO:
+		var dt := maxf(get_physics_process_delta_time(), 0.0001)
+		_vel_pos_muestras.append(Vector2(p_body.x - _pos_anterior.x,
+			p_body.z - _pos_anterior.z).length() / dt)
+	_pos_anterior = p_body
 	var pie := _hueso("shin.L")
 	if pie == null:
 		return
@@ -482,6 +497,19 @@ func _veredicto() -> void:
 	if _pie_max != Vector3.ZERO:
 		zancada = (_pie_max - _pie_min).length()
 	print("  vel media al andar = %.2f m/s   recorrido del pie = %.3f m" % [vel_media, zancada])
+	# SUAVIDAD REAL: media y desviacion tipica de `dp/dt`. En un avance
+	# continuo `sigma/media` es bajo; en un diente de sierra, alto.
+	if _vel_pos_muestras.size() > 1:
+		var sp := 0.0
+		for x in _vel_pos_muestras:
+			sp += x
+		var mp := sp / float(_vel_pos_muestras.size())
+		var vp2 := 0.0
+		for x in _vel_pos_muestras:
+			vp2 += pow(x - mp, 2.0)
+		var sigp := sqrt(vp2 / float(_vel_pos_muestras.size()))
+		print("  SUAVIDAD (dp/dt) = %.2f m/s  sigma %.2f  (sigma/media %.2f)" % [
+			mp, sigp, sigp / maxf(mp, 0.01)])
 	var vel_pie := 0.0
 	if _vel_pie_muestras.size() > 0:
 		var suma := 0.0
