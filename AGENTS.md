@@ -1636,6 +1636,30 @@ línea por tick** (363 líneas en 15 s).
   se fusiona el pecho en la pelvis (14 cuerpos): se perdería la cápsula del
   torso (colisión con paredes) y el error se iría al eslabón siguiente.
 
+**Fase 5 (2026-11-05): el pie VUELA — causa real de los "pasitos".**
+
+Con la suavidad y el patinaje instrumentados por **diferencias de posicion**
+(`dp/dt`, la unica metrica que ve un `body_set_state(TRANSFORM)`):
+
+| | teleport puro | **+ exclusion por fase** |
+|---|---|---|
+| Desplazamiento | 3.37 m | **3.37 m** |
+| `dp/dt` / sigma / sigma-media | 1.11 / 0.20 / 0.18 | **1.11 / 0.15 / 0.13** |
+| **Pie en el suelo** | **7 %** (0.32 m de 4.54) | **62 %** (2.09 m de 3.39) |
+
+**El "diente de sierra" del teleport era falso:** sigma/media 0.18 es *mas
+suave* que el servo de la rama (0.44). Y el pie **patinaba 0**: lo que hacia era
+**volar el 93 % del tiempo**. El teleport movia los pies con el cuerpo, asi que
+la gravedad nunca los asentaba: eso eran los pasitos.
+
+**Fix:** `_pie_en_apoyo_por_clip(id)` — la FASE sale del **clip** (rango
+deslizante de la altura del pie objetivo: apoyo = cerca del minimo), **no** del
+suelo (un pie clavado por la traslacion toca siempre, asi que el suelo no
+informa). Los pies en apoyo **se excluyen del teleport**: se quedan, el cuerpo
+pasa por encima y la gravedad los asienta. Sin caducidad ni temporizador.
+
+Escaleras: **PASS 3/3** tras el cambio.
+
 **Gotas nuevas (medidas 2026-11-04):**
 
 - **`CollisionShape3D` tiene que ser hijo DIRECTO del `CollisionObject3D`.**

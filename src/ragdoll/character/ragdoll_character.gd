@@ -149,6 +149,12 @@ var logic: CharacterBody3D = null
 ## ragdoll esta de pie. Se calibra sola en el primer apoyo: asi el teleport
 ## vertical sirve para cualquier rig.
 var _offset_pelvis := 0.75
+## Altura (Y, mundo) del objetivo de cada hueso este tick: es la pose del
+## CLIP, asi que sirve para saber en que FASE del paso esta cada pie.
+var _alturas_objetivo := {}
+## Rango deslizante de la altura del pie en el clip (min y max recientes).
+var _pie_h_min := {}
+var _pie_h_max := {}
 var oxigeno: Oxygen = null
 var _cabeza_fisica: Node3D = null
 var _salto_evento := false
@@ -580,9 +586,14 @@ func _suelo_logic(punto: Vector3 = Vector3.INF) -> float:
 
 
 ## El ragdoll SIGUE a la capsula en POSICION (es VISUAL): se traslada el
-## mismo delta a todos los cuerpos, sin tocar velocidades ni orientaciones.
-## El ciclo de paso (TimeScale = velocidad real / natural) hace que los pies
-## parezcan plantados aunque el cuerpo avance. :v
+## mismo delta a TODOS los cuerpos menos los PIES EN APOYO.
+##
+## OJO (medido 2026-11-05) - el pie volaba el 93% del tiempo: solo 0.32 m de
+## sus 4.54 m de recorrido ocurrian con el pie en el suelo. El teleport movia
+## el pie con el cuerpo, asi que la gravedad nunca lo asentaba y el paso se
+## veia como pasitos en el aire. Excluir de la traslacion el pie que el CLIP
+## tiene en apoyo le da tiempo a tocar y a quedarse quieto mientras el cuerpo
+## pasa por encima.
 func _seguir_logic(_delta: float) -> void:
 	if logic == null or physical_bone_body == null:
 		return
@@ -607,10 +618,37 @@ func _seguir_logic(_delta: float) -> void:
 	if d.length_squared() < 1e-10:
 		return
 	for b in skeleton.bones:
+		# El pie que el CLIP tiene en apoyo NO se traslada: se queda donde
+		# esta y el cuerpo pasa por encima. Es lo que convierte el "pasito en
+		# el aire" en un paso con contacto.
+		if rig_config != null and rig_config.is_foot(b.bone_name) \
+				and _pie_en_apoyo_por_clip(b.get_bone_id()):
+			continue
 		var xf := RagdollMotor.body_transform(b)
 		xf.origin += d
 		PhysicsServer3D.body_set_state(b.get_rid(),
 			PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+
+
+## Fase de apoyo del pie SEGUN EL CLIP, con un rango deslizante de su altura.
+##
+## Se usa el CLIP y no el suelo a proposito: un pie clavado por la traslacion
+## toca el suelo siempre, asi que el suelo no informa de la fase. La altura
+## del pie en la animacion si: apoyo = cerca del minimo del ciclo.
+func _pie_en_apoyo_por_clip(id: int) -> bool:
+	if id < 0 or not _alturas_objetivo.has(id):
+		return false
+	var h := float(_alturas_objetivo[id])
+	var mn := float(_pie_h_min.get(id, h))
+	var mx := float(_pie_h_max.get(id, h))
+	# El minimo baja rapido y sube lento; el maximo al reves. Asi el rango se
+	# adapta solo al clip (no hay que conocer su amplitud).
+	mn = minf(h, lerpf(mn, h, 0.02))
+	mx = maxf(h, lerpf(mx, h, 0.02))
+	_pie_h_min[id] = mn
+	_pie_h_max[id] = mx
+	var rango := maxf(mx - mn, 0.02)
+	return (h - mn) < 0.35 * rango
 
 
 func _mover_cuerpo(dir: Vector3, delta: float) -> void:
@@ -810,6 +848,10 @@ func _calcular_objetivos() -> Dictionary:
 		var objetivo: Transform3D = animated_skel.global_transform * pose
 		objetivo = _aplicar_lean(b, objetivo)
 		objetivo = head_look.apply(b, objetivo)
+		# Altura del pie SEGUN EL CLIP: es la fase del paso (ver
+		# `_pie_en_apoyo_por_clip`). Se guarda ANTES del foot lock, que la
+		# sustituye por la pose fisica cuando el pie ya toca.
+		_alturas_objetivo[id] = objetivo.origin.y
 		# PIE PLANTADO: si el pie toca el suelo, el objetivo es su PROPIA pose
 		# fisica. Asi el servo no pelea con el suelo (medido: 96 grados de
 		# error en foot.R y omega desperdiciada). En el aire vuelve al clip.

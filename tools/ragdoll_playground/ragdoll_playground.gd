@@ -80,6 +80,11 @@ var _vel_pie_muestras: Array[float] = []
 ## teleport y 3.37 m de recorrido real.
 var _vel_pos_muestras: Array[float] = []
 var _pos_anterior := Vector3.ZERO
+## PATINAJE REAL: recorrido horizontal del PIE mientras toca suelo. Si esto
+## se acerca al recorrido total, el pie no se planta nunca: se desliza.
+var _pie_recorrido_apoyo := 0.0
+var _pie_recorrido_total := 0.0
+var _pie_pos_ant := Vector3.ZERO
 var _pie_min := Vector3.ZERO
 var _pie_max := Vector3.ZERO
 var _pie_z0 := 0.0
@@ -299,6 +304,9 @@ func _maquetar_fases() -> void:
 				_vel_pie_muestras.clear()
 				_vel_pos_muestras.clear()
 				_pos_anterior = Vector3.ZERO
+				_pie_recorrido_apoyo = 0.0
+				_pie_recorrido_total = 0.0
+				_pie_pos_ant = Vector3.ZERO
 				_mano_y_sin = _altura_mano()
 				print("[pg] FASE 1: caminando (3 s)")
 				Input.action_press("move_forward")
@@ -401,6 +409,17 @@ func _midiendo_caminata() -> void:
 		_vel_pos_muestras.append(Vector2(p_body.x - _pos_anterior.x,
 			p_body.z - _pos_anterior.z).length() / dt)
 	_pos_anterior = p_body
+	# Patinaje: recorrido del PIE de verdad (`foot.L`) y cuanto de el ocurre
+	# con el pie en el suelo. 100% de apoyo = el pie nunca se planta.
+	var pie_real := _hueso("foot.L")
+	if pie_real != null:
+		var pp := _pos_pie(pie_real)
+		if _pie_pos_ant != Vector3.ZERO:
+			var d := Vector2(pp.x - _pie_pos_ant.x, pp.z - _pie_pos_ant.z).length()
+			_pie_recorrido_total += d
+			if _pie_toca(pp):
+				_pie_recorrido_apoyo += d
+		_pie_pos_ant = pp
 	var pie := _hueso("shin.L")
 	if pie == null:
 		return
@@ -455,6 +474,24 @@ func _hueso(nombre: String) -> PhysicalBone3D:
 	return null
 
 
+## Posicion del HUESO en mundo (deshace `body_offset`).
+func _pos_pie(b: PhysicalBone3D) -> Vector3:
+	var boff: Transform3D = b.get("body_offset")
+	return (RagdollMotor.body_transform(b) * boff.affine_inverse()).origin
+
+
+## Hay suelo justo debajo del pie (mascara 1: mundo).
+func _pie_toca(pos: Vector3) -> bool:
+	var mundo := get_world_3d()
+	if mundo == null:
+		return false
+	var q := PhysicsRayQueryParameters3D.create(pos + Vector3.UP * 0.05,
+		pos + Vector3.DOWN * 0.14)
+	q.collision_mask = 1
+	q.collide_with_areas = false
+	return not mundo.direct_space_state.intersect_ray(q).is_empty()
+
+
 ## La altura de la mano (para ver si el IK la levanta).
 func _altura_mano(nombre: String = "hand.R") -> float:
 	var h := _hueso(nombre)
@@ -497,6 +534,10 @@ func _veredicto() -> void:
 	if _pie_max != Vector3.ZERO:
 		zancada = (_pie_max - _pie_min).length()
 	print("  vel media al andar = %.2f m/s   recorrido del pie = %.3f m" % [vel_media, zancada])
+	if _pie_recorrido_total > 0.0:
+		var pct := 100.0 * _pie_recorrido_apoyo / _pie_recorrido_total
+		print("  PATINAJE REAL: pie en suelo %.2f m de %.2f m (%.0f%% del recorrido)" % [
+			_pie_recorrido_apoyo, _pie_recorrido_total, pct])
 	# SUAVIDAD REAL: media y desviacion tipica de `dp/dt`. En un avance
 	# continuo `sigma/media` es bajo; en un diente de sierra, alto.
 	if _vel_pos_muestras.size() > 1:
