@@ -60,6 +60,10 @@ var info: Label = null
 
 var _t: float = 0.0
 var _start_ms: int = 0
+## Altura de la pelvis en reposo y maxima tras el salto (para el PASS).
+var _pel_y_reposo := 0.0
+var _salto_max := 0.0
+var _salto_ok := false
 var _body: PhysicalBone3D = null
 var _head: PhysicalBone3D = null
 var _start_pos: Vector3 = Vector3.ZERO
@@ -67,7 +71,7 @@ var _peor_up: float = 1.0
 var _max_omega: float = 0.0
 
 # --- Fases del test --------------------------------------------------------
-enum Fase { REPOSO, CAMINAR, BRAZOS, FIN }
+enum Fase { REPOSO, CAMINAR, SALTO, BRAZOS, FIN }
 var _fase: int = Fase.REPOSO
 var _fase_t: float = 0.0
 
@@ -120,6 +124,12 @@ func _ready() -> void:
 	if OS.get_environment("PG_PIES_SIN_COLISION") == "1":
 		pies_sin_colision = true
 	print("===== PLAYGROUND RAGDOLL (TEST CANONICO) =====")
+	# `PG_TEST=1` activa el test automatico desde CLI (si no, es interactivo
+	# y NO se cierra solo).
+	if OS.get_environment("PG_TEST") == "1":
+		auto_walk = true
+		if auto_quit_seconds <= 0.0:
+			auto_quit_seconds = 25.0
 	print("[playground] auto_quit=%.1fs auto_walk=%s diagnostic=%s" % [
 		auto_quit_seconds, str(auto_walk), str(diagnostic_direct_velocity)])
 	_start_ms = Time.get_ticks_msec()
@@ -208,8 +218,6 @@ func _physics_process(delta: float) -> void:
 		auto_walk = true
 	if Input.is_key_pressed(KEY_Y):
 		auto_walk = false
-	if auto_walk:
-		Input.action_press("move_forward")
 
 	if diagnostic_direct_velocity and _body:
 		if Input.is_action_pressed("move_forward"):
@@ -221,10 +229,23 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_pressed("move_right"):
 			_body.linear_velocity.z -= 4.0 * delta
 
-	_maquetar_fases()
+	# El test automatico SOLO si se ha activado (tecla T o `PG_TEST=1`).
+	# Antes se llamaba siempre: el playground caminaba solo y se CERRABA al
+	# llegar al veredicto (medido 2026-11-05).
+	if auto_walk:
+		_maquetar_fases()
 
 	if _body == null:
 		return
+	# Telemetria de suelo (para el salto): por que no salta.
+	if OS.get_environment("SALTO_DEBUG") == "1" and Engine.get_physics_frames() % 20 == 0:
+		var ch := character as RagdollCharacter
+		if ch != null:
+			print("[suelo] floor=%s L=%s R=%s logic=%s" % [
+				str(ch.is_on_floor),
+				str(ch.on_floor_left != null and ch.on_floor_left.is_colliding()),
+				str(ch.on_floor_right != null and ch.on_floor_right.is_colliding()),
+				str(ch.logic != null and ch.logic.is_on_floor())])
 	var pos := _pos(_body)
 	var dist := pos - _start_pos
 	var up := _verticalidad()
@@ -312,16 +333,36 @@ func _maquetar_fases() -> void:
 				_pie_recorrido_total = 0.0
 				_pie_pos_ant = Vector3.ZERO
 				_mano_y_sin = _altura_mano()
+				_pel_y_reposo = _pos(_body).y
 				print("[pg] FASE 1: caminando (3 s)")
 				Input.action_press("move_forward")
 		Fase.CAMINAR:
 			_midiendo_caminata()
 			if _fase_t > 3.0:
-				_siguiente_fase(Fase.BRAZOS)
 				Input.action_release("move_forward")
+				_siguiente_fase(Fase.SALTO)
+				_salto_max = 0.0
+				print("[pg] FASE 2: salto")
+		Fase.SALTO:
+			# Se pulsa al principio y se suelta: el juicio es cuanto SUBE la
+			# pelvis respecto a la altura de reposo.
+			if _fase_t < 0.25:
+				Input.action_press("jump")
+			else:
+				Input.action_release("jump")
+			_salto_max = maxf(_salto_max, _pos(_body).y)
+			if Engine.get_physics_frames() % 6 == 0:
+				print("[salto] t=%.2f pel_y=%.3f v_y=%.2f" % [_fase_t,
+					_pos(_body).y, RagdollMotor.body_linear_velocity(_body).y])
+			if _fase_t > 1.8:
+				_salto_ok = (_salto_max - _pel_y_reposo) > 0.15
+				print("[pg] salto: reposo=%.3f max=%.3f subida=%.3f -> %s" % [
+					_pel_y_reposo, _salto_max, _salto_max - _pel_y_reposo,
+					"PASS" if _salto_ok else "FALLO"])
+				_siguiente_fase(Fase.BRAZOS)
 				_mano_y_sin = _altura_mano("hand.L")
 				_mano_r_sin = _altura_mano("hand.R")
-				print("[pg] FASE 2: brazos (clic)")
+				print("[pg] FASE 3: brazos (clic)")
 				Input.action_press("grab_left")
 		Fase.BRAZOS:
 			if _fase_t > 1.5:
@@ -573,6 +614,8 @@ func _veredicto() -> void:
 	print("  vel media del PIE = %.2f m/s  (cuerpo %.2f) -> patinaje %+.2f m/s" % [
 		vel_pie, vel_media, vel_pie - vel_media])
 	print("  error max de orientacion = %.1f grados  (hueso: %s)" % [_err_max, _err_hueso])
+	print("  SALTO: subida de la pelvis = %.2f m -> %s" % [
+		_salto_max - _pel_y_reposo, "PASS" if _salto_ok else "FALLO"])
 	# Por FASE: el maximo global es el transitorio del estiron (el objetivo del
 	# brazo salta 65 grados). Lo que se juzga es el error ESTACIONARIO.
 	var nombres_fase := { Fase.REPOSO: "reposo", Fase.CAMINAR: "andando", Fase.BRAZOS: "brazos" }

@@ -1,4 +1,4 @@
-extends Node3D
+﻿extends Node3D
 class_name RagdollCharacter
 ## PERSONAJE RAGDOLL: la raiz que COMPONE los componentes de la libreria
 ## (`src/ragdoll/`) y a la vez lo que es de este personaje concreto: el
@@ -12,8 +12,8 @@ class_name RagdollCharacter
 ## Montar un personaje nuevo = un `RagdollRig` (que genera el `RigForge`)
 ## + esta escena. Nada de tocar codigo.
 
-## La salud llega a 0 → la muerte es local y cosmetica (decision D16 de la
-## guia de red): se suelta el ragdoll y se emite `murio()`. Aún no hay
+## La salud llega a 0 â†’ la muerte es local y cosmetica (decision D16 de la
+## guia de red): se suelta el ragdoll y se emite `murio()`. AÃºn no hay
 ## fuentes de dano en el juego; es el gancho para cuando existan.
 signal murio
 
@@ -52,7 +52,7 @@ var fp_clip: FpClip                 ## El recorte de 1a persona.
 ## mantiene al personaje de pie, y el balance le devolvia a la pelvis el par
 ## de todos los hijos (medido: la pelvis giraba a 40 rad/s y se volcaba).
 
-## === ESTADISTICAS (Yuki Romero: Velocidad Baja · Stamina 50 · Salud 300)
+## === ESTADISTICAS (Yuki Romero: Velocidad Baja Â· Stamina 50 Â· Salud 300)
 ## Los valores viven en `stats_shiba.tres`; la escena la asigna.
 @export var stats: CharacterStats
 
@@ -66,7 +66,7 @@ var is_sprinting := false
 ## paredes y las escaleras los resuelve `move_and_slide`.
 const JUMP_SPEED := 5.0
 ## Pitch (grados) que lleva el lean al maximo. Mirar 30 grados abajo ya
-## inclina del todo: mas seria incómodo en 1a persona.
+## inclina del todo: mas seria incÃ³modo en 1a persona.
 const LEAN_PITCH_REFERENCIA := 30.0
 ## Altura de la capsula sobre el suelo que pisa (evita penetrar el `Floor`).
 const ALTURA_SOBRE_SUELO := 0.05
@@ -164,6 +164,20 @@ var _impulso_vertical_pendiente := 0.0
 ## Punto del mundo donde piso cada pie (`bone_id -> Vector3`). Mientras dura
 ## la fase de apoyo el pie se re-ancla ahi cada tick.
 var _ancla_pie := {}
+## Objetivos del tick (pose del clip en mundo), para el pie en vuelo.
+var _objetivos_actuales := {}
+## Indice del hueso de la pelvis (para trasladar el clip al cuerpo).
+var _id_pelvis := -1
+## Cuanto persigue el pie en vuelo a su objetivo del clip (0..1 por tick).
+const PIE_VUELO_LERP := 0.35
+## Tope de desplazamiento del pie por tick (m). 0.05 a 60 Hz son 3 m/s.
+const PIE_VUELO_MAX := 0.05
+## Velocidad del salto (m/s) integrada por el TELEPORT: en este rig el motor
+## de fisica no conserva velocidades lineales entre ticks, asi que el salto
+## se mueve con la misma autoridad que el resto del personaje.
+var _salto_v := 0.0
+## Gravedad del salto (m/s2). Con 5 m/s da ~1 m de altura.
+const GRAVEDAD_SALTO := 12.0
 var oxigeno: Oxygen = null
 var _cabeza_fisica: Node3D = null
 var _salto_evento := false
@@ -326,6 +340,8 @@ func _crear_componentes() -> void:
 	physical_bone_body = skeleton.body_bone()
 	if physical_bone_body == null and rig_config != null:
 		physical_bone_body = skeleton.find_in_skeleton(rig_config.body_bone_name)
+	if physical_bone_body != null:
+		_id_pelvis = physical_bone_body.get_bone_id()
 	_resolver_colisiones_de_suelo()
 
 	# --- Animacion ------------------------------------------------------
@@ -452,7 +468,10 @@ func _physics_process(delta: float) -> void:
 	# final del tick, despues del espejo (que es el unico orden en el que el
 	# motor respeta un cambio de velocidad).
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
+		if OS.get_environment("SALTO_DEBUG") == "1":
+			print("[salto] dispara (floor=%s can=%s)" % [str(is_on_floor), str(can_jump)])
 		_impulso_vertical_pendiente += JUMP_SPEED
+		_salto_v = JUMP_SPEED
 		current_stamina = maxf(current_stamina - stats.jump_stamina_cost, 0.0)
 		if jump_timer:
 			jump_timer.start()
@@ -470,12 +489,6 @@ func _physics_process(delta: float) -> void:
 	# El PD (y el espejo de las poses) van en el tick de FISICA: es donde
 	# se aplican los torques y donde se lee el estado de los cuerpos.
 	_actualizar_pd()
-	# SALTO: impulso vertical al CONJUNTO y AL FINAL del tick (despues del
-	# espejo, que es el unico orden en el que el motor respeta un cambio de
-	# velocidad: `linear_velocity` en un PhysicalBone3D no persiste).
-	if _impulso_vertical_pendiente > 0.0 and skeleton != null:
-		_aplicar_impulso_conjunto(Vector3(0.0, _impulso_vertical_pendiente, 0.0))
-		_impulso_vertical_pendiente = 0.0
 	# Primera vez: los cuerpos se colocan en la pose de la ANIMACION.
 	#
 	# Si nacen en la pose de reposo (T), el spring tiene que girarlos 90
@@ -564,7 +577,7 @@ func _direccion_de_movimiento() -> Vector3:
 ## penetra el `Floor` (1 cm dentro trababa `move_and_slide`: 6 contactos con
 ## normal UP, velocidad conservada y posicion quieta).
 ##
-## OJO — STEP ASSIST (medido 2026-11-04): con `velocity.y = 0` la capsula NO
+## OJO â€” STEP ASSIST (medido 2026-11-04): con `velocity.y = 0` la capsula NO
 ## sube escalones; se queda pegada a la cara del peldano (el personaje se
 ## paraba a 0.25 m del escalon de 20 cm y ya no avanzaba). El fondo redondeado
 ## solo trepa si algo la empuja hacia abajo. Por eso la altura se decide con
@@ -627,7 +640,7 @@ func _suelo_logic(punto: Vector3 = Vector3.INF) -> float:
 ## veia como pasitos en el aire. Excluir de la traslacion el pie que el CLIP
 ## tiene en apoyo le da tiempo a tocar y a quedarse quieto mientras el cuerpo
 ## pasa por encima.
-func _seguir_logic(_delta: float) -> void:
+func _seguir_logic(delta: float) -> void:
 	if logic == null or physical_bone_body == null:
 		return
 	var p := RagdollMotor.body_transform(physical_bone_body).origin
@@ -641,7 +654,17 @@ func _seguir_logic(_delta: float) -> void:
 			p.y - logic.global_position.y, 0.05)
 	var objetivo_y := logic.global_position.y + _offset_pelvis
 	var delta_y := objetivo_y - p.y
-	if delta_y > ALTURA_ESCALON_MIN:
+	if _salto_v != 0.0:
+		# SALTO: se integra aqui, con la misma autoridad que el teleport. En
+		# este rig la fisica NO conserva la velocidad lineal entre ticks (el
+		# espejo de poses la anula), asi que un impulso no levanta al
+		# personaje: v_y pedia 5 m/s y en un tick caia a 0.08.
+		_salto_v -= GRAVEDAD_SALTO * delta
+		d.y = _salto_v * delta
+		if _salto_v <= 0.0 and is_on_floor:
+			_salto_v = 0.0
+			d.y = 0.0
+	elif delta_y > ALTURA_ESCALON_MIN:
 		# Peldano arriba: sube hasta el tope por tick.
 		d.y = minf(delta_y, MAX_PASO)
 	elif delta_y < -ALTURA_ESCALON_MIN and is_on_floor:
@@ -671,9 +694,40 @@ func _seguir_logic(_delta: float) -> void:
 			continue
 		_ancla_pie.erase(id)
 		var xf := RagdollMotor.body_transform(b)
+		# PIE EN VUELO: se lleva a su objetivo del CLIP, pero TRASLADADO al
+		# cuerpo actual. Sin esto el pie solo acompaÃ±a al cuerpo y nunca
+		# recupera hacia DELANTE, asi que el ciclo no se cierra y el pie se
+		# queda atras arrastrandose (medido: la zancada no avanzaba nunca).
+		if rig_config != null and rig_config.is_foot(b.bone_name):
+			var obj := _objetivo_de_pie_en_cuerpo(id)
+			if obj != Vector3.INF:
+				# TOPE por tick: sin el, un objetivo lejano mueve el pie
+				# 0.35 x la distancia de golpe (medido: 21 m/s de catapulta y
+				# el pie arrastraba el cuerpo entero a 6.85 m/s).
+				var paso := (obj - xf.origin).limit_length(PIE_VUELO_MAX)
+				xf.origin += paso
+				PhysicsServer3D.body_set_state(b.get_rid(),
+					PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+				continue
 		xf.origin += d
 		PhysicsServer3D.body_set_state(b.get_rid(),
 			PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+
+
+## Objetivo del pie del CLIP trasladado al cuerpo actual.
+##
+## El maestro de animacion esta FIJO en el mundo (no sigue al personaje), asi
+## que su pose no sirve como destino absoluto. Lo que se usa es el
+## DESPLAZAMIENTO: la diferencia entre la pelvis fisica y la pelvis del clip
+## se suma al pie del clip.
+func _objetivo_de_pie_en_cuerpo(id: int) -> Vector3:
+	if not _objetivos_actuales.has(id) or _id_pelvis < 0 \
+			or not _objetivos_actuales.has(_id_pelvis):
+		return Vector3.INF
+	var pie_clip: Vector3 = (_objetivos_actuales[id] as Transform3D).origin
+	var pelvis_clip: Vector3 = (_objetivos_actuales[_id_pelvis] as Transform3D).origin
+	var pelvis_fisica := _posicion_fisica(physical_bone_body)
+	return pie_clip + (pelvis_fisica - pelvis_clip)
 
 
 ## Cambia la velocidad del CONJUNTO sin deformar la pose: reparte el mismo
@@ -830,7 +884,7 @@ func _actualizar_rumbo_del_cuerpo(dir: Vector3, delta: float) -> void:
 
 ## Yaw objetivo del cuerpo: el de la direccion de marcha, con inercia.
 ##
-## OJO — el yaw del esqueleto ANIMADO va AL REVES (medido: el personaje
+## OJO â€” el yaw del esqueleto ANIMADO va AL REVES (medido: el personaje
 ## caminaba de espaldas, `dot(frente_del_modelo, camara) = -1`).
 ##
 ## El nodo `Animated` lleva un giro de 180 grados en Y (el modelo se
@@ -887,6 +941,7 @@ func _actualizar_pd() -> void:
 	# pelvis giraba a 40 rad/s y el personaje se volcaba).
 	motor.drive(skeleton.bones, objetivos, _grupos(), get_physics_process_delta_time(),
 		physical_skel)
+	_objetivos_actuales = objetivos
 	mirror.mirror(physical_skel, animated_skel, skeleton.bones, physical_bone_body)
 
 
@@ -900,7 +955,7 @@ func _calcular_objetivos() -> Dictionary:
 			continue
 		# La pose objetivo es la de la ANIMACION (el esqueleto ANIMADO).
 		var pose := driver.pose_of(id)
-		# OJO — DOS REGLAS DE MARCO (medidas y documentadas por Godot):
+		# OJO â€” DOS REGLAS DE MARCO (medidas y documentadas por Godot):
 		#   * `get_bone_global_pose()` es RELATIVA AL ESQUELETO, no al
 		#     mundo ("it is not the actual global/world transform of the
 		#     bone", class_skeleton3d).
@@ -930,7 +985,7 @@ func _calcular_objetivos() -> Dictionary:
 ## El marco en el que se aplica la pose del clip: la ORIENTACION del
 ## esqueleto animado, pero con el ORIGEN en la pelvis del CUERPO.
 ##
-## OJO (medido 2026-11-04) — POR QUE NO SE USA `animated_skel.global_transform`:
+## OJO (medido 2026-11-04) â€” POR QUE NO SE USA `animated_skel.global_transform`:
 ## el `PoseMirror` mueve el esqueleto (el fisico y el animado) para que
 ## sigan a la pelvis del cuerpo. Si el objetivo se calculara con la
 ## posicion REAL del esqueleto maestro, el lazo seria:
@@ -961,7 +1016,7 @@ func _base_de_objetivos() -> Transform3D:
 ## MEDIDO (2026-11-04): el `TwoBoneIK3D` de Godot NO escribe la pose en
 ## este esqueleto (con la influencia a 1,0 la mano del esqueleto animado
 ## se queda en la pose del clip: y=0,839 colgando, medido). Por eso el
-## estirón se hace AQUI, en el objetivo del servo, que es lo que de
+## estirÃ³n se hace AQUI, en el objetivo del servo, que es lo que de
 ## verdad mueve al personaje.
 ##
 ## Sin clic, los brazos se quedan en la pose del IDLE (el servo los
@@ -1042,7 +1097,7 @@ func _posicion_fisica(b: PhysicalBone3D) -> Vector3:
 	return (RagdollMotor.body_transform(b) * boff.affine_inverse()).origin
 
 
-## ¿El pie apoya en el suelo? Raycast desde el hueso del pie hacia abajo.
+## Â¿El pie apoya en el suelo? Raycast desde el hueso del pie hacia abajo.
 ## La mascara 1 (mundo) ignora los propios huesos (capa 2). :v
 func _pie_en_suelo(b: PhysicalBone3D) -> bool:
 	if b == null:
@@ -1099,7 +1154,7 @@ func _alinear_con_la_animacion() -> void:
 		var id := b.get_bone_id()
 		if id < 0:
 			continue
-		# OJO (medido) — el cuerpo NO esta en el origen del hueso: esta a
+		# OJO (medido) â€” el cuerpo NO esta en el origen del hueso: esta a
 		# MEDIA HUESO, y ese desplazamiento es el `body_offset` (en espacio
 		# de hueso). Godot coloca el cuerpo como
 		# `esqueleto * pose_del_hueso * body_offset`.
