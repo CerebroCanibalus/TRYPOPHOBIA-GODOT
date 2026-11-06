@@ -406,32 +406,16 @@ func _on_insert_modified_pressed(mask: int) -> void:
 
 ## Avisa por que no se pudo insertar nada.
 ##
+## Imprime SIEMPRE la resolucion completa (que esqueleto se uso, que ruta, que
+## tiempo, cuantos huesos y cuantos tienen pista) para que "no hace nada" deje
+## de ser un misterio.
+##
 ## @param es_insert_tracks true si el boton pulsado fue "Insert Tracks".
 func _aviso_sin_claves(es_insert_tracks: bool = false) -> void:
-	if context == null or context.skeleton == null:
-		print("[ArmatureEditor] No hay un Skeleton3D seleccionado.")
-		return
-	var player := animation_key_service.find_animation_player()
-	if player == null:
-		print("[ArmatureEditor] No se encontro un AnimationPlayer en la escena abierta.")
-		return
-	var anim := animation_key_service.current_animation(player)
-	if anim == null:
-		print("[ArmatureEditor] No hay ninguna animacion seleccionada en el panel Animation.")
-		return
-	var modificados: Array[int] = animation_key_service.modified_bones(context.skeleton)
-	if modificados.is_empty():
-		print("[ArmatureEditor] Ningun hueso modificado: la pose de todos coincide con su rest. Mueve huesos antes de keyar.")
-		return
-	var rel := animation_key_service.relative_skeleton_path(player, context.skeleton)
-	var con_pista := animation_key_service.count_tracked(context.skeleton, anim,
-		modificados, rel, animation_key_service.track_mask)
-	if not es_insert_tracks and con_pista == 0:
-		print("[ArmatureEditor] Los %d huesos modificados NO tienen pista de ese tipo en '%s': usa 'Insert Tracks' para crearlas." % [
-			modificados.size(), str(player.get_assigned_animation())])
-		return
-	print("[ArmatureEditor] Nada que escribir: revisa la mascara (pos/rot/scale); con varios huesos modificados (%d) y %d pistas encontradas." % [
-		modificados.size(), con_pista])
+	print("[ArmatureEditor] NO se escribio nada. Estado: %s"
+		% animation_key_service.describe_resolution())
+	if not es_insert_tracks:
+		print("[ArmatureEditor] Si el hueso no tiene pista de ese tipo, 'Insert Modified' no la crea: usa 'Insert Tracks'.")
 
 ## Dispatches context menu actions to edit services.
 func _on_context_menu_action_requested(action_id: int, bone_index: int) -> void:

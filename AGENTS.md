@@ -1789,3 +1789,44 @@ referencia, y **ya es correcto** con el giro de 180 grados del nodo
 
 El otro modo (el cuerpo gira hacia donde camina) necesita la correccion de
 `gamma` de `_calibrar_rumbo()`.
+
+---
+
+## 🎛️ ARMATURE EDITOR — tres bugs medidos (2026-11-05)
+
+Addon de autoria (`addons/ArmatureEditor/`). Los tres se midieron con sondas
+headless (`.heren/tmp/prueba_insert.gd`, `.heren/tmp/prueba_resolucion.gd`), no
+a ojo.
+
+**1. El esqueleto de las PISTAS manda, no el seleccionado.** El Shiba tiene DOS
+`Skeleton3D` (`Physical/metarig/Skeleton3D` con los `PhysicalBone3D` y
+`Animated/metarig/Skeleton3D` con la malla) y `shiba_anim.tres` apunta a
+`Animated/metarig/Skeleton3D`. El servicio de claves usaba `context.skeleton`
+(lo que hubiera seleccionado), asi que con el fisico seleccionado construia
+rutas `Physical/...` que **no casan con ninguna pista**: *Insert Tracks* e
+*Insert Modified* no escribian **NADA** y sin un solo error. Medido: con la ruta
+fisica `thigh.L` da -1; con la animada, 0. Ahora `animation_skeleton()` saca el
+esqueleto de la ruta de la primera pista y `preferred_skeleton()` evita el que
+tiene `PhysicalBone3D` cuando la animacion aun no tiene pistas.
+
+**2. `insert_tracks` no keyeaba las pistas que YA existian** (hacia `continue`).
+Como casi todos los huesos animados ya tienen pista, el boton parecia roto:
+creaba 0. Ahora crea las que faltan **y** escribe la clave en todas.
+
+**3. `track_insert_key` no reemplaza si el tiempo no coincide EXACTO.** A 0,5 ms
+metia otra clave en el mismo frame (2 → 3 claves). Ahora `_key_track()` busca la
+clave mas cercana a menos de `key_tolerance()` = medio `step` acotado a [1, 10]
+ms y **sobrescribe** con `track_set_key_value`.
+
+**Que huesos se keyean (`bones_to_key`):** `modified_bones()` compara la pose
+contra el `rest` y marca como "modificado" TODO hueso que el clip este posando
+(medido: 12 sin tocar nada), asi que manda `_gizmo_modified` (lo que el usuario
+arrastro) y solo se cae a pose-vs-rest si no hay aviso del gizmo.
+
+**Gotcha del addon:** es `@tool` → hay que **recargar el proyecto** para ver los
+cambios. `--check-only` en sus `.gd` funciona igual que con el juego.
+
+**Gotcha de las sondas headless:** un `-s` con `extends SceneTree` que crea
+nodos dentro de `_initialize()` **se cuelga**; todo el trabajo va en el primer
+`_process` y los `quit()` desde ahi.
+

@@ -480,15 +480,102 @@ func perform_insert_modified(mask: int, skeleton: Skeleton3D = null) -> int:
 	return insert_keys(parts["skeleton"], parts["anim"], bones, current_time(parts["player"]), parts["rel_path"], mask)
 
 
+## Esqueleto que la animacion ANIMA de verdad (el de la ruta de sus pistas).
+##
+## OJO (2026-11-05) — EL BUG DEL SHIBA: en un ragdoll hay DOS `Skeleton3D`
+## (`Physical/metarig/Skeleton3D` con los `PhysicalBone3D` y
+## `Animated/metarig/Skeleton3D` con la malla) y las pistas apuntan a UNO SOLO.
+## El servicio usaba `context.skeleton` (lo que hubiera seleccionado), asi que
+## con el fisico seleccionado construia rutas `Physical/...` que no casaban con
+## nada: `_find_track` devolvia -1 y los dos botones no hacian NADA (ni clave,
+## ni pista), sin un solo error. Medido: `walk_full` apunta a
+## `Animated/metarig/Skeleton3D`.
+##
+## @param anim Animacion a inspeccionar.
+## @param player AnimationPlayer dueno de la animacion.
+## @return El Skeleton3D de la primera pista de hueso, o null si no hay.
+func animation_skeleton(anim: Animation, player: AnimationPlayer) -> Skeleton3D:
+	if anim == null or player == null:
+		return null
+	var anim_root := player.get_node_or_null(player.get_root_node())
+	if anim_root == null:
+		anim_root = player
+	for t in anim.get_track_count():
+		var ruta := str(anim.track_get_path(t))
+		var sep := ruta.rfind(":")
+		if sep < 0:
+			continue
+		var nodo := anim_root.get_node_or_null(NodePath(ruta.substr(0, sep)))
+		if nodo is Skeleton3D:
+			return nodo as Skeleton3D
+	return null
+
+
+## Esqueleto a usar cuando la animacion todavia NO tiene pistas.
+##
+## Si el elegido es de un ragdoll (tiene `PhysicalBone3D` hijos) se prefiere
+## otro `Skeleton3D` del mismo arbol que no los tenga: el animado es donde van
+## las pistas. Si no hay ninguno, se respeta el elegido.
+##
+## @param player AnimationPlayer dueno de la animacion.
+## @param elegido Esqueleto seleccionado por el usuario.
+## @return Esqueleto donde crear las pistas.
+func preferred_skeleton(player: AnimationPlayer, elegido: Skeleton3D) -> Skeleton3D:
+	if player == null or elegido == null:
+		return elegido
+	if elegido.find_children("*", "PhysicalBone3D", true, false).is_empty():
+		return elegido
+	var anim_root := player.get_node_or_null(player.get_root_node())
+	if anim_root == null:
+		anim_root = player
+	for nodo in anim_root.find_children("*", "Skeleton3D", true, false):
+		var sk := nodo as Skeleton3D
+		if sk != null and sk != elegido \
+				and sk.find_children("*", "PhysicalBone3D", true, false).is_empty():
+			return sk
+	return elegido
+
+
+## Describe el estado de la resolucion, para el aviso de "no hizo nada".
+##
+## @param skeleton Esqueleto a usar (por defecto, el seleccionado).
+## @return Texto de una linea con esqueleto, pista, tiempo y huesos.
+func describe_resolution(skeleton: Skeleton3D = null) -> String:
+	if context == null:
+		return "el plugin no tiene contexto"
+	var elegido: Skeleton3D = skeleton if skeleton != null else context.skeleton
+	if elegido == null:
+		return "no hay ningun Skeleton3D seleccionado en la escena"
+	var player := find_animation_player()
+	if player == null:
+		return "no hay ningun AnimationPlayer en la escena abierta"
+	var anim := current_animation(player)
+	if anim == null:
+		return "el AnimationPlayer no tiene animacion asignada (assigned='%s')" % str(player.get_assigned_animation())
+	var partes := _resolve(skeleton)
+	if partes.is_empty():
+		return "no se pudo resolver (seleccionado=%s)" % str(elegido.get_path())
+	var skel: Skeleton3D = partes["skeleton"]
+	var huesos := bones_to_key(skel)
+	return "seleccionado=%s | USADO=%s | ruta='%s' | anim='%s' pistas=%d time=%.3f | huesos a keyar=%d | con pista=%d" % [
+		str(elegido.get_path()), str(skel.get_path()), str(partes["rel_path"]),
+		str(player.get_assigned_animation()), anim.get_track_count(),
+		current_time(player), huesos.size(),
+		count_tracked(skel, anim, huesos, str(partes["rel_path"]), track_mask)]
+
+
 ## Resuelve skeleton + animacion + player del escenario abierto.
+##
+## El esqueleto de las PISTAS manda sobre el seleccionado (ver
+## `animation_skeleton`): en un ragdoll hay dos y solo uno se anima.
 ##
 ## @param skeleton Skeleton3D a usar (por defecto, el seleccionado).
 ## @return Diccionario con `skeleton`, `anim`, `player` y `rel_path`.
 func _resolve(skeleton: Skeleton3D = null) -> Dictionary:
 	if context == null:
 		return {}
-	var skel := skeleton if skeleton != null else context.skeleton
-	if skel == null:
+	var elegido: Skeleton3D = skeleton if skeleton != null else context.skeleton
+	if elegido == null:
 		return {}
 	var player := find_animation_player()
 	if player == null:
@@ -496,6 +583,9 @@ func _resolve(skeleton: Skeleton3D = null) -> Dictionary:
 	var anim := current_animation(player)
 	if anim == null:
 		return {}
+	var skel := animation_skeleton(anim, player)
+	if skel == null:
+		skel = preferred_skeleton(player, elegido)
 	var rel_path := relative_skeleton_path(player, skel)
 	if rel_path.is_empty():
 		return {}
@@ -544,7 +634,7 @@ func _find_track(anim: Animation, rel_path: String, bone_name: String, type: int
 	var track := anim.find_track(_track_path(rel_path, bone_name), type)
 	if track != -1:
 		return track
-	var unique_rel := _unique_relative_path(rel_path)
+	var unique_rel := _unique_relative_path(anim, rel_path)
 	if unique_rel != rel_path:
 		return anim.find_track(_track_path(unique_rel, bone_name), type)
 	return -1
@@ -552,15 +642,19 @@ func _find_track(anim: Animation, rel_path: String, bone_name: String, type: int
 
 ## Sustituye el ultimo tramo de la ruta por su nombre unico, si lo tiene.
 ##
+## @param anim Animacion (para saber QUE esqueleto anima).
 ## @param rel_path Ruta relativa del skeleton.
 ## @return Ruta relativa con nombre unico, o la misma si no se puede obtener.
-func _unique_relative_path(rel_path: String) -> String:
-	if context == null or context.skeleton == null:
-		return rel_path
+func _unique_relative_path(anim: Animation, rel_path: String) -> String:
 	var player := find_animation_player()
 	if player == null:
 		return rel_path
-	var unique_rel := unique_skeleton_path(player, context.skeleton)
+	var skel := animation_skeleton(anim, player)
+	if skel == null and context != null:
+		skel = context.skeleton
+	if skel == null:
+		return rel_path
+	var unique_rel := unique_skeleton_path(player, skel)
 	if unique_rel.is_empty() or unique_rel == rel_path:
 		return rel_path
 	return unique_rel
