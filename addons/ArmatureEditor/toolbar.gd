@@ -104,13 +104,13 @@ func _build_animation_row() -> void:
 
 	_insert_tracks = Button.new()
 	_insert_tracks.text = "Insert Tracks"
-	_insert_tracks.tooltip_text = "Crea las pistas que falten (pos/rot/scale) de los huesos MODIFICADOS y mete una clave con la pose actual."
+	_insert_tracks.tooltip_text = "Crea las pistas que falten (pos/rot/scale) de los huesos MODIFICADOS y mete una clave con la pose actual. Las pistas que ya existen tambien reciben su clave."
 	_insert_tracks.pressed.connect(_on_insert_tracks_pressed)
 	row.add_child(_insert_tracks)
 
 	_insert_modified = Button.new()
 	_insert_modified.text = "Insert Modified"
-	_insert_modified.tooltip_text = "Mete claves en las pistas EXISTENTES de los huesos MODIFICADOS, en el tiempo actual del panel Animation. No crea pistas."
+	_insert_modified.tooltip_text = "Mete claves en las pistas EXISTENTES de los huesos MODIFICADOS, en el tiempo actual del panel Animation. No crea pistas. Si el playhead esta encima de una clave, la REEMPLAZA."
 	_insert_modified.pressed.connect(_on_insert_modified_pressed)
 	row.add_child(_insert_modified)
 

@@ -207,15 +207,20 @@ func is_bone_modified(skeleton: Skeleton3D, bone: int) -> bool:
 	return false
 
 
-## Crea las pistas que falten para los huesos indicados y pone una clave inicial.
+## Crea las pistas que falten para los huesos indicados y mete una clave con
+## la pose actual en TODAS sus pistas: las creadas y las que ya existian.
 ##
-## No toca las pistas que ya existen. La clave se inserta en el tiempo actual
-## con el valor de pose actual del hueso.
+## OJO (medido 2026-11-05): antes, si la pista ya existia hacia `continue`, o
+## sea que NO metia clave. Como el AnimationPlayer casi siempre ya tiene las
+## pistas de los huesos que se estan animando, "Insert Tracks" parecia roto
+## (creaba 0 y no tocaba nada). Ahora: pista que falta -> se crea; pista que
+## existe -> se le mete la clave (reemplazando la que este bajo el playhead).
 ##
-## NOTA SOBRE EL DESHACER: todas las acciones de deshacer borran la pista en el
-## MISMO indice (`base_index`, el numero de pistas que habia antes de empezar).
-## Al borrar una pista, las siguientes se desplazan y vuelven a ocupar ese
-## indice, asi que el resultado no depende del orden en que se ejecuten.
+## NOTA SOBRE EL DESHACER: todas las acciones de deshacer de pistas NUEVAS
+## borran la pista en el MISMO indice (`base_index`, el numero de pistas que
+## habia antes de empezar). Al borrar una pista, las siguientes se desplazan y
+## vuelven a ocupar ese indice, asi que el resultado no depende del orden en
+## que se ejecuten.
 ##
 ## @param skeleton Skeleton3D origen de los valores.
 ## @param anim Animacion destino.
@@ -223,14 +228,14 @@ func is_bone_modified(skeleton: Skeleton3D, bone: int) -> bool:
 ## @param time Tiempo donde insertar la clave.
 ## @param rel_path Ruta relativa del skeleton (p.ej. `metarig/Skeleton3D`).
 ## @param mask Mascara MASK_POSITION/MASK_ROTATION/MASK_SCALE.
-## @return Numero de pistas creadas.
+## @return Numero de pistas AFECTADAS (creadas + existentes con clave nueva).
 func insert_tracks(skeleton: Skeleton3D, anim: Animation, bones: Array[int], time: float, rel_path: String, mask: int) -> int:
 	if skeleton == null or anim == null or rel_path.is_empty():
 		return 0
 	var types := _types_from_mask(mask)
 	if types.is_empty():
 		return 0
-	var created := 0
+	var afectadas := 0
 	var base_index := anim.get_track_count()
 	var next_index := base_index
 	var old_length := anim.length
@@ -242,10 +247,16 @@ func insert_tracks(skeleton: Skeleton3D, anim: Animation, bones: Array[int], tim
 		if bone_name.is_empty():
 			continue
 		for type in types:
-			if _find_track(anim, rel_path, bone_name, type) != -1:
-				continue
 			var value := _value_for(skeleton, bone, type)
 			if value == null:
+				continue
+			var track := _find_track(anim, rel_path, bone_name, type)
+			if track != -1:
+				# La pista YA existe: se le mete la clave. Antes se saltaba y
+				# el boton no hacia nada con los huesos que ya estaban
+				# animados (que son casi todos).
+				if _key_track(anim, track, time, value):
+					afectadas += 1
 				continue
 			var path := _track_path(rel_path, bone_name)
 			_add_do(anim, "add_track", [type])
@@ -253,26 +264,30 @@ func insert_tracks(skeleton: Skeleton3D, anim: Animation, bones: Array[int], tim
 			_add_do(anim, "track_insert_key", [next_index, time, value])
 			_add_undo(anim, "remove_track", [base_index])
 			next_index += 1
-			created += 1
+			afectadas += 1
 
-	if created > 0 and new_length > old_length:
+	if afectadas > 0 and new_length > old_length:
 		_add_do(anim, "set_length", [new_length])
 		_add_undo(anim, "set_length", [old_length])
 
 	_commit_action()
-	if created > 0:
+	if afectadas > 0:
 		anim.emit_changed()
-	return created
+	return afectadas
 
 
-## Inserta (o sobrescribe) claves en las pistas existentes de los huesos indicados.
+## Inserta (o REEMPLAZA) claves en las pistas existentes de los huesos indicados.
 ##
 ## No crea pistas: si un hueso no tiene pista para ese tipo, se salta.
 ##
-## NOTA SOBRE EL DESHACER: si ya habia una clave en ese tiempo, el deshacer
-## vuelve a escribir su valor anterior (`track_insert_key` REEMPLAZA la clave
-## que hay en ese tiempo). Si no habia ninguna, el deshacer la borra. Cada
-## caso es una sola accion, asi que el orden no importa.
+## REEMPLAZO: si el playhead esta ENCIMA de una clave (dentro de
+## `key_tolerance`), esa clave se sobrescribe en vez de meter otra al lado.
+## Antes se usaba `track_insert_key` a secas, que solo reemplaza cuando el
+## tiempo coincide EXACTO (medido: a 0,5 ms metia una clave pegada encima).
+##
+## NOTA SOBRE EL DESHACER: cada clave es una sola accion (`track_set_key_value`
+## para el reemplazo, `track_remove_key_at_time` para la nueva), asi que el
+## orden no importa.
 ##
 ## @param skeleton Skeleton3D origen de los valores.
 ## @param anim Animacion destino.
@@ -280,7 +295,7 @@ func insert_tracks(skeleton: Skeleton3D, anim: Animation, bones: Array[int], tim
 ## @param time Tiempo donde insertar la clave.
 ## @param rel_path Ruta relativa del skeleton (p.ej. `metarig/Skeleton3D`).
 ## @param mask Mascara MASK_POSITION/MASK_ROTATION/MASK_SCALE.
-## @return Numero de claves insertadas.
+## @return Numero de claves escritas.
 func insert_keys(skeleton: Skeleton3D, anim: Animation, bones: Array[int], time: float, rel_path: String, mask: int) -> int:
 	if skeleton == null or anim == null or rel_path.is_empty():
 		return 0
@@ -303,20 +318,8 @@ func insert_keys(skeleton: Skeleton3D, anim: Animation, bones: Array[int], time:
 			var value := _value_for(skeleton, bone, type)
 			if value == null:
 				continue
-			var existing := anim.track_find_key(track, time, Animation.FIND_MODE_APPROX)
-			var old_value: Variant = null
-			var old_transition := 1.0
-			if existing != -1:
-				old_value = anim.track_get_key_value(track, existing)
-				old_transition = anim.track_get_key_transition(track, existing)
-			_add_do(anim, "track_insert_key", [track, time, value])
-			if existing != -1:
-				# Sobrescribe la clave: para deshacer se vuelve a escribir el
-				# valor anterior en ese mismo tiempo.
-				_add_undo(anim, "track_insert_key", [track, time, old_value, old_transition])
-			else:
-				_add_undo(anim, "track_remove_key_at_time", [track, time])
-			inserted += 1
+			if _key_track(anim, track, time, value):
+				inserted += 1
 
 	if inserted > 0 and new_length > old_length:
 		_add_do(anim, "set_length", [new_length])
@@ -328,16 +331,135 @@ func insert_keys(skeleton: Skeleton3D, anim: Animation, bones: Array[int], time:
 	return inserted
 
 
+## Tolerancia para considerar que el playhead esta ENCIMA de una clave.
+##
+## `track_insert_key` solo reemplaza si el tiempo coincide exacto; a 0,5 ms
+## metia una clave NUEVA pegada a la anterior (medido 2026-11-05: 2 -> 3
+## claves en el mismo frame), que es justo lo que hace inservible keyar desde
+## el panel Animation.
+##
+## Regla: medio frame del clip (`step`), acotado a [1 ms, 10 ms]. Con 30 fps
+## (step 0,0333) son 10 ms; con `step = 0` (poses) 1 ms.
+##
+## @param anim Animacion a medir.
+## @return Tolerancia en segundos.
+func key_tolerance(anim: Animation) -> float:
+	if anim == null:
+		return 0.001
+	return clampf(anim.step * 0.5, 0.001, 0.010)
+
+
+## Indice de la clave mas cercana a `time`, si esta dentro de la tolerancia.
+##
+## @param anim Animacion a inspeccionar.
+## @param track Indice de la pista.
+## @param time Tiempo del playhead.
+## @return Indice de la clave, o -1 si no hay ninguna debajo.
+func _find_key_under(anim: Animation, track: int, time: float) -> int:
+	if anim == null or track < 0 or track >= anim.get_track_count():
+		return -1
+	var tol := key_tolerance(anim)
+	var mejor := -1
+	var mejor_d := INF
+	for k in anim.track_get_key_count(track):
+		var d := absf(anim.track_get_key_time(track, k) - time)
+		if d <= tol and d < mejor_d:
+			mejor_d = d
+			mejor = k
+	return mejor
+
+
+## Escribe una clave en una pista: REEMPLAZA la que este bajo el playhead o
+## inserta una nueva. Registra el deshacer que corresponda.
+##
+## @param anim Animacion destino.
+## @param track Indice de la pista.
+## @param time Tiempo de la clave.
+## @param value Valor (Vector3 / Quaternion) segun el tipo de pista.
+## @return true si se escribio.
+func _key_track(anim: Animation, track: int, time: float, value: Variant) -> bool:
+	if anim == null or track < 0 or track >= anim.get_track_count():
+		return false
+	var bajo := _find_key_under(anim, track, time)
+	if bajo != -1:
+		var old_value: Variant = anim.track_get_key_value(track, bajo)
+		_add_do(anim, "track_set_key_value", [track, bajo, value])
+		_add_undo(anim, "track_set_key_value", [track, bajo, old_value])
+		return true
+	_add_do(anim, "track_insert_key", [track, time, value])
+	_add_undo(anim, "track_remove_key_at_time", [track, time])
+	return true
+
+
+## Huesos a keyar.
+##
+## Manda lo que el GIZMO acaba de transformar (`_gizmo_modified`); si no hay
+## nada apuntado, se cae a "pose distinta del rest" (`modified_bones`).
+##
+## OJO (medido 2026-11-05) - POR QUE NO BASTA `modified_bones`:
+## comparar la pose contra el `rest` marca como "modificado" TODO hueso que el
+## clip este posando ahora mismo. Pulsando "Insert Modified" en mitad de un
+## walk se keyaba el cuerpo entero en ese tiempo y se APLANABAN las curvas que
+## el usuario no habia tocado (ese tiempo ya tenia su valor interpolado, pero
+## sin la suavidad de los tramos vecinos).
+##
+## El gizmo avisa (`recorded_bones_changed`) de los huesos que el usuario ha
+## arrastrado, que es la informacion buena. La lista NO se limpia al keyar a
+## proposito: el flujo real es arrastrar -> keyar -> mover el playhead -> keyar,
+## y ahi los huesos que se estan animando son los mismos.
+##
+## @param skeleton Skeleton3D de los huesos.
+## @return Indices de huesos a keyar.
+func bones_to_key(skeleton: Skeleton3D) -> Array[int]:
+	var out: Array[int] = []
+	if skeleton != null:
+		for value in _gizmo_modified:
+			var bone := int(value)
+			if bone >= 0 and bone < skeleton.get_bone_count() and not out.has(bone):
+				out.append(bone)
+	if out.is_empty():
+		return modified_bones(skeleton)
+	return out
+
+
+## Numero de (hueso, tipo) de la lista que YA tienen pista.
+##
+## Sirve para explicar por que "Insert Modified" no hizo nada: si ninguno de
+## los huesos modificados tiene pista de ese tipo, no hay donde meter la clave
+## y primero hay que crearlas con "Insert Tracks".
+##
+## @param skeleton Skeleton3D de los huesos.
+## @param anim Animacion a inspeccionar.
+## @param bones Indices de huesos.
+## @param rel_path Ruta relativa del skeleton.
+## @param mask Mascara MASK_POSITION/MASK_ROTATION/MASK_SCALE.
+## @return Cuantas pistas de esos huesos ya existen.
+func count_tracked(skeleton: Skeleton3D, anim: Animation, bones: Array[int],
+		rel_path: String, mask: int) -> int:
+	if skeleton == null or anim == null or rel_path.is_empty():
+		return 0
+	var out := 0
+	var types := _types_from_mask(mask)
+	for bone in bones:
+		var bone_name := skeleton.get_bone_name(bone)
+		if bone_name.is_empty():
+			continue
+		for type in types:
+			if _find_track(anim, rel_path, bone_name, type) != -1:
+				out += 1
+	return out
+
+
 ## Atajo de alto nivel: crea pistas para los huesos modificados de la escena.
 ##
 ## @param mask Mascara MASK_POSITION/MASK_ROTATION/MASK_SCALE.
 ## @param skeleton Skeleton3D a usar (por defecto, el seleccionado).
-## @return Numero de pistas creadas.
+## @return Pistas afectadas (creadas + existentes con clave nueva).
 func perform_insert_tracks(mask: int, skeleton: Skeleton3D = null) -> int:
 	var parts := _resolve(skeleton)
 	if parts.is_empty():
 		return 0
-	var bones := modified_bones(parts["skeleton"])
+	var bones := bones_to_key(parts["skeleton"])
 	if bones.is_empty():
 		return 0
 	return insert_tracks(parts["skeleton"], parts["anim"], bones, current_time(parts["player"]), parts["rel_path"], mask)
@@ -352,7 +474,7 @@ func perform_insert_modified(mask: int, skeleton: Skeleton3D = null) -> int:
 	var parts := _resolve(skeleton)
 	if parts.is_empty():
 		return 0
-	var bones := modified_bones(parts["skeleton"])
+	var bones := bones_to_key(parts["skeleton"])
 	if bones.is_empty():
 		return 0
 	return insert_keys(parts["skeleton"], parts["anim"], bones, current_time(parts["player"]), parts["rel_path"], mask)

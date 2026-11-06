@@ -380,16 +380,16 @@ func _on_recorded_bones_changed(bone_indices: Array) -> void:
 	animation_key_service.note_bones_modified(bone_indices)
 
 
-## Crea las pistas que falten de los huesos modificados.
+## Crea las pistas que falten de los huesos modificados y escribe sus claves.
 func _on_insert_tracks_pressed(mask: int) -> void:
 	if animation_key_service == null:
 		return
 	animation_key_service.set_track_mask(mask)
-	var created := animation_key_service.perform_insert_tracks(mask)
-	if created == 0:
-		_aviso_sin_claves()
+	var afectadas := animation_key_service.perform_insert_tracks(mask)
+	if afectadas == 0:
+		_aviso_sin_claves(true)
 	else:
-		print("[ArmatureEditor] Insert Tracks: %d pistas creadas." % created)
+		print("[ArmatureEditor] Insert Tracks: %d pistas creadas/actualizadas." % afectadas)
 
 
 ## Inserta claves en las pistas existentes de los huesos modificados.
@@ -399,13 +399,15 @@ func _on_insert_modified_pressed(mask: int) -> void:
 	animation_key_service.set_track_mask(mask)
 	var inserted := animation_key_service.perform_insert_modified(mask)
 	if inserted == 0:
-		_aviso_sin_claves()
+		_aviso_sin_claves(false)
 	else:
-		print("[ArmatureEditor] Insert Modified: %d claves insertadas." % inserted)
+		print("[ArmatureEditor] Insert Modified: %d claves escritas (las que estaban bajo el playhead se reemplazan)." % inserted)
 
 
 ## Avisa por que no se pudo insertar nada.
-func _aviso_sin_claves() -> void:
+##
+## @param es_insert_tracks true si el boton pulsado fue "Insert Tracks".
+func _aviso_sin_claves(es_insert_tracks: bool = false) -> void:
 	if context == null or context.skeleton == null:
 		print("[ArmatureEditor] No hay un Skeleton3D seleccionado.")
 		return
@@ -413,10 +415,23 @@ func _aviso_sin_claves() -> void:
 	if player == null:
 		print("[ArmatureEditor] No se encontro un AnimationPlayer en la escena abierta.")
 		return
-	if animation_key_service.current_animation(player) == null:
+	var anim := animation_key_service.current_animation(player)
+	if anim == null:
 		print("[ArmatureEditor] No hay ninguna animacion seleccionada en el panel Animation.")
 		return
-	print("[ArmatureEditor] Ningun hueso modificado (la pose de todos los huesos coincide con su rest).")
+	var modificados: Array[int] = animation_key_service.modified_bones(context.skeleton)
+	if modificados.is_empty():
+		print("[ArmatureEditor] Ningun hueso modificado: la pose de todos coincide con su rest. Mueve huesos antes de keyar.")
+		return
+	var rel := animation_key_service.relative_skeleton_path(player, context.skeleton)
+	var con_pista := animation_key_service.count_tracked(context.skeleton, anim,
+		modificados, rel, animation_key_service.track_mask)
+	if not es_insert_tracks and con_pista == 0:
+		print("[ArmatureEditor] Los %d huesos modificados NO tienen pista de ese tipo en '%s': usa 'Insert Tracks' para crearlas." % [
+			modificados.size(), str(player.get_assigned_animation())])
+		return
+	print("[ArmatureEditor] Nada que escribir: revisa la mascara (pos/rot/scale); con varios huesos modificados (%d) y %d pistas encontradas." % [
+		modificados.size(), con_pista])
 
 ## Dispatches context menu actions to edit services.
 func _on_context_menu_action_requested(action_id: int, bone_index: int) -> void:
