@@ -53,6 +53,8 @@ var _active_skeleton_id: int = 0
 
 ## Si es true se ven los cuerpos de los huesos; si es false, solo los puntos.
 var _show_bones: bool = true
+## Bolitas de las articulaciones. Se conserva entre cambios de esqueleto.
+var _show_joints: bool = true
 ## Initializes plugin UI and services.
 func _enter_tree() -> void:
 	context = ArmatureSkeletonContext.new()
@@ -68,6 +70,7 @@ func _enter_tree() -> void:
 	add_node_3d_gizmo_plugin(skeleton_gizmo)
 	skeleton_gizmo.recorded_bones_changed.connect(_on_recorded_bones_changed)
 	skeleton_gizmo.show_bone_bodies = _show_bones
+	skeleton_gizmo.show_joints = _show_joints
 	context.gizmo_plugin = skeleton_gizmo
 
 	toolbar_controller = ToolbarController.new()
@@ -82,6 +85,7 @@ func _enter_tree() -> void:
 	context.toolbar.insert_tracks_pressed.connect(_on_insert_tracks_pressed)
 	context.toolbar.insert_modified_pressed.connect(_on_insert_modified_pressed)
 	context.toolbar.show_bones_changed.connect(_on_show_bones_changed)
+	context.toolbar.show_joints_changed.connect(_on_show_joints_changed)
 	context_menu_controller = ContextMenuController.new()
 	add_child(context_menu_controller)
 	context_menu_controller.set_context(context)
@@ -209,7 +213,7 @@ func _handles(object: Object) -> bool:
 		# Al seleccionar el esqueleto, Godot crea/recupera su gizmo nativo, que
 		# dibuja los huesos "a su manera". Se apaga si el usuario pidio solo los
 		# puntos de las articulaciones.
-		skeleton_gizmo.set_foreign_gizmos_hidden(next_skeleton, not _show_bones)
+		skeleton_gizmo.set_foreign_gizmos_hidden(next_skeleton, _gizmos_ajenos_ocultos())
 
 		toolbar_controller.toolbar.visible = true
 	elif c == "MultiNodeEdit":
@@ -311,7 +315,7 @@ func _refresh_skeletons_in_tree(node: Node) -> void:
 		skeleton.update_gizmos()
 		# Tras redibujar, el gizmo nativo de Godot vuelve a verse: hay que
 		# volver a apagarlo si el usuario pidio solo los puntos.
-		skeleton_gizmo.set_foreign_gizmos_hidden(skeleton, not _show_bones)
+		skeleton_gizmo.set_foreign_gizmos_hidden(skeleton, _gizmos_ajenos_ocultos())
 
 	for child in node.get_children():
 		_refresh_skeletons_in_tree(child)
@@ -344,6 +348,44 @@ func _on_show_bones_changed(enabled: bool) -> void:
 	_apply_bone_visibility()
 
 
+## Muestra u oculta las bolitas de las articulaciones.
+##
+## Con los cuerpos visibles ya solo se dibujaban en los huesos HOJA, los
+## seleccionados y el que esta bajo el cursor; este toggle las quita del todo.
+##
+## Se apagan TAMBIEN los gizmos ajenos (el nativo de Godot dibuja sus propios
+## puntos en cada articulacion): si no, "sin articulaciones" seguiria teniendo
+## puntos en pantalla.
+##
+## OJO: desmarcado, y con "Bones" tambien desmarcado, no queda NINGUN handle
+## dibujado y por diseno tampoco se puede agarrar nada (un handle invisible no
+## debe robar clicks). Se avisa por consola.
+func _on_show_joints_changed(enabled: bool) -> void:
+	_show_joints = enabled
+	if skeleton_gizmo != null:
+		skeleton_gizmo.show_joints = enabled
+	_apply_bone_visibility()
+	var root := get_editor_interface().get_edited_scene_root()
+	if root != null:
+		_refrescar_gizmos(root)
+	if not enabled and not _show_bones:
+		print("[ArmatureEditor] Sin articulaciones y sin huesos no hay nada que agarrar: activa 'Bones'.")
+
+
+## Si hay que ocultar los gizmos AJENOS (el nativo de Godot): solo se ven si el
+## usuario quiere huesos Y articulaciones.
+func _gizmos_ajenos_ocultos() -> bool:
+	return not (_show_bones and _show_joints)
+
+
+## Fuerza el redibujado de los gizmos de todos los esqueletos.
+func _refrescar_gizmos(node: Node) -> void:
+	if node is Skeleton3D:
+		(node as Skeleton3D).update_gizmos()
+	for child in node.get_children():
+		_refrescar_gizmos(child)
+
+
 ## Aplica la visibilidad de los huesos a todos los Skeleton3D de la escena.
 func _apply_bone_visibility() -> void:
 	if skeleton_gizmo == null:
@@ -357,7 +399,7 @@ func _apply_bone_visibility() -> void:
 ## Aplica la visibilidad de los huesos al esqueleto y sus descendientes.
 func _apply_bone_visibility_in_tree(node: Node) -> void:
 	if node is Skeleton3D:
-		skeleton_gizmo.set_foreign_gizmos_hidden(node as Skeleton3D, not _show_bones)
+		skeleton_gizmo.set_foreign_gizmos_hidden(node as Skeleton3D, _gizmos_ajenos_ocultos())
 	for child in node.get_children():
 		_apply_bone_visibility_in_tree(child)
 

@@ -1826,6 +1826,16 @@ arrastro) y solo se cae a pose-vs-rest si no hay aviso del gizmo.
 **Gotcha del addon:** es `@tool` → hay que **recargar el proyecto** para ver los
 cambios. `--check-only` en sus `.gd` funciona igual que con el juego.
 
+**Bolitas de las articulaciones (dos toggles).** `Bones` controla los cuerpos;
+`Joints` las esferas. Regla de dibujo y picking (`_dibujar_junta`, una sola para
+los dos): con cuerpos visibles solo se dibujan en huesos HOJA (puntas de dedos:
+su unico handle), en el seleccionado y en el que esta bajo el cursor; con
+cuerpos ocultos se dibujan todas. `Joints` desmarcado las quita del todo **y
+apaga tambien el gizmo nativo de Godot** (que dibuja sus propios puntos): si no,
+"sin articulaciones" seguia teniendo puntos. Y un handle que no se dibuja **no
+se puede agarrar** (antes el cuerpo invisible le robaba el click a la bolita).
+
+
 **Gotcha de las sondas headless:** un `-s` con `extends SceneTree` que crea
 nodos dentro de `_initialize()` **se cuelga**; todo el trabajo va en el primer
 `_process` y los `quit()` desde ahi.

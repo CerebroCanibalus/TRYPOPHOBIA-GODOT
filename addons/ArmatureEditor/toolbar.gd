@@ -6,6 +6,7 @@ signal mode_changed(mode: int)
 signal snap_enabled_changed(enabled: bool)
 signal snap_amount_changed(amount: float)
 signal show_bones_changed(enabled: bool)
+signal show_joints_changed(enabled: bool)
 signal insert_tracks_pressed(mask: int)
 signal insert_modified_pressed(mask: int)
 
@@ -31,9 +32,14 @@ var _mask_scale: CheckButton = null
 var _insert_tracks: Button = null
 var _insert_modified: Button = null
 var _show_bones: CheckButton = null
+var _show_joints: CheckButton = null
 
 ## Si es false, el viewport muestra solo los puntos de las articulaciones.
 var show_bones: bool = true
+
+## Si es false, no se dibujan las bolitas de las articulaciones (ni se pueden
+## agarrar: un handle invisible no debe robar clicks).
+var show_joints: bool = true
 
 
 func _ready() -> void:
@@ -83,6 +89,15 @@ func _build_animation_row() -> void:
 	_show_bones.tooltip_text = "Muestra los huesos. Desmarcado: solo se ven los puntos de las articulaciones."
 	_show_bones.toggled.connect(_on_show_bones_toggled)
 	row.add_child(_show_bones)
+
+	# Toggle de las bolitas de las articulaciones. Sin el, en un rig con dedos
+	# son decenas de esferas tapando la malla (y comiendose los clicks).
+	_show_joints = CheckButton.new()
+	_show_joints.text = "Joints"
+	_show_joints.button_pressed = show_joints
+	_show_joints.tooltip_text = "Dibuja los puntos de las articulaciones. Desmarcado no hay bolitas (ojo: con 'Bones' tambien desmarcado no queda ningun handle que agarrar)."
+	_show_joints.toggled.connect(_on_show_joints_toggled)
+	row.add_child(_show_joints)
 
 	_mask_position = CheckButton.new()
 	_mask_position.text = "Pos"
@@ -156,6 +171,12 @@ func _on_snap_amount_changed(amount: float) -> void:
 func _on_show_bones_toggled(enabled: bool) -> void:
 	show_bones = enabled
 	show_bones_changed.emit(enabled)
+
+
+## Emite el cambio de la visibilidad de las articulaciones.
+func _on_show_joints_toggled(enabled: bool) -> void:
+	show_joints = enabled
+	show_joints_changed.emit(enabled)
 
 func set_can_create_root_bone(visible: bool) -> void:
 	_root_bone.visible = visible

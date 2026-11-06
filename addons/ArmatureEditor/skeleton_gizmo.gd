@@ -170,8 +170,9 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 
 	# El gizmo NATIVO de Godot se recrea en cada `update_gizmos()` y recibe el
 	# estado global del menu "Gizmos" del viewport. Aqui se vuelve a ocultar si
-	# el usuario pidio solo los puntos, para que no reaparezcan los huesos.
-	if not show_bone_bodies:
+	# el usuario pidio solo los puntos (o ningun punto), para que no reaparezcan
+	# los huesos ni los puntos ajenos.
+	if not (show_bone_bodies and show_joints):
 		set_foreign_gizmos_hidden(skeleton, true)
 
 	if not _is_node_selected(skeleton):
