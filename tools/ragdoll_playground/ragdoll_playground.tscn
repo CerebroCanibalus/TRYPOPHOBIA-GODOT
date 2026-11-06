@@ -50,7 +50,7 @@ mesh = SubResource("floor_mesh")
 surface_material_override/0 = SubResource("floor_mat")
 
 [node name="Shiba" parent="Floor" unique_id=35073120 instance=ExtResource("2_206fg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34462595, 0.014879301, 3.286798)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34462595, 0.29187095, 3.286798)
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1356114607]
 transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)

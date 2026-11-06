@@ -85,6 +85,10 @@ var _pos_anterior := Vector3.ZERO
 var _pie_recorrido_apoyo := 0.0
 var _pie_recorrido_total := 0.0
 var _pie_pos_ant := Vector3.ZERO
+## ZANCADA RELATIVA: recorrido del pie respecto al CUERPO. Si es ~0 el pie va
+## pegado al personaje (no hay paso visible); si es ~1-2 m, hay zancada.
+var _zancada_rel := 0.0
+var _pie_rel_ant := Vector3.ZERO
 var _pie_min := Vector3.ZERO
 var _pie_max := Vector3.ZERO
 var _pie_z0 := 0.0
@@ -419,6 +423,11 @@ func _midiendo_caminata() -> void:
 			_pie_recorrido_total += d
 			if _pie_toca(pp):
 				_pie_recorrido_apoyo += d
+			# Zancada RELATIVA al cuerpo: es el paso que se ve.
+			var rel := Vector3(pp.x - p_body.x, 0.0, pp.z - p_body.z)
+			if _pie_rel_ant != Vector3.ZERO:
+				_zancada_rel += (rel - _pie_rel_ant).length()
+			_pie_rel_ant = rel
 		_pie_pos_ant = pp
 	var pie := _hueso("shin.L")
 	if pie == null:
@@ -538,6 +547,7 @@ func _veredicto() -> void:
 		var pct := 100.0 * _pie_recorrido_apoyo / _pie_recorrido_total
 		print("  PATINAJE REAL: pie en suelo %.2f m de %.2f m (%.0f%% del recorrido)" % [
 			_pie_recorrido_apoyo, _pie_recorrido_total, pct])
+		print("  ZANCADA RELATIVA al cuerpo = %.2f m  (0 = el pie va pegado)" % _zancada_rel)
 	# SUAVIDAD REAL: media y desviacion tipica de `dp/dt`. En un avance
 	# continuo `sigma/media` es bajo; en un diente de sierra, alto.
 	if _vel_pos_muestras.size() > 1:

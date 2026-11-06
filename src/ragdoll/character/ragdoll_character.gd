@@ -65,6 +65,9 @@ var is_sprinting := false
 ## cambia la jerarquia). El ragdoll (visual) lo sigue; el suelo, las
 ## paredes y las escaleras los resuelve `move_and_slide`.
 const JUMP_SPEED := 5.0
+## Pitch (grados) que lleva el lean al maximo. Mirar 30 grados abajo ya
+## inclina del todo: mas seria incómodo en 1a persona.
+const LEAN_PITCH_REFERENCIA := 30.0
 ## Altura de la capsula sobre el suelo que pisa (evita penetrar el `Floor`).
 const ALTURA_SOBRE_SUELO := 0.05
 ## Distancia a la que se sondea el suelo por delante (radio de la capsula +
@@ -155,6 +158,12 @@ var _alturas_objetivo := {}
 ## Rango deslizante de la altura del pie en el clip (min y max recientes).
 var _pie_h_min := {}
 var _pie_h_max := {}
+## Impulso vertical pendiente (m/s). El salto se acumula aqui y se aplica al
+## final del tick, despues del espejo.
+var _impulso_vertical_pendiente := 0.0
+## Punto del mundo donde piso cada pie (`bone_id -> Vector3`). Mientras dura
+## la fase de apoyo el pie se re-ancla ahi cada tick.
+var _ancla_pie := {}
 var oxigeno: Oxygen = null
 var _cabeza_fisica: Node3D = null
 var _salto_evento := false
@@ -436,18 +445,37 @@ func _physics_process(delta: float) -> void:
 	_actualizar_agua()
 	# Salto: lo lleva el RAGDOLL (la capsula es solo horizontal). El
 	# `is_on_floor` sale de los ShapeCast de las espinillas.
+	#
+	# OJO (medido 2026-11-05): `physical_bone_body.linear_velocity.y += ...`
+	# NO persiste en un `PhysicalBone3D` (se comandaba y la velocidad real no
+	# cambiaba). El salto se acumula y se aplica como IMPULSO AL CONJUNTO al
+	# final del tick, despues del espejo (que es el unico orden en el que el
+	# motor respeta un cambio de velocidad).
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
-		physical_bone_body.linear_velocity.y += JUMP_SPEED
+		_impulso_vertical_pendiente += JUMP_SPEED
 		current_stamina = maxf(current_stamina - stats.jump_stamina_cost, 0.0)
 		if jump_timer:
 			jump_timer.start()
 		can_jump = false
 	driver.set_walking(walking, _velocidad_deseada())
+	# LEAN por CLIP: el BlendSpace `grab_dir` mezcla lean_back (-1) / IDLE (0)
+	# / lean_forward (+1) y NADIE escribia su blend_position, asi que los tres
+	# clips existian y no se veian nunca. El pitch de la camara los mueve:
+	# mirar abajo inclina el torso adelante, arriba lo inclina atras.
+	if driver != null and camera_pivot != null:
+		driver.set_direction(clampf(camera_pivot.rotation.x
+			/ deg_to_rad(LEAN_PITCH_REFERENCIA), -1.0, 1.0))
 	_actualizar_rumbo_del_cuerpo(dir, delta)
 	head_look.update(delta)
 	# El PD (y el espejo de las poses) van en el tick de FISICA: es donde
 	# se aplican los torques y donde se lee el estado de los cuerpos.
 	_actualizar_pd()
+	# SALTO: impulso vertical al CONJUNTO y AL FINAL del tick (despues del
+	# espejo, que es el unico orden en el que el motor respeta un cambio de
+	# velocidad: `linear_velocity` en un PhysicalBone3D no persiste).
+	if _impulso_vertical_pendiente > 0.0 and skeleton != null:
+		_aplicar_impulso_conjunto(Vector3(0.0, _impulso_vertical_pendiente, 0.0))
+		_impulso_vertical_pendiente = 0.0
 	# Primera vez: los cuerpos se colocan en la pose de la ANIMACION.
 	#
 	# Si nacen en la pose de reposo (T), el spring tiene que girarlos 90
@@ -500,14 +528,19 @@ func _velocidad_horizontal() -> float:
 
 ## Direccion de movimiento en el espacio de la CAMARA (lo que espera un
 ## jugador de FPS: el input no se descuadra si el cuerpo mira a otro lado).
+## Direccion de marcha en el plano XZ, tomada del YAW de la camara.
+##
+## OJO (medido 2026-11-05): usar la base de la camara tal cual metia el PITCH
+## en la direccion. En 3a persona la camara mira hacia abajo ~20-45 grados, asi
+## que `dir` llegaba con componente Y y el empuje se iba contra el suelo: el
+## personaje "se perdia" al girar y parecia tener una direccion fija. El yaw
+## del pivote es puro plano horizontal y no depende del pitch.
 func _direccion_de_movimiento() -> Vector3:
-	var cam_basis := Basis.IDENTITY
+	var yaw := 0.0
 	if camera_pivot:
-		cam_basis = camera_pivot.global_transform.basis
-	var cam_fwd := -cam_basis.z
-	var cam_right := cam_fwd.cross(Vector3.UP).normalized()
-	if cam_right.is_zero_approx():
-		cam_right = cam_basis.x
+		yaw = camera_pivot.global_rotation.y
+	var cam_fwd := Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, -1.0)
+	var cam_right := Basis(Vector3.UP, yaw) * Vector3(1.0, 0.0, 0.0)
 	var dir := Vector3.ZERO
 	if Input.is_action_pressed("move_forward"):
 		dir += cam_fwd
@@ -618,16 +651,46 @@ func _seguir_logic(_delta: float) -> void:
 	if d.length_squared() < 1e-10:
 		return
 	for b in skeleton.bones:
-		# El pie que el CLIP tiene en apoyo NO se traslada: se queda donde
-		# esta y el cuerpo pasa por encima. Es lo que convierte el "pasito en
-		# el aire" en un paso con contacto.
+		var id := b.get_bone_id()
+		# El pie que el CLIP tiene en apoyo se RE-ANCLA cada tick al punto
+		# donde piso: se queda quieto y el cuerpo pasa por encima.
+		#
+		# OJO (medido 2026-11-05): solo EXCLUIRLO del teleport no basta: el
+		# servo de orientacion lo arrastraba y acumulaba desfase con el
+		# cuerpo, asi que los pies se veian trabados. Re-anclar es
+		# determinista: su posicion la fija el ancla, no el servo.
 		if rig_config != null and rig_config.is_foot(b.bone_name) \
-				and _pie_en_apoyo_por_clip(b.get_bone_id()):
+				and _pie_en_apoyo_por_clip(id):
+			var xf_pie := RagdollMotor.body_transform(b)
+			if not _ancla_pie.has(id):
+				_ancla_pie[id] = xf_pie.origin
+			var ancla: Vector3 = _ancla_pie[id]
+			xf_pie.origin = Vector3(ancla.x, xf_pie.origin.y, ancla.z)
+			PhysicsServer3D.body_set_state(b.get_rid(),
+				PhysicsServer3D.BODY_STATE_TRANSFORM, xf_pie)
 			continue
+		_ancla_pie.erase(id)
 		var xf := RagdollMotor.body_transform(b)
 		xf.origin += d
 		PhysicsServer3D.body_set_state(b.get_rid(),
 			PhysicsServer3D.BODY_STATE_TRANSFORM, xf)
+
+
+## Cambia la velocidad del CONJUNTO sin deformar la pose: reparte el mismo
+## delta entre todos los cuerpos ponderado por masa (`J = m*dv`). Es la unica
+## forma de mover un ragdoll de 15 cuerpos acoplados por joints: empujar uno
+## solo (la pelvis, 6 kg contra 38) se lo reparte el solver y se pierde
+## (medido 2026-11-05: dv pedido -6 m/s, velocidad real -0.3).
+func _aplicar_impulso_conjunto(dv: Vector3) -> void:
+	if skeleton == null:
+		return
+	for b in skeleton.bones:
+		var rid := b.get_rid()
+		var masa: float = PhysicsServer3D.body_get_param(rid,
+			PhysicsServer3D.BODY_PARAM_MASS)
+		if masa <= 0.0:
+			masa = 0.1
+		PhysicsServer3D.body_apply_impulse(rid, dv * masa)
 
 
 ## Fase de apoyo del pie SEGUN EL CLIP, con un rango deslizante de su altura.
