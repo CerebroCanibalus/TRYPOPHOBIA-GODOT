@@ -56,7 +56,6 @@ Cada pieza es un componente con UNA responsabilidad. La raíz los compone.
 | `runtime/head_look.gd` | `HeadLook` | La cabeza que sigue a la cámara (pesos acumulados) |
 | `runtime/arm_ik.gd` | `ArmIK` | Los brazos que se estiran hacia el puntero |
 | `runtime/fp_clip.gd` | `FpClip` | El recorte de 1ª persona (el shader del cráneo) |
-| `runtime/balance_controller.gd` | `BalanceController` | El equilibrio (upright + centro de masas) |
 | `character/ragdoll_character.gd` | `RagdollCharacter` | La raíz: input, movimiento, agarre, agua |
 | `character/ragdoll_camera.gd` | — | Cámara en 1ª/3ª persona |
 | `tools/ragdoll_scene_builder.gd` | `RagdollSceneBuilder` | **Construye la escena** completa desde (modelo + rig) |
@@ -499,7 +498,7 @@ eslabón y el `max_angular_accel` de los huesos de la columna, que es el
   endereza y **se queda de pie** (`tests/ragdoll/shots/shiba_3persona.png`).
 - El muelle de altura por sí solo no basta: sin el `column` bien repartido
   (T16) el balance no hacía **nada** en silencio.
-- Test automático: **13/13** (`tests/ragdoll/shiba_test.tscn`) · capturas
+- Test automatico: `tools/ragdoll_playground` (test canonico) con capturas
   en `tests/ragdoll/shots/`.
 - `RigForge` regenera rig + escena (`shiba_rig_config.tres` /
   `shiba_player.tscn`): columnas, colliders, masas (suma = 50 kg) y

@@ -165,10 +165,10 @@ static func forge(opts: Options) -> Result:
 
 	# --- 3) Tabla de huesos con sus colliders y masas -------------------
 	# La COLUMNA: la cadena del cuerpo a la cabeza. El grupo "column" lo usa
-	# el BalanceController para saber que hueso es el TORSO (el que hay que
-	# enderezar). Si solo se marcara la pelvis, el balance no encontraria
-	# torso y no haria NADA (medido: el personaje se quedaba tumbado con el
-	# torso erguido).
+	# el motor (`column_spring_scale`) para tratar el torso aparte de brazos y
+	# piernas. Si solo se marcara la pelvis, la columna iria con la ganancia
+	# general y el torso se doblaba (medido: el personaje se quedaba tumbado
+	# con el torso erguido).
 	var columna := _cadena_entre(skel, opts.body_bone, opts.head_bone)
 
 	# --- 3b) Masas y ganancia del PD -----------------------------------
@@ -177,7 +177,7 @@ static func forge(opts: Options) -> Result:
 	# masa (si no, el ragdoll pesa 4 veces lo que debe y la inercia
 	# descoloca a los extremos): va en `pd_gain`, la ganancia del PD.
 	#
-	# La COLUMNA (para el BalanceController) se calcula antes.
+	# La COLUMNA se calcula antes (la necesita `_grupo_de`).
 	var volumenes := {}
 	var vol_total := 0.0
 	for h in con_cuerpo.keys():

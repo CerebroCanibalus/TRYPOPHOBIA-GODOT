@@ -1394,7 +1394,6 @@ Shiba (Node3D, ragdoll_character.gd)
 | `PhysicalBone3D`, colliders, offsets, masa, tipo de joint | **LA ESCENA** | datos, versionables, visibles en el editor |
 | `RagdollSkeleton` | runtime | **solo** recoge los cuerpos ya presentes, arranca `physical_bones_start_simulation()` y normaliza la máscara de colisión |
 | `RagdollMotor` (PD) | runtime | el torque que lleva los cuerpos a la pose de la animación |
-| `BalanceController` | runtime | el equilibrio (upright + centro de masas + muelle vertical) |
 
 **El simulador NO se crea:** lo crea Godot como hijo del `Skeleton3D`
 (`@PhysicalBoneSimulator3D@N`, nombre autogenerado ⇒ **se busca por TIPO,
@@ -1419,7 +1418,7 @@ escribe.
 ## ðŸ¦´ SHIBA â€” ragdoll del jugador (2026-11-03)
 
 `src/player/shiba_player.tscn` (24,6 KB) Â· `shiba_rig_config.tres` Â· `shiba_anim.tres` Â·
-`tests/ragdoll/shiba_test.tscn` (13/13 âœ“) Â· capturas en `tests/ragdoll/shots/`.
+`tools/ragdoll_playground` (test canonico) · capturas en `tests/ragdoll/shots/`.
 
 ### Arquitectura
 
@@ -1501,7 +1500,7 @@ Shiba son las de **inclinaciÃ³n** (`lean_back` / `IDLE` / `lean_forward`).
 - El personaje **se sostiene de pie**: pelvis ~0,7-0,9 m y columna erguida
   (`up ~ +1` en `spine`), incluso soltado desde 1,1 m (cae, el muelle lo
   endereza y se queda de pie). Capturas: `tests/ragdoll/shots/`.
-- Test automatico: **13/13** (`tests/ragdoll/shiba_test.tscn`).
+- Test automatico: `tools/ragdoll_playground` con `PG_TEST=1`.
 - Joints correctos tras crear los cuerpos **en runtime dentro del simulador**
   (padre antes que hijo) - ver "GOTA - el joint de PhysicalBone3D".
 - Masas = volumen (suma 50 kg), `pd_gain` por carga (spine = 13x) - ver
@@ -1581,8 +1580,7 @@ línea por tick** (363 líneas en 15 s).
   pero el maestro sigue fijo en el mundo para el resto del clip.
 - El `shiba_rig_config.tres` **sigue listando 19 huesos** (física duplicada que
   el runtime ignora). La verdad es la escena.
-- `tests/ragdoll/shiba_test.gd` sigue **vacío** y su `.tscn` instancia el
-  `ragdoll_character.tscn` viejo (Character.glb), no el Shiba.
+- ~~`tests/ragdoll/shiba_test`~~: **borrado 2026-11-05** (el `.gd` estaba vacio y el `.tscn` instanciaba el `ragdoll_character.tscn` viejo). El test canonico es `tools/ragdoll_playground`.
 
 **Fase 2 (2026-11-04): ley única + `CharacterBody3D`.**
 - `RagdollMotor`: **UNA ley**, servo en cadena con error RELATIVO al padre y

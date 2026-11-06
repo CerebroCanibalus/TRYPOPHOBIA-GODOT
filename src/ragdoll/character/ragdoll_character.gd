@@ -1,4 +1,4 @@
-﻿extends Node3D
+extends Node3D
 class_name RagdollCharacter
 ## PERSONAJE RAGDOLL: la raiz que COMPONE los componentes de la libreria
 ## (`src/ragdoll/`) y a la vez lo que es de este personaje concreto: el
@@ -48,8 +48,8 @@ var fp_clip: FpClip                 ## El recorte de 1a persona.
 ## influencia a 1,0 la mano del esqueleto animado se queda en la pose del
 ## clip: y=0,839 colgando). El estiron del brazo lo hace el SERVO, sobre el
 ## objetivo (`_estirar_brazo_agarrado`), que es lo que de verdad mueve al
-## personaje. Y NO hay `BalanceController`: el servo con objetivo absoluto ya
-## mantiene al personaje de pie, y el balance le devolvia a la pelvis el par
+## personaje. Y NO hay controlador de balance: el servo con objetivo absoluto
+## ya mantiene al personaje de pie, y el balance le devolvia a la pelvis el par
 ## de todos los hijos (medido: la pelvis giraba a 40 rad/s y se volcaba).
 
 ## === ESTADISTICAS (Yuki Romero: Velocidad Baja Â· Stamina 50 Â· Salud 300)
@@ -158,9 +158,6 @@ var _alturas_objetivo := {}
 ## Rango deslizante de la altura del pie en el clip (min y max recientes).
 var _pie_h_min := {}
 var _pie_h_max := {}
-## Impulso vertical pendiente (m/s). El salto se acumula aqui y se aplica al
-## final del tick, despues del espejo.
-var _impulso_vertical_pendiente := 0.0
 ## Punto del mundo donde piso cada pie (`bone_id -> Vector3`). Mientras dura
 ## la fase de apoyo el pie se re-ancla ahi cada tick.
 var _ancla_pie := {}
@@ -168,8 +165,6 @@ var _ancla_pie := {}
 var _objetivos_actuales := {}
 ## Indice del hueso de la pelvis (para trasladar el clip al cuerpo).
 var _id_pelvis := -1
-## Cuanto persigue el pie en vuelo a su objetivo del clip (0..1 por tick).
-const PIE_VUELO_LERP := 0.35
 ## Tope de desplazamiento del pie por tick (m). 0.05 a 60 Hz son 3 m/s.
 const PIE_VUELO_MAX := 0.05
 ## Velocidad del salto (m/s) integrada por el TELEPORT: en este rig el motor
@@ -241,10 +236,10 @@ func velocidad_cuerpo() -> Vector3:
 ## Altura del SUELO que hay debajo de la pelvis (raycast hacia abajo).
 ## INF si no hay suelo debajo.
 ##
-## Se usa para anclar la altura objetivo del balance (ver
-## `BalanceController.capture_target`): anclar al PIE fallaba cuando el
-## personaje caia de espaldas (los pies quedan altos y el balance nunca
-## se activaba, medido: el ragdoll se quedaba tumbado boca arriba).
+## Se usa para anclar la altura objetivo del personaje al SUELO y no al pie:
+## anclar al PIE fallaba cuando el personaje caia de espaldas (los pies quedan
+## altos y la captura nunca ocurria, medido: el ragdoll se quedaba tumbado
+## boca arriba).
 func _suelo_bajo_pelvis() -> float:
 	if physical_bone_body == null:
 		return INF
@@ -462,15 +457,15 @@ func _physics_process(delta: float) -> void:
 	# Salto: lo lleva el RAGDOLL (la capsula es solo horizontal). El
 	# `is_on_floor` sale de los ShapeCast de las espinillas.
 	#
-	# OJO (medido 2026-11-05): `physical_bone_body.linear_velocity.y += ...`
-	# NO persiste en un `PhysicalBone3D` (se comandaba y la velocidad real no
-	# cambiaba). El salto se acumula y se aplica como IMPULSO AL CONJUNTO al
-	# final del tick, despues del espejo (que es el unico orden en el que el
-	# motor respeta un cambio de velocidad).
+	# OJO (medido 2026-11-05): el salto NO puede venir de la fisica. En este
+	# rig la velocidad lineal no sobrevive al tick: el teleport del `Logic`
+	# deja el cuerpo a v=0 y el espejo de poses hace lo mismo. Medido: v_y
+	# comandada 5 m/s -> 0.08 al tick siguiente, y ni con impulso al conjunto
+	# subia. Por eso `_salto_v` se integra en el TELEPORT (la misma autoridad
+	# que mueve al personaje), igual que los escalones.
 	if Input.is_action_pressed("jump") and is_on_floor and can_jump and physical_bone_body:
 		if OS.get_environment("SALTO_DEBUG") == "1":
 			print("[salto] dispara (floor=%s can=%s)" % [str(is_on_floor), str(can_jump)])
-		_impulso_vertical_pendiente += JUMP_SPEED
 		_salto_v = JUMP_SPEED
 		current_stamina = maxf(current_stamina - stats.jump_stamina_cost, 0.0)
 		if jump_timer:
@@ -508,7 +503,6 @@ func _physics_process(delta: float) -> void:
 		# flotando medio metro (la pose del clip lo deja por encima de su
 		# origen) y el golpe contra el suelo lo tumba (medido).
 		_colocar_en_el_suelo()
-		mirror.capture_offset(physical_skel, physical_bone_body)
 
 
 ## La velocidad horizontal que el personaje DEBERIA llevar (m/s).
@@ -728,23 +722,6 @@ func _objetivo_de_pie_en_cuerpo(id: int) -> Vector3:
 	var pelvis_clip: Vector3 = (_objetivos_actuales[_id_pelvis] as Transform3D).origin
 	var pelvis_fisica := _posicion_fisica(physical_bone_body)
 	return pie_clip + (pelvis_fisica - pelvis_clip)
-
-
-## Cambia la velocidad del CONJUNTO sin deformar la pose: reparte el mismo
-## delta entre todos los cuerpos ponderado por masa (`J = m*dv`). Es la unica
-## forma de mover un ragdoll de 15 cuerpos acoplados por joints: empujar uno
-## solo (la pelvis, 6 kg contra 38) se lo reparte el solver y se pierde
-## (medido 2026-11-05: dv pedido -6 m/s, velocidad real -0.3).
-func _aplicar_impulso_conjunto(dv: Vector3) -> void:
-	if skeleton == null:
-		return
-	for b in skeleton.bones:
-		var rid := b.get_rid()
-		var masa: float = PhysicsServer3D.body_get_param(rid,
-			PhysicsServer3D.BODY_PARAM_MASS)
-		if masa <= 0.0:
-			masa = 0.1
-		PhysicsServer3D.body_apply_impulse(rid, dv * masa)
 
 
 ## Fase de apoyo del pie SEGUN EL CLIP, con un rango deslizante de su altura.
@@ -982,34 +959,20 @@ func _calcular_objetivos() -> Dictionary:
 	return out
 
 
-## El marco en el que se aplica la pose del clip: la ORIENTACION del
-## esqueleto animado, pero con el ORIGEN en la pelvis del CUERPO.
+## POR QUE EL MAESTRO (el esqueleto animado) NO SE MUEVE (medido 2026-11-04)
 ##
-## OJO (medido 2026-11-04) â€” POR QUE NO SE USA `animated_skel.global_transform`:
-## el `PoseMirror` mueve el esqueleto (el fisico y el animado) para que
-## sigan a la pelvis del cuerpo. Si el objetivo se calculara con la
-## posicion REAL del esqueleto maestro, el lazo seria:
-##   el servo lleva el cuerpo al objetivo -> el espejo mueve el maestro
-##   -> el objetivo se mueve -> el servo lo persigue...
-## Con un tick de retraso eso es una OSCILACION DE PERIODO 2: medido, la
-## pelvis subia a 2,41 m y volvia a 0,30 m una y otra vez (el personaje
-## "se movia horripilantemente").
+## La ley del servo corrige ORIENTACION: el error es el eje*angulo del
+## quaternion de `objetivo * actual^-1`, y la POSICION del objetivo no entra
+## en la ecuacion. Por eso el maestro puede quedarse fijo en su sitio: de el
+## se copia la ROTACION de cada hueso, no su traslacion.
 ##
-## Anclando el origen a la pelvis del CUERPO, el objetivo depende del
-## cuerpo y no del maestro: no hay lazo, y el clip sigue al personaje.
-func _base_de_objetivos() -> Transform3D:
-	var m := animated_skel.global_transform if animated_skel != null else Transform3D.IDENTITY
-	if physical_bone_body == null or animated_skel == null or rig_config == null:
-		return m
-	var pelvis := RagdollMotor.body_transform(physical_bone_body).origin
-	# La posicion del hueso de la pelvis DENTRO del esqueleto (la pose del
-	# clip): para colocar el maestro sobre la pelvis del cuerpo.
-	var pid := animated_skel.find_bone(rig_config.body_bone_name)
-	var p_rel := Vector3.ZERO
-	if pid >= 0:
-		p_rel = animated_skel.get_bone_global_pose(pid).origin
-	return Transform3D(m.basis, pelvis - m.basis * p_rel)
-
+## Si el maestro SIGUIERA al cuerpo, el ciclo de paso viajaria con el y el pie
+## nunca se plantaria (medido: el pie barria junto al cuerpo, el personaje no
+## avanzaba y se veia como pasitos). El esqueleto FISICO si sigue al cuerpo
+## (ver `PoseMirror.follow_pelvis`), para que la malla quede pegada.
+##
+## Las UNICAS posiciones que se usan son las de los PIES, y van trasladadas al
+## cuerpo por la diferencia de pelvis (`_objetivo_de_pie_en_cuerpo`).
 
 ## ESTIRA el brazo que agarra hacia el puntero.
 ##
@@ -1329,12 +1292,6 @@ func _desplazar(d: Vector3) -> void:
 			PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY, Vector3.ZERO)
 		PhysicsServer3D.body_set_state(b.get_rid(),
 			PhysicsServer3D.BODY_STATE_ANGULAR_VELOCITY, Vector3.ZERO)
-
-
-## Hooke's law angular: torque de resorte amortiguado (delegado al motor).
-func hookes_law(displacement: Vector3, current_velocity: Vector3, stiffness: float,
-		damping: float) -> Vector3:
-	return RagdollMotor.hookes_law(displacement, current_velocity, stiffness, damping)
 
 
 ## === RESOLUCION DE NODOS ===============================================

@@ -18,22 +18,9 @@ class_name PoseMirror
 ##    copian la pose de la ANIMACION apoyados en su padre: si no, los
 ##    dedos se quedan en la pose de reposo (T) con la mano animada.
 
-## Posicion de la pelvis en el espacio del esqueleto (para el ajuste 1).
-var pelvis_offset := Vector3.ZERO
 ## La pelvis del CUERPO en el frame anterior: el esqueleto la sigue con
 ## este desplazamiento (ver `follow_pelvis`).
 var _pelvis_anterior := Vector3.ZERO
-
-
-## Captura el offset de la pelvis. Se hace UNA vez, con el esqueleto
-## todavia en su sitio: si se capturase despues de moverlo, el offset
-## saldria 0 y el ajuste se dispararia (medido: el esqueleto se iba a
-## -1,4e7 en 5 frames).
-func capture_offset(physical_skel: Skeleton3D, pelvis_body: PhysicalBone3D) -> void:
-	if physical_skel == null or pelvis_body == null:
-		return
-	pelvis_offset = physical_skel.global_transform.affine_inverse() \
-		* RagdollMotor.body_transform(pelvis_body).origin
 
 
 ## Espeja las poses. `animated_skel` puede ser null (entonces los huesos
@@ -119,8 +106,8 @@ func mirror(physical_skel: Skeleton3D, animated_skel: Skeleton3D,
 ##
 ## OJO (medido 2026-11-04) — POR QUE "SIGUE EL DESPLAZAMIENTO" Y NO
 ## "CORRIGE EL ERROR":
-## Lo que se movia antes era un CORRECTOR (`pos += (local - pelvis_offset)`),
-## o sea, el esqueleto se colocaba sobre la pelvis del cuerpo. Y como el
+## Lo que se movia antes era un CORRECTOR (`pos += (local - offset)`), o sea,
+## el esqueleto se colocaba sobre la pelvis del cuerpo. Y como el
 ## objetivo del servo se calculaba con la posicion del esqueleto maestro,
 ## eso era un LAZO con un tick de retraso: el servo llevaba el cuerpo al
 ## objetivo, el corrector movia el maestro, el objetivo se movia... y el

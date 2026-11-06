@@ -23,7 +23,6 @@ src/ragdoll/
 │   ├── head_look.gd           HeadLook          la cabeza que sigue a la camara
 │   ├── arm_ik.gd              ArmIK             IK de brazos (polos, alcance)
 │   ├── fp_clip.gd             FpClip            recorte de 1a persona
-│   └── balance_controller.gd  BalanceController el equilibrio
 ├── character/                 EL PERSONAJE
 │   ├── ragdoll_character.gd   RagdollCharacter  raiz: input, movimiento, agarre
 │   ├── ragdoll_camera.gd      camara en 1a/3a persona

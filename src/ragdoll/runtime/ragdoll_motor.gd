@@ -47,11 +47,11 @@ class_name RagdollMotor
 ## (`PhysicalBoneSimulator3D::_get_physical_bone_parent` sube por la
 ## jerarquia), asi que el servo y la fisica comparten jerarquia.
 ##
-## TRAMPA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â el tope de velocidad angular: con 6 rad/s el servo no puede mover
+## TRAMPA ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â el tope de velocidad angular: con 6 rad/s el servo no puede mover
 ## un hueso grande en un frame y el personaje se ve "aguado". El tope es de
 ## decenas (40).
 ##
-## TRAMPA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â comparar pose de HUESO con pose de CUERPO: el cuerpo puede no
+## TRAMPA ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â comparar pose de HUESO con pose de CUERPO: el cuerpo puede no
 ## estar en el origen del hueso (`body_offset`). Se deshace antes de comparar.
 
 ## Rigidez del servo (rad/s2 por radian de error).
@@ -210,28 +210,6 @@ static func _profundidad(physical_skel: Skeleton3D, id: int, memo: Dictionary) -
 	return p
 
 
-## Convierte una aceleracion angular (rad/s2, en espacio de MUNDO) en un
-## torque (N*m) usando la inercia real del cuerpo.
-##
-## OJO: la ley ya NO usa torque (comanda velocidad angular). Se conserva
-## porque `BalanceController` (componente inactivo) la referencia.
-static func torque_de(b: PhysicalBone3D, alpha: Vector3) -> Vector3:
-	var inercia: Vector3 = PhysicsServer3D.body_get_param(b.get_rid(),
-		PhysicsServer3D.BODY_PARAM_INERTIA)
-	if inercia == Vector3.ZERO:
-		return alpha * TORQUE_SIN_INERCIA
-	var xf := body_transform(b)
-	var a_local := xf.basis.inverse() * alpha
-	var t_local := Vector3(a_local.x * inercia.x, a_local.y * inercia.y, a_local.z * inercia.z)
-	return xf.basis * t_local
-
-
-## Ley de Hooke con amortiguamiento: `kÃƒâ€šÃ‚Â·x - cÃƒâ€šÃ‚Â·v`.
-static func hookes_law(desplazamiento: Vector3, velocidad: Vector3,
-		rigidez: float, amortiguamiento: float) -> Vector3:
-	return (rigidez * desplazamiento) - (amortiguamiento * velocidad)
-
-
 ## Vector de error de una rotacion (eje * angulo), en espacio de MUNDO.
 ##
 ## Es el vector de error correcto para un servo de orientacion: el
@@ -275,15 +253,3 @@ static func body_linear_velocity(b: PhysicalBone3D) -> Vector3:
 	return PhysicsServer3D.body_get_state(b.get_rid(), PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY)
 
 
-## Constante de torque cuando el motor de fisica no da la inercia.
-const TORQUE_SIN_INERCIA := 0.03
-
-
-## Inercia media de un cuerpo (kg*m2). Si el motor de fisica no la da, se
-## usa un valor pequeno.
-static func inercia_media(b: PhysicalBone3D) -> float:
-	var inercia: Vector3 = PhysicsServer3D.body_get_param(b.get_rid(),
-		PhysicsServer3D.BODY_PARAM_INERTIA)
-	if inercia == Vector3.ZERO:
-		return 0.01
-	return maxf((inercia.x + inercia.y + inercia.z) / 3.0, 0.0005)
