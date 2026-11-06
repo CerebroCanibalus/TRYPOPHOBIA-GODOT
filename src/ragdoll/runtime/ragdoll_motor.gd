@@ -251,5 +251,3 @@ static func body_linear_velocity(b: PhysicalBone3D) -> Vector3:
 	if b == null:
 		return Vector3.ZERO
 	return PhysicsServer3D.body_get_state(b.get_rid(), PhysicsServer3D.BODY_STATE_LINEAR_VELOCITY)
-
-

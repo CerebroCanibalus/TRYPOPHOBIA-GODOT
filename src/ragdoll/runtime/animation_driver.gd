@@ -41,6 +41,11 @@ var animated_skel: Skeleton3D
 var skeleton_path := ""
 ## La raiz del personaje (a la que apuntan el root_node y las pistas).
 var root_node: Node = null
+## Nombres de los parametros que expone el AnimationTree (para avisar de
+## rutas inexistentes, ver `_pon_parametro`).
+var _parametros := {}
+var _params_cargados := false
+var _params_avisados := {}
 
 
 ## Monta el driver sobre la escena.
@@ -126,7 +131,7 @@ func pose_of_bone(bone_name: StringName) -> Transform3D:
 func set_walking(caminando: bool, velocidad: float = 0.0) -> void:
 	if tree == null:
 		return
-	tree.set("parameters/walking/blend_amount", 1.0 if caminando else 0.0)
+	_pon_parametro("parameters/walking/blend_amount", 1.0 if caminando else 0.0)
 	var zancada := 0.32
 	var ciclo := 0.58
 	if rig != null:
@@ -138,14 +143,34 @@ func set_walking(caminando: bool, velocidad: float = 0.0) -> void:
 	var escala := 1.0
 	if caminando and velocidad > 0.05:
 		escala = clampf(velocidad / natural, 0.05, 4.0)
-	tree.set("parameters/TimeScale/scale", escala)
+	_pon_parametro("parameters/TimeScale/scale", escala)
 
 
 ## Posicion del BlendSpace de direccion (-1..1), normalmente el pitch.
 func set_direction(valor: float) -> void:
 	if tree == null:
 		return
-	tree.set("parameters/grab_dir/blend_position", valor)
+	_pon_parametro("parameters/grab_dir/blend_position", valor)
+
+
+## Escribe un parametro del AnimationTree AVISANDO si no existe.
+##
+## OJO (medido 2026-11-05): un `tree.set()` sobre una ruta inexistente no
+## hace NADA y no da error. Renombrar un nodo del arbol (o cambiar su
+## nombre) dejaba al personaje andando sin ciclo y sin una sola linea en
+## consola. Con el aviso, el fallo es ruidoso la primera vez.
+func _pon_parametro(ruta: String, valor: Variant) -> void:
+	if tree == null:
+		return
+	if not _params_cargados:
+		_params_cargados = true
+		for p in tree.get_property_list():
+			_parametros[str(p["name"])] = true
+	if not _parametros.has(ruta) and not _params_avisados.has(ruta):
+		_params_avisados[ruta] = true
+		push_warning("[AnimationDriver] el AnimationTree no tiene el parametro "
+			+ "'%s' (¿renombraste el nodo?)" % ruta)
+	tree.set(ruta, valor)
 
 
 ## Reproduce un clip suelto (para efectos puntuales).
@@ -201,17 +226,41 @@ func _reapuntar(path: NodePath) -> NodePath:
 
 
 ## Los clips de glTF vienen con loop_mode NONE: hay que forzarlo.
+##
+## OJO (medido 2026-11-05): un clip con `loop_mode = NONE` se reproduce UNA
+## vez y se CONGELA (el walk cycle se quedaba en 0,83 s). Se fuerza en los
+## clips que declara el rig y, ademas, en cualquier otro que sea de verdad
+## una ANIMACION (alguna pista con mas de 2 keys): las poses de 1 key no
+## necesitan loop y se dejan como estan.
+##
+## Y si un clip que el rig espera NO existe, se AVISA: renombrar un clip en
+## el AnimationPlayer dejaba al personaje sin animacion y sin un solo error
+## en consola.
 func _configurar_clips() -> void:
-	if player == null or rig == null:
+	if player == null:
 		return
-	for clip_name in [rig.clip_idle, rig.clip_walk, rig.clip_grab_lower,
-			rig.clip_grab_middle, rig.clip_grab_upper, rig.clip_grab_hold]:
-		if clip_name == &"":
+	if rig != null:
+		for n in [rig.clip_idle, rig.clip_walk, rig.clip_grab_lower,
+				rig.clip_grab_middle, rig.clip_grab_upper, rig.clip_grab_hold]:
+			if n != &"" and not player.has_animation(n):
+				push_warning("[AnimationDriver] el rig espera el clip '%s' y el "
+					% n + "AnimationPlayer no lo tiene (¿lo renombraste?)")
+	for lib_id in player.get_animation_library_list():
+		var lib := player.get_animation_library(lib_id)
+		if lib == null:
 			continue
-		if not player.has_animation(clip_name):
-			continue
-		var anim := player.get_animation(clip_name)
-		if anim == null:
-			continue
-		if anim.length > 0.1 and anim.loop_mode == Animation.LOOP_NONE:
-			anim.loop_mode = Animation.LOOP_LINEAR
+		for clip_name in lib.get_animation_list():
+			var anim := lib.get_animation(clip_name)
+			if anim == null or anim.length <= 0.1:
+				continue
+			if anim.loop_mode == Animation.LOOP_NONE and _es_animacion_con_tiempo(anim):
+				anim.loop_mode = Animation.LOOP_LINEAR
+
+
+## ¿El clip se mueve en el TIEMPO? Una pose tiene 1 key por pista; una
+## animacion de verdad tiene muchas.
+func _es_animacion_con_tiempo(anim: Animation) -> bool:
+	for t in anim.get_track_count():
+		if anim.track_get_key_count(t) > 2:
+			return true
+	return false

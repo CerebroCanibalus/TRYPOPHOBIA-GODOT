@@ -66,6 +66,10 @@ var snap_amount = .1
 ## El gizmo NATIVO de Godot dibuja sus propios huesos aparte; ese se apaga
 ## aparte (ver `set_foreign_gizmos_hidden`).
 var show_bone_bodies: bool = true
+## Dibujar las bolitas de las articulaciones. Con los cuerpos visibles son
+## redundantes (y en un rig con dedos, una plaga); cuando los cuerpos estan
+## ocultos son EL handle, asi que se respetan siempre (`_dibujar_junta`).
+var show_joints: bool = true
 
 func _is_node_selected(node: Node) -> bool:
 	var selection := EditorInterface.get_selection()
@@ -252,17 +256,24 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 				else:
 					_add_dashed_line(gizmo, head, tail, bone_mat, length * 0.12, length * 0.08)
 
-			var radius := 0.025
-			var joint_xf := Transform3D(
-				Basis().scaled(Vector3(radius, radius, radius)),
-				tail
-			)
+			# OJO (2026-11-05): las articulaciones NO se dibujan siempre. Antes
+			# iba una bolita por CADA hueso: en un rig con dedos son decenas
+			# tapando la malla, y en el picking ganaban al cuerpo del hueso
+			# (10 px minimos + 6 px de margen), asi que no se podia agarrar
+			# nada de lo que habia debajo. Ver `_dibujar_junta`.
+			if _dibujar_junta(joint_id, joint_selected,
+					skeleton.get_bone_children(child_bone).is_empty()):
+				var radius := 0.025
+				var joint_xf := Transform3D(
+					Basis().scaled(Vector3(radius, radius, radius)),
+					tail
+				)
 
-			gizmo.add_mesh(
-				_unit_sphere,
-				joint_mat,
-				joint_xf
-			)
+				gizmo.add_mesh(
+					_unit_sphere,
+					joint_mat,
+					joint_xf
+				)
 
 func _get_subgizmo_transform(gizmo: EditorNode3DGizmo, id: int) -> Transform3D:
 	var skeleton := gizmo.get_node_3d() as Skeleton3D
@@ -450,6 +461,26 @@ func _make_material(color: Color) -> StandardMaterial3D:
 	#m.disable_receive_shadows = true
 	m.cull_mode = BaseMaterial3D.CULL_BACK
 	return m
+
+
+## ¿Se dibuja (y se puede agarrar) la articulacion `joint_id`?
+##
+## Regla unica para DIBUJO y PICKING: un handle invisible no puede robar
+## clicks, y un handle redundante no debe tapar lo de debajo.
+##
+##  * Cuerpos OCULTOS (modo pose): la bolita ES el unico handle -> siempre.
+##  * Cuerpos VISIBLES (edicion): el cuerpo del hueso ya es su handle -> la
+##    bolita solo si el hueso es HOJA (no tiene cuerpo dibujado: puntas de los
+##    dedos, punta de la cabeza...), si esta SELECCIONADA o si esta bajo el
+##    cursor.
+##  * `show_joints = false` las quita del todo en los dos casos.
+func _dibujar_junta(joint_id: int, joint_seleccionada: bool,
+		es_hoja: bool = false) -> bool:
+	if not show_joints:
+		return false
+	if not show_bone_bodies:
+		return true
+	return es_hoja or joint_seleccionada or _hover_id == joint_id
 
 
 func _create_unit_sphere_mesh() -> ArrayMesh:
@@ -718,6 +749,11 @@ func _pick_subgizmo_id_perspective(
 			continue
 
 		for child_bone in children:
+			var joint_id := (child_bone * 2) + 1
+			# Un handle INVISIBLE no puede robar el click (ver `_dibujar_junta`).
+			if not _dibujar_junta(joint_id, gizmo.is_subgizmo_selected(joint_id),
+					skeleton.get_bone_children(child_bone).is_empty()):
+				continue
 			var child_world := _get_bone_world_transform(skeleton, child_bone)
 			var joint_center := child_world.origin
 
@@ -729,7 +765,7 @@ func _pick_subgizmo_id_perspective(
 			var t_joint := _ray_sphere(ray_from, ray_dir, joint_center, joint_radius)
 			if t_joint >= 0.0 and t_joint < best_joint_t:
 				best_joint_t = t_joint
-				best_joint_id = (child_bone * 2) + 1
+				best_joint_id = joint_id
 				best_joint_radius = joint_radius
 
 		var best_parent_body_t := INF
@@ -746,7 +782,7 @@ func _pick_subgizmo_id_perspective(
 			var body_radius := max(seg_len * 0.05, 0.012)
 			var t_body := _ray_capsule(ray_from, ray_dir, head, tail, body_radius)
 
-			if t_body >= 0.0 and t_body < best_parent_body_t:
+			if t_body >= 0.0 and t_body < best_parent_body_t and show_bone_bodies:
 				best_parent_body_t = t_body
 				best_parent_body_radius = body_radius
 
@@ -791,6 +827,11 @@ func _pick_subgizmo_id_ortho(
 		# Joints: unchanged (per child)
 		# ------------------------------
 		for child_bone in children:
+			var joint_id := (child_bone * 2) + 1
+			# Un handle INVISIBLE no puede robar el click (ver `_dibujar_junta`).
+			if not _dibujar_junta(joint_id, gizmo.is_subgizmo_selected(joint_id),
+					skeleton.get_bone_children(child_bone).is_empty()):
+				continue
 			var child_world := _get_bone_world_transform(skeleton, child_bone)
 			var joint_w := child_world.origin
 			var joint_s := camera.unproject_position(joint_w)
@@ -804,7 +845,7 @@ func _pick_subgizmo_id_ortho(
 
 			if d_px <= joint_radius_px and d_px < best_joint_px:
 				best_joint_px = d_px
-				best_joint_id = (child_bone * 2) + 1
+				best_joint_id = joint_id
 
 		# --------------------------------------------
 		# Body: pick the closest dashed/limb segment
@@ -825,7 +866,7 @@ func _pick_subgizmo_id_ortho(
 			var body_radius_px := max(seg_len_px * 0.10, 8.0)
 			var d_seg_px := _distance_point_to_segment_2d(screen_pos, head_s, tail_s)
 
-			if d_seg_px <= body_radius_px and d_seg_px < best_parent_body_px:
+			if d_seg_px <= body_radius_px and d_seg_px < best_parent_body_px and show_bone_bodies:
 				best_parent_body_px = d_seg_px
 				best_parent_body_radius_px = body_radius_px
 

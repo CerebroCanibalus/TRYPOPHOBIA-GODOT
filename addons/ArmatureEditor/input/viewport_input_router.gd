@@ -13,6 +13,12 @@ var copy_paste_service: ArmatureCopyPasteService = null
 var context_menu_controller: Object = null 
 var extrude_name_controller: Object = null 
 var toaster: EditorToaster = null
+## Cuantos pixeles puede moverse el puntero y seguir contando como CLICK
+## (por encima de esto fue un ARRASTRE: orbita de camara, no menu).
+const RMB_CLICK_MAX := 4.0
+## Estado de la pulsacion del click derecho (click vs arrastre).
+var _rmb_presionada := false
+var _rmb_pos := Vector2.ZERO
 ## Sets dependencies used by this router.
 func set_dependencies(
 	p_context: ArmatureSkeletonContext,
@@ -63,35 +69,25 @@ func handle(camera: Camera3D, event: InputEvent) -> int:
 
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
-		if mb.pressed and mb.button_index == MOUSE_BUTTON_RIGHT:
-			var global_pos := viewport.get_screen_transform().origin + mb.position
-			if not context.is_edit_mode():
-				if selected_nodes.size() > 1:
-					if _should_show_multi_selection_menu():
-						if context_menu_controller != null and context_menu_controller.has_method("popup_for_multi_selection"):
-							context_menu_controller.call("popup_for_multi_selection", global_pos)
-						viewport.set_input_as_handled()
-						return 1
-				_push_edit_mode_toast()
-				return 1
-
-			var bone_index := selection_service.get_context_bone_from_selection()
-
-
-			if bone_index >= 0:
-				if context_menu_controller != null and context_menu_controller.has_method("popup_for_bone"):
-					context_menu_controller.call("popup_for_bone", bone_index, global_pos)
-				viewport.set_input_as_handled()
-				return 1
-
-			if selected_nodes.size() > 1:
-				if _should_show_multi_selection_menu():
-					if context_menu_controller != null and context_menu_controller.has_method("popup_for_multi_selection"):
-						context_menu_controller.call("popup_for_multi_selection", global_pos)
-					viewport.set_input_as_handled()
-					return 1
-
-			return 0
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
+			# OJO (2026-11-05): al PULSAR no se consume NADA. En el viewport 3D
+			# de Godot el click derecho ARRASTRANDO orbita la camara, y este
+			# router se comia el evento: en modo de edicion de huesos la
+			# camara no se movia.
+			#
+			# El menu contextual sobrevive, pero solo para un CLICK LIMPIO:
+			# si el puntero se movio mas de `RMB_CLICK_MAX` px, fue una
+			# orbita y el evento pasa entero (pulsacion y soltada).
+			if mb.pressed:
+				_rmb_presionada = true
+				_rmb_pos = mb.position
+				return 0
+			var hubo_arrastre := not _rmb_presionada \
+				or mb.position.distance_to(_rmb_pos) > RMB_CLICK_MAX
+			_rmb_presionada = false
+			if hubo_arrastre:
+				return 0
+			return _menu_de_click_derecho(viewport, mb.position, selected_nodes)
 
 	if event is InputEventMouseMotion and extrude_service != null and not extrude_service.is_extruding():
 		var mm := event as InputEventMouseMotion
@@ -206,3 +202,33 @@ func _push_edit_mode_toast() -> void:
 			"Switch to Edit Mode to modify bones.",
 			EditorToaster.SEVERITY_INFO
 		)
+
+
+## Menu contextual del CLICK derecho (nunca de una orbita de camara).
+##
+## @return int resultado de reenvio (0 = pasar, 1 = consumido)
+func _menu_de_click_derecho(viewport: SubViewport, pos: Vector2,
+		selected_nodes: Array[Node]) -> int:
+	var global_pos := viewport.get_screen_transform().origin + pos
+	if not context.is_edit_mode():
+		if selected_nodes.size() > 1:
+			if _should_show_multi_selection_menu():
+				if context_menu_controller != null and context_menu_controller.has_method("popup_for_multi_selection"):
+					context_menu_controller.call("popup_for_multi_selection", global_pos)
+				viewport.set_input_as_handled()
+				return 1
+		_push_edit_mode_toast()
+		return 1
+	var bone_index := selection_service.get_context_bone_from_selection()
+	if bone_index >= 0:
+		if context_menu_controller != null and context_menu_controller.has_method("popup_for_bone"):
+			context_menu_controller.call("popup_for_bone", bone_index, global_pos)
+		viewport.set_input_as_handled()
+		return 1
+	if selected_nodes.size() > 1:
+		if _should_show_multi_selection_menu():
+			if context_menu_controller != null and context_menu_controller.has_method("popup_for_multi_selection"):
+				context_menu_controller.call("popup_for_multi_selection", global_pos)
+			viewport.set_input_as_handled()
+			return 1
+	return 0
